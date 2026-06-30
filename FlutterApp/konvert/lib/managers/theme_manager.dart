@@ -35,7 +35,7 @@ class ThemeManager {
   final Color primaryColorLight = Color.fromARGB(255, 0, 0, 255);
 
   // State fields: Defaulting completely to light mode (Themes.accent)
-  Themes _currentTheme = Themes.neon;
+  Themes _currentTheme = Themes.accent;
 
   /// Initializes SharedPreferences and restores saved theme state.
   Future<void> init() async {
@@ -46,7 +46,7 @@ class ThemeManager {
     if (savedThemeName != null) {
       _currentTheme = Themes.values.firstWhere(
         (e) => e.name == savedThemeName,
-        orElse: () => Themes.neon,
+        orElse: () => Themes.accent,
       );
     }
   }
