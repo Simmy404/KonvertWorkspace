@@ -1,17 +1,3 @@
-enum ThemeModeVariations {
-  none,
-  lightMode,
-  darkMode,
-}
 
-enum CompanyHierarchy {
-  salesRep,
-  manager,
-  regionalManager,
-  businessUnitHead,
-}
-
-enum UserType {
-  customer,
-  business,
-}
+// Enum to define the target custom themes
+enum Themes { accent, neon }

@@ -1,16 +1,10 @@
 // lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
-import '../managers/app_manager.dart';
 import '../utils/page_transitions.dart';
+import '../managers/legal_manager.dart';
+import '../managers/theme_manager.dart';
 import 'welcome_screen.dart';
-import 'dashboard_screen.dart';
-import 'terms_of_service_screen.dart';
-import 'domain_selection_screen.dart';
-import 'user_type_selection_screen.dart';
-import 'business_hierarchy_screen.dart';
-import 'sales_rep_login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,80 +15,98 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _controller;
+  bool _isVideoFinished = false;
+  bool _isImagesPreloaded = false;
+
+  final double videoExitPoint = 85 / 100; // end video when 85% finished
 
   @override
   void initState() {
     super.initState();
+
+    // Automatically resolves to 'assets/splash/konvert_splash_light.mp4' or '_dark.mp4'
     _controller = VideoPlayerController.asset(
-      'assets/splash/konvert_splash.mp4',
+      ThemeManager.instance.getSplashScreen(),
     );
-    _initializeVideo();
+
+    _initializeVideoAndAssets();
   }
 
-  Future<void> _initializeVideo() async {
+  Future<void> _initializeVideoAndAssets() async {
+    // 1. Initialize video controller
     await _controller.initialize();
     if (!mounted) return;
+
     setState(() {});
     _controller.play();
     _controller.setVolume(0);
     _controller.addListener(_checkVideoEnd);
+
+    // 2. Start loading images in the background (Notice we don't 'await' this here
+    // so the video isn't blocked from playing while images download)
+    _preloadImages();
+  }
+
+  /// Downloads and caches 5 example images into memory
+  Future<void> _preloadImages() async {
+    try {
+      // 5 Example network images (Replace with your actual AssetImage or NetworkImage paths)
+      final List<ImageProvider> imagesToLoad = ThemeManager.instance
+          .getImagesToPreload();
+
+      // Use Future.wait to load all 5 images concurrently to save time
+      await Future.wait(
+        imagesToLoad.map((image) => precacheImage(image, context)),
+      );
+
+      debugPrint('All 5 background images preloaded successfully.');
+    } catch (e) {
+      debugPrint('Error preloading images: $e');
+    } finally {
+      // Whether it succeeded or failed, flag as done so the user isn't stuck
+      // on the splash screen forever if a network request fails.
+      if (mounted) {
+        _isImagesPreloaded = true;
+        _checkNavigationReady();
+      }
+    }
+  }
+
+  bool canBypassOnboarding() {
+    return LegalManager.instance.hasAcceptedTerms;
   }
 
   void _checkVideoEnd() {
     if (_controller.value.isInitialized &&
-        _controller.value.position >= _controller.value.duration) {
+        _controller.value.position >=
+            (_controller.value.duration * videoExitPoint)) {
+      _controller.removeListener(_checkVideoEnd);
+      _isVideoFinished = true;
+      _checkNavigationReady();
+    }
+  }
+
+  // Ensures BOTH conditions are met before jumping to the onboarding route
+  void _checkNavigationReady() {
+    if (_isVideoFinished && _isImagesPreloaded && mounted) {
       _navigateToNextScreen();
     }
   }
 
   void _navigateToNextScreen() {
-    _controller.removeListener(_checkVideoEnd);
-    
-    // Get the app manager to determine where to go
-    final appManager = Provider.of<AppManager>(context, listen: false);
-    
-    // Determine the next screen based on onboarding progress
     Widget nextScreen;
-    
-    // Check if user is logged in
-    if (appManager.currentUser != null && appManager.currentUser!.isLoggedIn) {
-      nextScreen = const DashboardScreen();
+
+    if (!canBypassOnboarding()) {
+      nextScreen = const WelcomeScreen();
     } else {
-      // Check onboarding progress
-      final progress = appManager.getOnboardingProgress();
-      
-      switch (progress) {
-        case OnboardingProgress.completed:
-          nextScreen = const DashboardScreen();
-          break;
-        case OnboardingProgress.salesRepLogin:
-          nextScreen = const SalesRepLoginScreen();
-          break;
-        case OnboardingProgress.businessHierarchy:
-          nextScreen = const BusinessHierarchyScreen();
-          break;
-        case OnboardingProgress.userType:
-          nextScreen = const UserTypeSelectionScreen();
-          break;
-        case OnboardingProgress.domain:
-          nextScreen = const DomainSelectionScreen();
-          break;
-        case OnboardingProgress.tos:
-          nextScreen = const TermsOfServiceScreen();
-          break;
-        case OnboardingProgress.welcome:
-        default:
-          nextScreen = const WelcomeScreen();
-          break;
-      }
+      // Temporary placeholder until you build your dashboard/home screen
+      nextScreen = const Scaffold(body: Center(child: Text('Home Screen')));
     }
-    
-    // Navigate with fade transition
-    Navigator.of(context).pushReplacement(
-      PageTransitions.premiumTransition(
-        nextScreen,
-        duration: const Duration(milliseconds: 800),
-      ),
+
+    // Uses your custom utility class for a clean, professional fade transition
+    Navigator.pushReplacement(
+      context,
+      PageTransitions.fadeTransition(nextScreen),
     );
   }
 
@@ -122,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                 )
-              : const CircularProgressIndicator(),
+              : const CircularProgressIndicator(color: Colors.white),
         ),
       ),
     );
