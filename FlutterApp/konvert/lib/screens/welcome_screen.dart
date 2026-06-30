@@ -5,190 +5,158 @@ import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  // Accept the fully prepared controller directly from the splash transition thread
+  final VideoPlayerController preinitializedController;
+
+  const WelcomeScreen({
+    super.key,
+    required this.preinitializedController,
+  });
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  late VideoPlayerController _bgController;
-  bool _isBgInitialized = false;
+  // Directly point to the passed instance field
+  late final VideoPlayerController _bgController;
 
   @override
   void initState() {
     super.initState();
-    _initializeBackgroundVideo();
+    _bgController = widget.preinitializedController;
+    
+    // In case initialization was skipped due to exceptional fallback errors in splash screen
+    if (!_bgController.value.isInitialized) {
+      _retryWelcomeVideoInitialization();
+    }
   }
 
-  Future<void> _initializeBackgroundVideo() async {
-    _bgController = VideoPlayerController.asset(
-      ThemeManager.instance.getWelcomeBG(),
-    );
-
+  Future<void> _retryWelcomeVideoInitialization() async {
     try {
       await _bgController.initialize();
       if (!mounted) return;
-
-      setState(() {
-        _isBgInitialized = true;
-      });
-
-      // Configure background video behavior
+      setState(() {});
       _bgController.play();
       _bgController.setLooping(true);
-      _bgController.setVolume(0); // Ensure ambient video is completely silent
+      _bgController.setVolume(0);
     } catch (e) {
-      debugPrint('Error initializing welcome background video: $e');
+      debugPrint('Fallback initialization retry failed: $e');
     }
   }
 
   Future<void> _launchHelpUrl() async {
-    final Uri url = Uri.parse('https://example.com/support');
+    final Uri url = Uri.parse('https://example.com/support'); //[cite: 1]
     try {
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        debugPrint('Could not launch target URL: $url');
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) { //[cite: 1]
+        debugPrint('Could not launch target URL: $url'); //[cite: 1]
       }
     } catch (e) {
-      debugPrint('Error attempting to launch URL: $e');
+      debugPrint('Error attempting to launch URL: $e'); //[cite: 1]
     }
   }
 
   @override
   void dispose() {
-    _bgController.dispose();
+    // Safely tear down the video pipeline when the user completes onboarding
+    _bgController.dispose(); //[cite: 1]
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ThemeManager.instance
-          .getContrastColor(), // Fallback color while video initializes
+      backgroundColor: ThemeManager.instance.getContrastColor(), //[cite: 1]
       body: Stack(
         children: [
-          // 1. Background Layer (Video)
-          if (_isBgInitialized)
+          // 1. Background Layer (Instantaneous video render without flash frames)
+          if (_bgController.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
-                fit: BoxFit.cover,
+                fit: BoxFit.cover, //[cite: 1]
                 child: SizedBox(
-                  width: _bgController.value.size.width,
-                  height: _bgController.value.size.height,
-                  child: VideoPlayer(_bgController),
+                  width: _bgController.value.size.width, //[cite: 1]
+                  height: _bgController.value.size.height, //[cite: 1]
+                  child: VideoPlayer(_bgController), //[cite: 1]
                 ),
               ),
             ),
 
-          // 2. Foreground Layer (UI Elements)
+          // 2. Foreground Layer (UI Elements)[cite: 1]
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 24.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0), //[cite: 1]
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 16), //[cite: 1]
                   Image.asset(
-                    ThemeManager.instance.getLogoMark(),
-                    width: 42,
-                    height: 32,
-                    fit: BoxFit.contain,
+                    ThemeManager.instance.getLogoMark(), //[cite: 1]
+                    width: 42, //[cite: 1]
+                    height: 32, //[cite: 1]
+                    fit: BoxFit.contain, //[cite: 1]
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.broken_image,
-                        color: Colors.white,
-                        size: 32,
-                      );
+                      return const Icon(Icons.broken_image, color: Colors.white, size: 32); //[cite: 1]
                     },
                   ),
-
-                  const Spacer(),
-
+                  const Spacer(), //[cite: 1]
                   Text(
                     'Keep Your\nSales Moving',
                     style: TextStyle(
-                      color: ThemeManager.instance.getMatchColor(),
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                      letterSpacing: -1.0,
+                      color: ThemeManager.instance.getMatchColor(), //[cite: 1]
+                      fontSize: 48, //[cite: 1]
+                      fontWeight: FontWeight.bold, //[cite: 1]
+                      height: 1.1, //[cite: 1]
+                      letterSpacing: -1.0, //[cite: 1]
                     ),
                   ),
-
-                  const SizedBox(height: 10),
-
+                  const SizedBox(height: 10), //[cite: 1]
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
-                        color: ThemeManager.instance.getMatchColor(),
-                        fontSize: 16,
-                        height: 1.4,
-                        letterSpacing: -0.2,
+                        color: ThemeManager.instance.getMatchColor(), //[cite: 1]
+                        fontSize: 16, //[cite: 1]
+                        height: 1.4, //[cite: 1]
+                        letterSpacing: -0.2, //[cite: 1]
                       ),
                       children: const [
-                        TextSpan(
-                          text:
-                              'Track sales, manage teams, and generate\ninsights from anywhere.\n',
-                        ),
+                        TextSpan(text: 'Track sales, manage teams, and generate\ninsights from anywhere.\n'), //[cite: 1]
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 48),
-
+                  const SizedBox(height: 48), //[cite: 1]
                   SizedBox(
-                    width: double.infinity,
-                    height: 64,
+                    width: double.infinity, //[cite: 1]
+                    height: 64, //[cite: 1]
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Action handler pipeline
-                      },
+                      onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeManager.instance
-                            .getPrimaryColor(),
-                        foregroundColor: ThemeManager.instance
-                            .getContrastColor(),
-                        shape: const StadiumBorder(),
-                        elevation: 0,
+                        backgroundColor: ThemeManager.instance.getPrimaryColor(), //[cite: 1]
+                        foregroundColor: ThemeManager.instance.getContrastColor(), //[cite: 1]
+                        shape: const StadiumBorder(), //[cite: 1]
+                        elevation: 0, //[cite: 1]
                       ),
                       child: const Text(
                         'Get Started',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.3,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: -0.3), //[cite: 1]
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 16), //[cite: 1]
                   Center(
                     child: TextButton(
-                      onPressed: _launchHelpUrl,
+                      onPressed: _launchHelpUrl, //[cite: 1]
                       style: TextButton.styleFrom(
-                        foregroundColor: ThemeManager.instance.getMatchColor(),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 24,
-                        ),
+                        foregroundColor: ThemeManager.instance.getMatchColor(), //[cite: 1]
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), //[cite: 1]
                       ),
                       child: const Text(
                         'Need Help?',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.2), //[cite: 1]
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8), //[cite: 1]
                 ],
               ),
             ),

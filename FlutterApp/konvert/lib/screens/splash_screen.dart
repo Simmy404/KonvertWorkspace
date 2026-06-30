@@ -18,102 +18,117 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _isVideoFinished = false;
   bool _isImagesPreloaded = false;
 
-  final double videoExitPoint = 85 / 100; // end video when 85% finished
+  final double videoExitPoint = 85 / 100; // end video when 85% finished[cite: 3]
 
   @override
   void initState() {
     super.initState();
-
-    // Automatically resolves to 'assets/splash/konvert_splash_light.mp4' or '_dark.mp4'
     _controller = VideoPlayerController.asset(
-      ThemeManager.instance.getSplashScreen(),
+      ThemeManager.instance.getSplashScreen(), //[cite: 3]
     );
-
     _initializeVideoAndAssets();
   }
 
   Future<void> _initializeVideoAndAssets() async {
-    // 1. Initialize video controller
-    await _controller.initialize();
-    if (!mounted) return;
+    try {
+      await _controller.initialize(); //[cite: 3]
+      if (!mounted) return;
 
-    setState(() {});
-    _controller.play();
-    _controller.setVolume(0);
-    _controller.addListener(_checkVideoEnd);
+      setState(() {});
+      _controller.play(); //[cite: 3]
+      _controller.setVolume(0); //[cite: 3]
+      _controller.addListener(_checkVideoEnd); //[cite: 3]
+    } catch (e) {
+      debugPrint('Error initializing splash video: $e');
+      _isVideoFinished = true;
+    }
 
-    // 2. Start loading images in the background (Notice we don't 'await' this here
-    // so the video isn't blocked from playing while images download)
-    _preloadImages();
+    _preloadImages(); //[cite: 3]
   }
 
-  /// Downloads and caches 5 example images into memory
   Future<void> _preloadImages() async {
     try {
-      // 5 Example network images (Replace with your actual AssetImage or NetworkImage paths)
-      final List<ImageProvider> imagesToLoad = ThemeManager.instance
-          .getImagesToPreload();
-
-      // Use Future.wait to load all 5 images concurrently to save time
+      final List<ImageProvider> imagesToLoad = ThemeManager.instance.getImagesToPreload(); //[cite: 3]
       await Future.wait(
-        imagesToLoad.map((image) => precacheImage(image, context)),
+        imagesToLoad.map((image) => precacheImage(image, context).catchError((_) => true)),
       );
-
-      debugPrint('All 5 background images preloaded successfully.');
+      debugPrint('Splash images checked safely.');
     } catch (e) {
-      debugPrint('Error preloading images: $e');
+      debugPrint('Error preloading images: $e'); //[cite: 3]
     } finally {
-      // Whether it succeeded or failed, flag as done so the user isn't stuck
-      // on the splash screen forever if a network request fails.
       if (mounted) {
-        _isImagesPreloaded = true;
-        _checkNavigationReady();
+        _isImagesPreloaded = true; //[cite: 3]
+        _checkNavigationReady(); //[cite: 3]
       }
     }
   }
 
   bool canBypassOnboarding() {
-    return LegalManager.instance.hasAcceptedTerms;
+    return LegalManager.instance.hasAcceptedTerms; //[cite: 3]
   }
 
   void _checkVideoEnd() {
     if (_controller.value.isInitialized &&
-        _controller.value.position >=
-            (_controller.value.duration * videoExitPoint)) {
-      _controller.removeListener(_checkVideoEnd);
-      _isVideoFinished = true;
-      _checkNavigationReady();
+        _controller.value.position >= (_controller.value.duration * videoExitPoint)) { //[cite: 3]
+      _controller.removeListener(_checkVideoEnd); //[cite: 3]
+      _isVideoFinished = true; //[cite: 3]
+      _checkNavigationReady(); //[cite: 3]
     }
   }
 
-  // Ensures BOTH conditions are met before jumping to the onboarding route
   void _checkNavigationReady() {
-    if (_isVideoFinished && _isImagesPreloaded && mounted) {
+    if (_isVideoFinished && _isImagesPreloaded && mounted) { //[cite: 3]
       _navigateToNextScreen();
     }
   }
 
-  void _navigateToNextScreen() {
-    Widget nextScreen;
+  // Optimized pipeline handler to handle background preparation on the fly
+  Future<void> _navigateToNextScreen() async {
+    // Stop listening to splash updates to prevent double execution triggers
+    _controller.removeListener(_checkVideoEnd);
 
-    if (!canBypassOnboarding()) {
-      nextScreen = const WelcomeScreen();
+    if (!canBypassOnboarding()) { //[cite: 3]
+      // 1. We know onboarding is required. Create the next controller asset stream instance right here.
+      final welcomeVideoController = VideoPlayerController.asset(
+        ThemeManager.instance.getWelcomeBG(),
+      );
+
+      try {
+        // 2. Await initialization BEFORE the page routing begins
+        await welcomeVideoController.initialize();
+        welcomeVideoController.play();
+        welcomeVideoController.setLooping(true);
+        welcomeVideoController.setVolume(0);
+      } catch (e) {
+        debugPrint('Failed to warm up welcome video controller in transition: $e');
+      }
+
+      if (!mounted) {
+        welcomeVideoController.dispose();
+        return;
+      }
+
+      // Stop the splash video loop instantly to cleanly free up device hardware decoder layers
+      _controller.pause();
+
+      // 3. Hand off the completely warmed-up video player to the welcome viewport
+      Navigator.pushReplacement(
+        context,
+        PageTransitions.fadeTransition(WelcomeScreen(preinitializedController: welcomeVideoController)), //[cite: 3]
+      );
     } else {
-      // Temporary placeholder until you build your dashboard/home screen
-      nextScreen = const Scaffold(body: Center(child: Text('Home Screen')));
+      _controller.pause();
+      Navigator.pushReplacement(
+        context,
+        PageTransitions.fadeTransition(const Scaffold(body: Center(child: Text('Home Screen')))), //[cite: 3]
+      );
     }
-
-    // Uses your custom utility class for a clean, professional fade transition
-    Navigator.pushReplacement(
-      context,
-      PageTransitions.fadeTransition(nextScreen),
-    );
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_checkVideoEnd);
-    _controller.dispose();
+    _controller.removeListener(_checkVideoEnd); //[cite: 3]
+    _controller.dispose(); //[cite: 3]
     super.dispose();
   }
 
@@ -121,20 +136,20 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Colors.black,
+        color: Colors.black, //[cite: 3]
         child: Center(
-          child: _controller.value.isInitialized
+          child: _controller.value.isInitialized //[cite: 3]
               ? SizedBox.expand(
                   child: FittedBox(
-                    fit: BoxFit.cover,
+                    fit: BoxFit.cover, //[cite: 3]
                     child: SizedBox(
-                      width: _controller.value.size.width,
-                      height: _controller.value.size.height,
-                      child: VideoPlayer(_controller),
+                      width: _controller.value.size.width, //[cite: 3]
+                      height: _controller.value.size.height, //[cite: 3]
+                      child: VideoPlayer(_controller), //[cite: 3]
                     ),
                   ),
                 )
-              : const CircularProgressIndicator(color: Colors.white),
+              : const CircularProgressIndicator(color: Colors.white), //[cite: 3]
         ),
       ),
     );
