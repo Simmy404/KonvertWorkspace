@@ -1,16 +1,24 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
+import 'managers/app_manager.dart';
+import 'managers/error_manager.dart';
+import 'managers/legal_manager.dart';
+import 'managers/theme_manager.dart';
+import 'services/storage_service.dart';
 import 'screens/splash_screen.dart';
-import 'managers/legal_manager.dart'; // Import your new manager
-import 'managers/theme_manager.dart'; // Import your new manager
 
 void main() async {
+  // 1. THIS IS THE CRITICAL LINE. 
+  // It guarantees the engine is running before async platform channels are called.
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize persistent states cleanly before UI generation
-  await LegalManager.instance.init();
-  await ThemeManager.instance.init(); // Add this line
+  // 2. Boot up hardware storage first
+  await StorageService.instance.init();
   
+  // 3. Hydrate dependent managers
+  await ThemeManager.instance.init();
+  await LegalManager.instance.init();
+  
+  // 4. Finally, mount the UI
   runApp(const MyApp());
 }
 
@@ -20,8 +28,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Konvert',
       debugShowCheckedModeBanner: false,
-      title: 'Konvert App',
+      navigatorKey: ErrorManager.instance.navigatorKey,
+      scaffoldMessengerKey: ErrorManager.instance.messengerKey,
+      theme: ThemeData.dark(), // We will link this to ThemeManager later if needed
       home: const SplashScreen(),
     );
   }

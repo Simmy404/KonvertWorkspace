@@ -1,5 +1,7 @@
 // lib/screens/welcome_screen.dart
 import 'package:Konvert/managers/theme_manager.dart';
+import 'package:Konvert/managers/error_manager.dart';
+import 'package:Konvert/models/error_struct.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -47,11 +49,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Future<void> _launchHelpUrl() async {
     final Uri url = Uri.parse('https://example.com/support'); //[cite: 1]
+
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) { //[cite: 1]
         debugPrint('Could not launch target URL: $url'); //[cite: 1]
       }
     } catch (e) {
+      ErrorManager.instance.showToastError(ErrorStruct(code: '1001', technicalDetails: e.toString()), 3);
       debugPrint('Error attempting to launch URL: $e'); //[cite: 1]
     }
   }
@@ -61,6 +65,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     // Safely tear down the video pipeline when the user completes onboarding
     _bgController.dispose(); //[cite: 1]
     super.dispose();
+  }
+
+  void _startTOSPage()
+  {
+    ErrorManager.instance.showCriticalErrorScreen(  
+      const ErrorStruct(
+        code: '2001',
+        technicalDetails: 'User attempted to proceed without accepting Terms of Service.',
+      ),
+    );
   }
 
   @override
@@ -129,7 +143,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     width: double.infinity, //[cite: 1]
                     height: 64, //[cite: 1]
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _startTOSPage,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ThemeManager.instance.getPrimaryColor(), //[cite: 1]
                         foregroundColor: ThemeManager.instance.getContrastColor(), //[cite: 1]
