@@ -74,11 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
       // 2. Save user to local storage
       await StorageService.instance.setCurrentUser(authenticatedUser);
       
-      // 3. Transition to Dashboard
       if (!mounted) return;
+      
+      // 3. Instantly transition to Dashboard
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeSlideUpTransition(const DashboardScreen()), 
+        PageTransitions.instantTransition(const DashboardScreen()), 
       );
     }
 

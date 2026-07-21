@@ -35,6 +35,9 @@ class ThemeManager {
   final String loginMainDark = 'assets/extras/loginMainDark.png';
   final String loginMainLight = 'assets/extras/loginMainLight.png';
 
+  final String syncMainDark = 'assets/extras/syncMainDark.png';
+  final String syncMainLight = 'assets/extras/syncMainLight.png';
+
   final Color contrastColorDark = const Color.fromARGB(255, 0, 0, 0);
   final Color contrastColorLight = const Color.fromARGB(255, 255, 255, 255);
 
@@ -95,6 +98,7 @@ class ThemeManager {
   String getThemeMain() => _isLightMode ? themeMainLight : themeMainDark;
   String getDomainMain() => _isLightMode ? domainMainLight : domainMainDark;
   String getLoginMain() => _isLightMode ? loginMainLight : loginMainDark;
+  String getSyncMain() => _isLightMode ? syncMainLight : syncMainDark;
   
   Color getContrastColor() => _isLightMode ? contrastColorLight : contrastColorDark;
   Color getMatchColor() => _isLightMode ? matchColorLight : matchColorDark;
@@ -112,7 +116,10 @@ class ThemeManager {
     NetworkImage(getWelcomeBG()), 
     NetworkImage(getLogoMark()), 
     NetworkImage(getMainBG()), 
-    NetworkImage(getThemeMain())
+    NetworkImage(getThemeMain()),
+    NetworkImage(getSyncMain()),
+    NetworkImage(getDomainMain()),
+    NetworkImage(getLoginMain())
   ];
 
   Future<void> setThemeStyle(Themes style) async {

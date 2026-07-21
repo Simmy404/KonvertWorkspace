@@ -2,15 +2,62 @@
 import 'package:flutter/material.dart';
 import '../managers/theme_manager.dart';
 import '../services/storage_service.dart';
+import '../utils/page_transitions.dart';
+import 'master_sync_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _needsInitialSync = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInitialSync();
+  }
+
+  void _checkInitialSync() {
+    final targets = StorageService.instance.getTargets();
+    if (targets['month_target'] == '0' && targets['total_sales'] == '0') {
+      _needsInitialSync = true;
+      
+      // Push instantly to Master Sync after the layout initializes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            PageTransitions.instantTransition(const MasterSyncScreen()),
+          );
+        }
+      });
+    }
+  }
+
+  void _triggerManualSync() {
+    Navigator.push(
+      context,
+      PageTransitions.fadeTransition(const MasterSyncScreen()),
+    ).then((_) {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Retrieve the active user data to demonstrate context availability
+    // SECURITY: Black out the screen for 1 frame to prevent any glimpses 
+    // of the Dashboard UI if a master sync is required.
+    if (_needsInitialSync) {
+      return const Scaffold(backgroundColor: Colors.black);
+    }
+
     final currentUser = StorageService.instance.getCurrentUser();
     final currentCompany = StorageService.instance.getCurrentCompany();
+    final targets = StorageService.instance.getTargets();
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -29,12 +76,21 @@ class DashboardScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-                  Image.asset(
-                    ThemeManager.instance.getLogoMark(), 
-                    width: 42,
-                    height: 32,
-                    fit: BoxFit.contain,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Image.asset(
+                        ThemeManager.instance.getLogoMark(), 
+                        width: 42,
+                        height: 32,
+                        fit: BoxFit.contain,
+                      ),
+                      IconButton(
+                        onPressed: _triggerManualSync,
+                        icon: Icon(Icons.sync, color: ThemeManager.instance.getMatchColor()),
+                        tooltip: 'Force Master Sync',
+                      ),
+                    ],
                   ),
                   const Spacer(),
                   Center(
@@ -52,7 +108,9 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Connected to: ${currentCompany?['name'] ?? 'Unknown Company'}',
+                          'Company: ${currentCompany?['name'] ?? 'Unknown'}\n'
+                          'Target: ${targets['month_target']}',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: ThemeManager.instance.getGreyTransparent5(),
                             fontSize: 16,

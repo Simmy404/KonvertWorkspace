@@ -63,6 +63,15 @@ class PageTransitions {
     );
   }
 
+  // Zero-duration transition for invisible routing
+  static Route instantTransition(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (_, __, ___) => page,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
   // Premium: Fade + Scale + Slide
   static Route premiumTransition(Widget page, {Duration duration = const Duration(milliseconds: 800)}) {
     return PageRouteBuilder(

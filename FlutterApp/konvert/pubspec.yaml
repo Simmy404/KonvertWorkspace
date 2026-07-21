@@ -39,6 +39,8 @@ dependencies:
   provider: ^6.1.1  # Add this line
   shared_preferences: ^2.2.3
   http: ^1.2.0  # Add this line
+  sqflite: ^2.3.0
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:

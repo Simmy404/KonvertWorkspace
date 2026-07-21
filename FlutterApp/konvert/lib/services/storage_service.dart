@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';// Add this import to the top of storage_service.dart
 import 'dart:convert';
+import 'database_service.dart';
 import '../models/user.dart';
 
 class StorageService {
@@ -28,6 +29,67 @@ class StorageService {
   }
 
 
+
+
+
+
+  // ==========================================
+  // DATABASE STUFF
+  // ==========================================
+
+
+
+  // --- TARGET STORAGE (SharedPreferences) ---
+  static const String _targetMonthKey = 'target_month';
+  static const String _targetTotalKey = 'target_total';
+  static const String _targetTodayKey = 'target_today';
+  static const String _targetOrdersKey = 'target_orders';
+
+  Future<void> setTargets({
+    required String monthTarget,
+    required String totalSales,
+    required String todaySales,
+    required String noOfOrders,
+  }) async {
+    await setString(_targetMonthKey, monthTarget);
+    await setString(_targetTotalKey, totalSales);
+    await setString(_targetTodayKey, todaySales);
+    await setString(_targetOrdersKey, noOfOrders);
+  }
+
+  Map<String, String> getTargets() {
+    return {
+      'month_target': getString(_targetMonthKey) ?? '0',
+      'total_sales': getString(_targetTotalKey) ?? '0',
+      'today_sales': getString(_targetTodayKey) ?? '0',
+      'no_of_orders': getString(_targetOrdersKey) ?? '0',
+    };
+  }
+
+  // --- DATABASE EXPOSURE (SQLite) ---
+  Future<void> saveSyncBricks(List<dynamic> brickList) async {
+    try {
+      await DatabaseService.instance.syncBricks(brickList);
+    } catch (e) {
+      _handleSilentError('DB-001', 'Failed to save bricks: $e');
+    }
+  }
+
+  Future<void> saveSyncCustomers(List<dynamic> customerList) async {
+    try {
+      await DatabaseService.instance.syncCustomers(customerList);
+    } catch (e) {
+      _handleSilentError('DB-002', 'Failed to save customers: $e');
+    }
+  }
+
+  Future<void> saveSyncProducts(List<dynamic> productList) async {
+    try {
+      await DatabaseService.instance.syncProducts(productList);
+    } catch (e) {
+      _handleSilentError('DB-003', 'Failed to save products: $e');
+    }
+  }
 
 
 

@@ -14,6 +14,7 @@ class ApiService {
 
 
   /// Authenticates the user against the currently saved domain
+/// Authenticates the user against the currently saved domain
   Future<User?> authenticateUser({
     required String username,
     required String password,
@@ -45,19 +46,30 @@ class ApiService {
 
       if (response.statusCode == 200) {
         try {
+          // 1. Try parsing as JSON first (Success case)
           final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-          // Parse the JSON into our User model
           return User.fromJson(jsonResponse, username);
+          
         } catch (e) {
-          debugPrint('JSON Parsing failed. Server responded: ${response.body}');
+          // 2. If JSON parsing fails, it means the PHP script returned a plain-text error message.
+          debugPrint('Server rejected login: ${response.body}');
+          
+          // Display the exact message from your PHP backend directly to the user
           ErrorManager.instance.showToastError(
-            const ErrorStruct(code: 'API-003', technicalDetails: 'Invalid credentials or server error.'),
+            ErrorStruct(
+              code: 'AUTH-REJECTED', 
+              technicalDetails: response.body.trim(), 
+            ),
             4,
           );
           return null;
         }
       } else {
         debugPrint('Server returned status code: ${response.statusCode}');
+        ErrorManager.instance.showToastError(
+          ErrorStruct(code: 'API-003', technicalDetails: 'Server error: ${response.statusCode}'),
+          3,
+        );
         return null;
       }
     } catch (e) {
@@ -68,7 +80,6 @@ class ApiService {
       return null;
     }
   }
-
 
 
 
@@ -117,4 +128,88 @@ class ApiService {
       return false;
     }
   }
+
+
+
+
+  // ADD to lib/services/api_service.dart
+
+  // Generic POST wrapper to reduce boilerplate for sync requests
+  Future<Map<String, dynamic>?> _postSyncRequest(String endpoint) async {
+    final company = StorageService.instance.getCurrentCompany();
+    final user = StorageService.instance.getCurrentUser();
+
+    if (company == null || user == null) return null;
+
+    final String domain = company['url']!;
+    final cleanDomain = domain.endsWith('/') ? domain.substring(0, domain.length - 1) : domain;
+    final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/$endpoint');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          "userid": user.id.toString(),
+          "bid": user.bid.toString(),
+        },
+      ).timeout(const Duration(seconds: 25)); // Slightly longer timeout for large syncs
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        debugPrint('Sync Error ($endpoint): Status ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Sync Exception ($endpoint): $e');
+      return null;
+    }
+  }
+
+  // --- INDIVIDUAL SYNC MODULES ---
+
+  Future<bool> syncBricks() async {
+    final data = await _postSyncRequest('getBricks.php');
+    if (data != null && data.containsKey('bricklist')) {
+      await StorageService.instance.saveSyncBricks(data['bricklist']);
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> syncProducts() async {
+    final data = await _postSyncRequest('getProducts.php');
+    if (data != null && data.containsKey('productlist')) {
+      await StorageService.instance.saveSyncProducts(data['productlist']);
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> syncCustomers() async {
+    final data = await _postSyncRequest('getCustomers.php');
+    if (data != null && data.containsKey('customerlist')) {
+      await StorageService.instance.saveSyncCustomers(data['customerlist']);
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> syncTarget() async {
+    final data = await _postSyncRequest('getTarget.php');
+    if (data != null && data.containsKey('targetlist')) {
+      final targetData = data['targetlist'][0];
+      await StorageService.instance.setTargets(
+        monthTarget: targetData['month_target'].toString(),
+        totalSales: targetData['total_sales'].toString(),
+        todaySales: targetData['today_sales'].toString(),
+        noOfOrders: targetData['no_of_orders'].toString(),
+      );
+      return true;
+    }
+    return false;
+  }
+
+
+  
 }
