@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_html: ^3.0.0-beta.2 # Use the latest stable or beta compatible with your setup
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -55,7 +56,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: false   # Set to true if you also want iOS icons
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icons/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -72,6 +73,10 @@ flutter:
     - assets/backgrounds/
     - assets/branding/
     - assets/features/
+    - assets/extras/
+    - assets/buttons/
+    - assets/icons/
+    - assets/legal/tos.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:

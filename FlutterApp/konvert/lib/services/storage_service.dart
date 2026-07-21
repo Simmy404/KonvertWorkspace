@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../managers/error_manager.dart';
-import '../models/error_struct.dart';
+import '../models/error_struct.dart';// Add this import to the top of storage_service.dart
+import 'dart:convert';
+import '../models/user.dart';
 
 class StorageService {
   StorageService._internal();
@@ -23,6 +25,106 @@ class StorageService {
         ),
       );
     }
+  }
+
+
+
+
+
+  
+  // ==========================================
+  // API KEY DATA
+  // ==========================================
+
+
+  static const String _apiKey = 'saved_api_key';
+
+  // --- API KEY STORAGE ---
+  Future<bool> setApiKey(String key) async {
+    return await setString(_apiKey, key);
+  }
+
+  String? getApiKey() {
+    return getString(_apiKey);
+  }
+
+
+  
+  // ==========================================
+  // USER DATA
+  // ==========================================
+
+  static const String _currentUserKey = 'current_user_cache';
+
+
+  // --- USER STORAGE ---
+  Future<bool> setCurrentUser(User user) async {
+    try {
+      final String payload = jsonEncode(user.toJson());
+      return await setString(_currentUserKey, payload);
+    } catch (e) {
+      _handleSilentError('STR-009', 'Failed to encode user data: $e');
+      return false;
+    }
+  }
+
+  User? getCurrentUser() {
+    try {
+      final String? payload = getString(_currentUserKey);
+      if (payload != null) {
+        final Map<String, dynamic> decoded = jsonDecode(payload);
+        return User(
+          id: decoded['id'] as int,
+          name: decoded['name'] as String,
+          bid: decoded['bid'] as int,
+          category: decoded['category'] as String,
+          isOnline: decoded['isOnline'] as bool,
+          googleApi: decoded['googleApi'] as String,
+          username: decoded['username'] as String,
+        );
+      }
+    } catch (e) {
+      _handleSilentError('STR-010', 'Failed to decode user data: $e');
+    }
+    return null;
+  }
+
+
+  // ==========================================
+  // COMPANY DATA
+  // ==========================================
+
+  static const String _currentCompanyKey = 'current_company_cache';
+
+  /// Saves the active company to local storage
+  Future<bool> setCurrentCompany({required String name, required String url}) async {
+    try {
+      final String payload = jsonEncode({
+        'name': name,
+        'url': url,
+      });
+      return await setString(_currentCompanyKey, payload);
+    } catch (e) {
+      _handleSilentError('STR-007', 'Failed to encode company data: $e');
+      return false;
+    }
+  }
+
+  /// Retrieves the active company from local storage. Returns null if none exists.
+  Map<String, String>? getCurrentCompany() {
+    try {
+      final String? payload = getString(_currentCompanyKey);
+      if (payload != null) {
+        final Map<String, dynamic> decoded = jsonDecode(payload);
+        return {
+          'name': decoded['name'].toString(),
+          'url': decoded['url'].toString(),
+        };
+      }
+    } catch (e) {
+      _handleSilentError('STR-008', 'Failed to decode company data: $e');
+    }
+    return null;
   }
 
   // ==========================================

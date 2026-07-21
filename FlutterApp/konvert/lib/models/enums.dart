@@ -1,3 +1,2 @@
-
-// Enum to define the target custom themes
-enum Themes { accent, neon }
+// lib/models/enums.dart
+enum Themes { accent, neon, system }
