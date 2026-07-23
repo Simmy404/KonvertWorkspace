@@ -1,7 +1,7 @@
 // lib/screens/lock_screen.dart
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
 import '../managers/theme_manager.dart';
+import '../managers/security_manager.dart';
 import '../services/storage_service.dart';
 import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
@@ -14,7 +14,6 @@ class LockScreen extends StatefulWidget {
 }
 
 class _LockScreenState extends State<LockScreen> {
-  final LocalAuthentication _auth = LocalAuthentication();
   bool _isAuthenticating = false;
   String _userIdentity = '';
 
@@ -44,23 +43,9 @@ class _LockScreenState extends State<LockScreen> {
     });
 
     try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate =
-          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
-
-      if (!canAuthenticate) {
-        // Device has no screen lock or biometrics configured. Proceed for UX or warn user.
-        _onUnlockSuccess();
-        return;
-      }
-
-      final bool didAuthenticate = await _auth.authenticate(
-        localizedReason: 'Please authenticate to unlock Konvert',
-        options: const AuthenticationOptions(
-          biometricOnly: false,
-          stickyAuth: true,
-          useErrorDialogs: true,
-        ),
+      final bool didAuthenticate =
+          await SecurityManager.instance.authenticateWithDeviceLock(
+        reason: 'Please authenticate to unlock Konvert',
       );
 
       if (didAuthenticate && mounted) {

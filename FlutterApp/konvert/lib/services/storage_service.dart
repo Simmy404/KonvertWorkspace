@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../managers/error_manager.dart';
-import '../models/error_struct.dart';// Add this import to the top of storage_service.dart
+import '../models/error_struct.dart'; // Add this import to the top of storage_service.dart
 import 'dart:convert';
 import 'database_service.dart';
 import '../models/user.dart';
@@ -12,7 +12,7 @@ class StorageService {
 
   SharedPreferences? _prefs;
 
-  /// Initializes the storage engine. 
+  /// Initializes the storage engine.
   /// MUST be called in main.dart before initializing other managers.
   Future<void> init() async {
     try {
@@ -28,16 +28,9 @@ class StorageService {
     }
   }
 
-
-
-
-
-
   // ==========================================
   // DATABASE STUFF
   // ==========================================
-
-
 
   // --- TARGET STORAGE (SharedPreferences) ---
   static const String _targetMonthKey = 'target_month';
@@ -108,13 +101,9 @@ class StorageService {
     }
   }
 
-
-
-  
   // ==========================================
   // API KEY DATA
   // ==========================================
-
 
   static const String _apiKey = 'saved_api_key';
 
@@ -127,14 +116,11 @@ class StorageService {
     return getString(_apiKey);
   }
 
-
-  
   // ==========================================
   // USER DATA
   // ==========================================
 
   static const String _currentUserKey = 'current_user_cache';
-
 
   // --- USER STORAGE ---
   Future<bool> setCurrentUser(User user) async {
@@ -178,7 +164,6 @@ class StorageService {
     }
   }
 
-
   // ==========================================
   // COMPANY DATA
   // ==========================================
@@ -186,12 +171,12 @@ class StorageService {
   static const String _currentCompanyKey = 'current_company_cache';
 
   /// Saves the active company to local storage
-  Future<bool> setCurrentCompany({required String name, required String url}) async {
+  Future<bool> setCurrentCompany({
+    required String name,
+    required String url,
+  }) async {
     try {
-      final String payload = jsonEncode({
-        'name': name,
-        'url': url,
-      });
+      final String payload = jsonEncode({'name': name, 'url': url});
       return await setString(_currentCompanyKey, payload);
     } catch (e) {
       _handleSilentError('STR-007', 'Failed to encode company data: $e');
@@ -294,11 +279,8 @@ class StorageService {
   void _handleSilentError(String code, String details) {
     debugPrint('StorageService Error [$code]: $details');
     ErrorManager.instance.showToastError(
-      ErrorStruct(
-        code: code,
-        technicalDetails: details,
-      ),
-      3, 
+      ErrorStruct(code: code, technicalDetails: details),
+      3,
     );
   }
 }

@@ -1,6 +1,7 @@
 // lib/services/database_service.dart
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../models/booking_data.dart';
 
 class DatabaseService {
   DatabaseService._internal();
@@ -244,4 +245,105 @@ class DatabaseService {
     ));
     return result ?? 0;
   }
+
+  // --- GETTERS FOR PLACE ORDER ---
+
+  Future<List<Map<String, dynamic>>> getAllBricks() async {
+    final db = await instance.database;
+    final res = await db.query('bricks');
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllCustomers() async {
+    final db = await instance.database;
+    final res = await db.query('customers');
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getCustomersByBrickId(String brickId) async {
+    final db = await instance.database;
+    final res = await db.query(
+      'customers',
+      where: 'customer_brickid = ?',
+      whereArgs: [brickId],
+    );
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getCustomersByBrickIdAndName(String brickId, String name) async {
+    final db = await instance.database;
+    final res = await db.query(
+      'customers',
+      where: 'customer_brickid = ? AND customer_name LIKE ?',
+      whereArgs: [brickId, '%$name%'],
+    );
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllProducts() async {
+    final db = await instance.database;
+    final res = await db.query('products');
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getProductsByName(String name) async {
+    final db = await instance.database;
+    final res = await db.query(
+      'products',
+      where: 'product_name LIKE ?',
+      whereArgs: ['%$name%'],
+    );
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getOTCProducts() async {
+    final db = await instance.database;
+    final res = await db.query(
+      'products',
+      where: "product_is_otc != ''",
+    );
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  // --- BOOKING OPERATIONS ---
+
+  Future<void> insertBooking(BookingData booking) async {
+    final db = await instance.database;
+    await db.insert(
+      'bookings',
+      booking.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<BookingData>> getAllBookings() async {
+    final db = await instance.database;
+    final maps = await db.query('bookings', orderBy: 'booking_invoice ASC');
+    return maps.map((json) => BookingData.fromJson(json)).toList();
+  }
+
+  Future<List<BookingData>> getBookingsByInvoice(String invoice) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'bookings',
+      where: 'booking_invoice = ?',
+      whereArgs: [invoice],
+    );
+    return maps.map((json) => BookingData.fromJson(json)).toList();
+  }
+
+  Future<void> deleteBookingByInvoice(String invoice) async {
+    final db = await instance.database;
+    await db.delete(
+      'bookings',
+      where: 'booking_invoice = ?',
+      whereArgs: [invoice],
+    );
+  }
+
+  Future<void> deleteAllBookings() async {
+    final db = await instance.database;
+    await db.delete('bookings');
+  }
+
 }

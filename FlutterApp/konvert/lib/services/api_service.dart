@@ -5,6 +5,7 @@ import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import 'dart:convert';
 import '../models/user.dart';
+import '../models/booking_data.dart';
 import '../services/storage_service.dart';
 
 class ApiService {
@@ -238,4 +239,71 @@ class ApiService {
     }
     return false;
   }
+
+  Future<bool> uploadBookings(List<BookingData> bookings) async {
+    final company = StorageService.instance.getCurrentCompany();
+    if (company == null) return false;
+
+    String domain = company['url']!;
+    if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+      domain = 'https://$domain';
+    }
+    final cleanDomain = domain.endsWith('/')
+        ? domain.substring(0, domain.length - 1)
+        : domain;
+    final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/uploadBookings.php');
+
+    try {
+      final jsonList = bookings.map((b) => b.toJson()).toList();
+      final body = jsonEncode(jsonList);
+
+      final response = await http.post(
+        url,
+        body: {"data": body},
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Sync Exception (uploadBookings): $e');
+      return false;
+    }
+  }
+
+  Future<List<BookingData>?> downloadBookings() async {
+    final company = StorageService.instance.getCurrentCompany();
+    final user = StorageService.instance.getCurrentUser();
+    if (company == null || user == null) return null;
+
+    String domain = company['url']!;
+    if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+      domain = 'https://$domain';
+    }
+    final cleanDomain = domain.endsWith('/')
+        ? domain.substring(0, domain.length - 1)
+        : domain;
+    final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/downloadBookings.php');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {"userid": user.id.toString()},
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded.containsKey('bookings')) {
+          final List<dynamic> list = decoded['bookings'];
+          return list.map((json) => BookingData.fromJson(json)).toList();
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Sync Exception (downloadBookings): $e');
+      return null;
+    }
+  }
 }
+

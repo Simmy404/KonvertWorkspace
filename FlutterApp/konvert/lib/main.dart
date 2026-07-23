@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'managers/app_manager.dart';
 import 'managers/error_manager.dart';
 import 'managers/legal_manager.dart';
+import 'managers/location_manager.dart';
 import 'managers/theme_manager.dart';
 import 'models/error_struct.dart';
 import 'services/storage_service.dart';
@@ -46,6 +47,7 @@ void main() async {
   // 4. Hydrate dependent managers
   await ThemeManager.instance.init();
   await LegalManager.instance.init();
+  await LocationManager.instance.init();
 
   // 5. Finally, mount the UI
   runApp(const MyApp());

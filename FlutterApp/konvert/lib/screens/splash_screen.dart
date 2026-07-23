@@ -32,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.asset(
-      ThemeManager.instance.getSplashScreen(), 
+      ThemeManager.instance.getSplashScreen(),
     );
     _initializeVideoAndAssets();
   }
@@ -43,61 +43,65 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       setState(() {});
-      _controller.play(); 
-      _controller.setVolume(0); 
-      _controller.addListener(_checkVideoEnd); 
+      _controller.play();
+      _controller.setVolume(0);
+      _controller.addListener(_checkVideoEnd);
     } catch (e) {
       // Major failure: Splash video engine crashed
       ErrorManager.instance.showCriticalErrorScreen(
         ErrorStruct(
           code: 'SPL-001',
-          technicalDetails: 'Splash video engine failed to initialize: $e'
-        )
+          technicalDetails: 'Splash video engine failed to initialize: $e',
+        ),
       );
-      return; 
+      return;
     }
 
-    _preloadImages(); 
+    _preloadImages();
   }
 
   Future<void> _preloadImages() async {
     try {
-      final List<ImageProvider> imagesToLoad = ThemeManager.instance.getImagesToPreload(); 
+      final List<ImageProvider> imagesToLoad = ThemeManager.instance
+          .getImagesToPreload();
       await Future.wait(
-        imagesToLoad.map((image) => precacheImage(image, context).catchError((_) => true)),
+        imagesToLoad.map(
+          (image) => precacheImage(image, context).catchError((_) => true),
+        ),
       );
     } catch (e) {
       // Minor failure: Images didn't cache. Non-blocking, just show toast.
       ErrorManager.instance.showToastError(
         ErrorStruct(
           code: 'SPL-002',
-          technicalDetails: 'Assets failed to preload: $e'
+          technicalDetails: 'Assets failed to preload: $e',
         ),
-        3
+        3,
       );
     } finally {
       if (mounted) {
-        _isImagesPreloaded = true; 
-        _checkNavigationReady(); 
+        _isImagesPreloaded = true;
+        _checkNavigationReady();
       }
     }
   }
 
   bool canBypassOnboarding() {
-    return LegalManager.instance.hasAcceptedTerms; 
+    return LegalManager.instance.hasAcceptedTerms;
   }
 
   void _checkVideoEnd() {
     if (_controller.value.isInitialized &&
-        _controller.value.position >= (_controller.value.duration * videoExitPoint)) { 
-      _controller.removeListener(_checkVideoEnd); 
-      _isVideoFinished = true; 
-      _checkNavigationReady(); 
+        _controller.value.position >=
+            (_controller.value.duration * videoExitPoint)) {
+      _controller.removeListener(_checkVideoEnd);
+      _isVideoFinished = true;
+      _checkNavigationReady();
     }
   }
 
   void _checkNavigationReady() {
-    if (_isVideoFinished && _isImagesPreloaded && mounted) { 
+    if (_isVideoFinished && _isImagesPreloaded && mounted) {
       _navigateToNextScreen();
     }
   }
@@ -135,8 +139,8 @@ class _SplashScreenState extends State<SplashScreen> {
         ErrorManager.instance.showCriticalErrorScreen(
           ErrorStruct(
             code: 'SPL-003',
-            technicalDetails: 'Welcome transition video pipeline failed: $e'
-          )
+            technicalDetails: 'Welcome transition video pipeline failed: $e',
+          ),
         );
         return;
       }
@@ -148,7 +152,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeTransition(WelcomeScreen(preinitializedController: welcomeVideoController)), 
+        PageTransitions.fadeTransition(
+          WelcomeScreen(preinitializedController: welcomeVideoController),
+        ),
       );
       return;
     }
@@ -157,14 +163,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Navigator.pushReplacement(
       context,
-      PageTransitions.fadeTransition(nextScreen), 
+      PageTransitions.fadeTransition(nextScreen),
     );
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_checkVideoEnd); 
-    _controller.dispose(); 
+    _controller.removeListener(_checkVideoEnd);
+    _controller.dispose();
     super.dispose();
   }
 
@@ -172,20 +178,20 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Colors.black, 
+        color: Colors.black,
         child: Center(
-          child: _controller.value.isInitialized 
+          child: _controller.value.isInitialized
               ? SizedBox.expand(
                   child: FittedBox(
-                    fit: BoxFit.cover, 
+                    fit: BoxFit.cover,
                     child: SizedBox(
-                      width: _controller.value.size.width, 
-                      height: _controller.value.size.height, 
-                      child: VideoPlayer(_controller), 
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
                     ),
                   ),
                 )
-              : const CircularProgressIndicator(color: Colors.white), 
+              : const CircularProgressIndicator(color: Colors.white),
         ),
       ),
     );
