@@ -1,5 +1,6 @@
 // lib/screens/domain_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../managers/theme_manager.dart';
 import '../managers/error_manager.dart';
@@ -197,147 +198,155 @@ class _DomainScreenState extends State<DomainScreen> {
 
     final Color helpTextColor = isLight ? Colors.black : Colors.white;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              ThemeManager.instance.getMainBG(),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  ColoredBox(color: bgColor),
-            ),
-          ),
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                ThemeManager.instance.getMainBG(),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    ColoredBox(color: bgColor),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
+            ),
 
-                  // Brand Logo
-                  Image.asset(
-                    ThemeManager.instance.getLogoMark(),
-                    width: 44,
-                    height: 34,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      Icons.blur_on,
-                      color: isLight ? Colors.blue : Colors.white,
-                      size: 36,
-                    ),
-                  ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
 
-                  const SizedBox(height: 20),
-
-                  // Main Domain Selection Container
-                  Expanded(
-                    child: _isExpanded
-                        ? _buildExpandedSelector(
-                            outerBoxBg: outerBoxBg,
-                            outerBoxBorder: outerBoxBorder,
-                            searchBarBg: searchBarBg,
-                            searchBarBorder: searchBarBorder,
-                            searchIconColor: searchIconColor,
-                            searchTextColor: searchTextColor,
-                            cardBg: cardBg,
-                            selectedCardBorder: selectedCardBorder,
-                            cardTitleColor: cardTitleColor,
-                            cardUrlColor: cardUrlColor,
-                            bottomHeaderBg: bottomHeaderBg,
-                            bottomHeaderBorder: bottomHeaderBorder,
-                          )
-                        : _buildCollapsedView(
-                            bottomHeaderBg: bottomHeaderBg,
-                            bottomHeaderBorder: bottomHeaderBorder,
-                            cardTitleColor: cardTitleColor,
-                            cardUrlColor: cardUrlColor,
-                            inputIconColor: inputIconColor,
-                          ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // API Key Field
-                  _buildApiKeyField(
-                    inputBg: inputBg,
-                    inputBorder: inputBorder,
-                    inputIconColor: inputIconColor,
-                    inputHintColor: inputHintColor,
-                    textColor: searchTextColor,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _onConfirm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonBg,
-                        foregroundColor: buttonTextColor,
-                        disabledBackgroundColor: buttonBg.withOpacity(0.5),
-                        shape: const StadiumBorder(),
-                        elevation: 0,
+                    // Brand Logo
+                    Image.asset(
+                      ThemeManager.instance.getLogoMark(),
+                      width: 44,
+                      height: 34,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.blur_on,
+                        color: isLight ? Colors.blue : Colors.white,
+                        size: 36,
                       ),
-                      child: _isLoading
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: buttonTextColor,
-                                strokeWidth: 3,
-                              ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Main Domain Selection Container
+                    Expanded(
+                      child: _isExpanded
+                          ? _buildExpandedSelector(
+                              outerBoxBg: outerBoxBg,
+                              outerBoxBorder: outerBoxBorder,
+                              searchBarBg: searchBarBg,
+                              searchBarBorder: searchBarBorder,
+                              searchIconColor: searchIconColor,
+                              searchTextColor: searchTextColor,
+                              cardBg: cardBg,
+                              selectedCardBorder: selectedCardBorder,
+                              cardTitleColor: cardTitleColor,
+                              cardUrlColor: cardUrlColor,
+                              bottomHeaderBg: bottomHeaderBg,
+                              bottomHeaderBorder: bottomHeaderBorder,
                             )
-                          : Text(
-                              buttonText,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.2,
-                                color: buttonTextColor,
-                              ),
+                          : _buildCollapsedView(
+                              bottomHeaderBg: bottomHeaderBg,
+                              bottomHeaderBorder: bottomHeaderBorder,
+                              cardTitleColor: cardTitleColor,
+                              cardUrlColor: cardUrlColor,
+                              inputIconColor: inputIconColor,
                             ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                  // Need Help Link
-                  Center(
-                    child: TextButton(
-                      onPressed: _launchHelpUrl,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 16,
+                    // API Key Field
+                    _buildApiKeyField(
+                      inputBg: inputBg,
+                      inputBorder: inputBorder,
+                      inputIconColor: inputIconColor,
+                      inputHintColor: inputHintColor,
+                      textColor: searchTextColor,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Action Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 58,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _onConfirm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonBg,
+                          foregroundColor: buttonTextColor,
+                          disabledBackgroundColor: buttonBg.withOpacity(0.5),
+                          shape: const StadiumBorder(),
+                          elevation: 0,
                         ),
+                        child: _isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: buttonTextColor,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                buttonText,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.2,
+                                  color: buttonTextColor,
+                                ),
+                              ),
                       ),
-                      child: Text(
-                        'Need Help?',
-                        style: TextStyle(
-                          color: helpTextColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.2,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Need Help Link
+                    Center(
+                      child: TextButton(
+                        onPressed: _launchHelpUrl,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                        ),
+                        child: Text(
+                          'Need Help?',
+                          style: TextStyle(
+                            color: helpTextColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.2,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

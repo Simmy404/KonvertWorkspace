@@ -9,7 +9,7 @@ import 'services/storage_service.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
-  // 1. THIS IS THE CRITICAL LINE. 
+  // 1. THIS IS THE CRITICAL LINE.
   // It guarantees the engine is running before async platform channels are called.
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -30,10 +30,7 @@ void main() async {
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
     ErrorManager.instance.logErrorToConsole(
       'UNCAUGHT',
-      ErrorStruct(
-        code: 'ASYNC-001',
-        technicalDetails: error.toString(),
-      ),
+      ErrorStruct(code: 'ASYNC-001', technicalDetails: error.toString()),
       stack,
     );
     return true;
@@ -41,12 +38,16 @@ void main() async {
 
   // 2. Boot up hardware storage first
   await StorageService.instance.init();
-  
-  // 3. Hydrate dependent managers
+
+  // 3. Reset storage and cache if app version has changed
+  AppManager.instance.appVersion = '1.0.0';
+  await AppManager.instance.checkAndResetOnVersionChange();
+
+  // 4. Hydrate dependent managers
   await ThemeManager.instance.init();
   await LegalManager.instance.init();
-  
-  // 4. Finally, mount the UI
+
+  // 5. Finally, mount the UI
   runApp(const MyApp());
 }
 
@@ -63,7 +64,9 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           navigatorKey: ErrorManager.instance.navigatorKey,
           scaffoldMessengerKey: ErrorManager.instance.messengerKey,
-          theme: ThemeManager.instance.isLightMode ? ThemeData.light() : ThemeData.dark(),
+          theme: ThemeManager.instance.isLightMode
+              ? ThemeData.light()
+              : ThemeData.dark(),
           home: const SplashScreen(),
         );
       },

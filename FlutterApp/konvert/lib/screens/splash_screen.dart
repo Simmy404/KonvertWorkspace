@@ -8,6 +8,7 @@ import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import '../services/storage_service.dart';
 import 'welcome_screen.dart';
+import 'theme_selection_screen.dart';
 import 'dashboard_screen.dart';
 import 'domain_screen.dart';
 import 'login_screen.dart';
@@ -102,8 +103,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateToNextScreen() async {
     _controller.removeListener(_checkVideoEnd);
+    _controller.pause();
 
-    if (!canBypassOnboarding()) { 
+    final currentUser = StorageService.instance.getCurrentUser();
+    final currentCompany = StorageService.instance.getCurrentCompany();
+    final hasSelectedTheme = ThemeManager.instance.hasSelectedTheme;
+    final hasAcceptedTerms = LegalManager.instance.hasAcceptedTerms;
+
+    Widget nextScreen;
+    if (currentUser != null && currentCompany != null) {
+      nextScreen = const DashboardScreen(fromLogin: false);
+    } else if (currentCompany != null) {
+      nextScreen = const LoginScreen();
+    } else if (hasSelectedTheme) {
+      nextScreen = const DomainScreen();
+    } else if (hasAcceptedTerms) {
+      nextScreen = const ThemeSelectionScreen();
+    } else {
       final welcomeVideoController = VideoPlayerController.asset(
         ThemeManager.instance.getWelcomeBG(),
       );
@@ -129,31 +145,19 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
-      _controller.pause();
-
       Navigator.pushReplacement(
         context,
         PageTransitions.fadeTransition(WelcomeScreen(preinitializedController: welcomeVideoController)), 
       );
-    } else {
-      _controller.pause();
-      final currentUser = StorageService.instance.getCurrentUser();
-      final currentCompany = StorageService.instance.getCurrentCompany();
-
-      Widget nextScreen;
-      if (currentUser != null && currentCompany != null) {
-        nextScreen = const DashboardScreen(fromLogin: false);
-      } else if (currentCompany != null) {
-        nextScreen = const LoginScreen();
-      } else {
-        nextScreen = const DomainScreen();
-      }
-
-      Navigator.pushReplacement(
-        context,
-        PageTransitions.fadeTransition(nextScreen), 
-      );
+      return;
     }
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      PageTransitions.fadeTransition(nextScreen), 
+    );
   }
 
   @override

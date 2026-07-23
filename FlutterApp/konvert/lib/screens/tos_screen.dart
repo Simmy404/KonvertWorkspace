@@ -1,9 +1,10 @@
 // lib/screens/tos_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
+import '../managers/legal_manager.dart';
 import '../managers/theme_manager.dart';
 import '../services/storage_service.dart';
 import '../utils/page_transitions.dart';
@@ -80,6 +81,7 @@ class _TosScreenState extends State<TosScreen> {
 
   // LOGIC ADDED: Save to local storage and route
   Future<void> _acceptAndContinue() async {
+    await LegalManager.instance.setTermsAccepted(true);
     await StorageService.instance.setBool('hasCheckedTos', true);
     
     if (!mounted) return;
@@ -99,7 +101,14 @@ class _TosScreenState extends State<TosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.black, // Fallback color
       body: Stack(
         children: [
@@ -241,6 +250,7 @@ class _TosScreenState extends State<TosScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }

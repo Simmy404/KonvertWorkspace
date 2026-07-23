@@ -6,6 +6,7 @@ import '../services/database_service.dart';
 import '../utils/page_transitions.dart';
 import 'master_sync_screen.dart';
 import 'place_order_screen.dart';
+import 'login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final bool fromLogin;
@@ -96,6 +97,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Navigator.push(
       context,
       PageTransitions.fadeTransition(const PlaceOrderScreen()),
+    );
+  }
+
+  Future<void> _onLogout() async {
+    await StorageService.instance.logoutUser();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      PageTransitions.fadeTransition(const LoginScreen()),
     );
   }
 
@@ -408,10 +418,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildActivityCard(isDark),
                 _buildActivityCard(isDark),
                 _buildActivityCard(isDark),
+
+                const SizedBox(height: 16),
+
+                // Logout Button
+                _buildLogoutButton(isDark),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Logout Button Helper
+  Widget _buildLogoutButton(bool isDark) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _onLogout,
+        icon: const Icon(Icons.logout_rounded, size: 20, color: Color(0xFFFF5252)),
+        label: const Text(
+          'Log Out',
+          style: TextStyle(
+            color: Color(0xFFFF5252),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.2,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: const Color(0xFFFF5252).withOpacity(0.4),
+            width: 1.5,
+          ),
+          backgroundColor: isDark
+              ? const Color(0xFFFF5252).withOpacity(0.08)
+              : const Color(0xFFFF5252).withOpacity(0.05),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
     );
   }

@@ -168,6 +168,16 @@ class StorageService {
     return null;
   }
 
+  Future<bool> logoutUser() async {
+    try {
+      if (_prefs == null) await init();
+      return await _prefs!.remove(_currentUserKey);
+    } catch (e) {
+      _handleSilentError('STR-011', 'Failed to clear user cache: $e');
+      return false;
+    }
+  }
+
 
   // ==========================================
   // COMPANY DATA
@@ -204,6 +214,19 @@ class StorageService {
       _handleSilentError('STR-008', 'Failed to decode company data: $e');
     }
     return null;
+  }
+
+  /// Clears active company and API key from local storage
+  Future<bool> clearCurrentCompany() async {
+    try {
+      if (_prefs == null) await init();
+      await _prefs!.remove(_currentCompanyKey);
+      await _prefs!.remove(_apiKey);
+      return true;
+    } catch (e) {
+      _handleSilentError('STR-012', 'Failed to clear company data: $e');
+      return false;
+    }
   }
 
   // ==========================================

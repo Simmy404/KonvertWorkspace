@@ -8,6 +8,7 @@ import '../models/user.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'dashboard_screen.dart';
+import 'domain_screen.dart';
 import '../utils/page_transitions.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,10 +19,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController =
-      TextEditingController(text: 'huraira@hassanpharma.com');
-  final TextEditingController _passwordController =
-      TextEditingController(text: 'huraira123');
+  final TextEditingController _usernameController = TextEditingController(
+    text: 'huraira@hassanpharma.com',
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: 'huraira123',
+  );
 
   bool _isLoading = false;
   bool _obscurePassword = true; // State to track password visibility
@@ -87,7 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // 3. Instantly transition to Dashboard (flags auto-sync condition A: user came from login)
       Navigator.pushReplacement(
         context,
-        PageTransitions.instantTransition(const DashboardScreen(fromLogin: true)),
+        PageTransitions.instantTransition(
+          const DashboardScreen(fromLogin: true),
+        ),
       );
     }
 
@@ -96,185 +101,208 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // Dynamic Background Layer
-          Positioned.fill(
-            child: Image.asset(
-              ThemeManager.instance.getMainBG(),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const ColoredBox(color: Colors.black),
-            ),
-          ),
-
-          // Foreground UI Layer
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 24.0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          await StorageService.instance.clearCurrentCompany();
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            PageTransitions.fadeSlideUpTransition(const DomainScreen()),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            // Dynamic Background Layer
+            Positioned.fill(
+              child: Image.asset(
+                ThemeManager.instance.getMainBG(),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const ColoredBox(color: Colors.black),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
+            ),
 
-                  // MATCHED: Exact logo dimensions
-                  Image.asset(
-                    ThemeManager.instance.getLogoMark(),
-                    width: 42,
-                    height: 32,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image,
-                      color: Colors.white,
-                      size: 32,
+            // Foreground UI Layer
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 24.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+
+                    // MATCHED: Exact logo dimensions
+                    Image.asset(
+                      ThemeManager.instance.getLogoMark(),
+                      width: 42,
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 32,
+                      ),
                     ),
-                  ),
 
-                  // Expanded pushes content to dynamically fit space without scrolling
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Center(
-                        child: Image.asset(
-                          ThemeManager.instance.getLoginMain(),
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.account_circle,
-                                color: Colors.white,
-                                size: 100,
-                              ),
+                    // Expanded pushes content to dynamically fit space without scrolling
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Image.asset(
+                            ThemeManager.instance.getLoginMain(),
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.account_circle,
+                                  color: Colors.white,
+                                  size: 100,
+                                ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Headers
-                  Center(
-                    child: Text(
-                      'Sign In to\nyour Account',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: ThemeManager.instance.getMatchColor(),
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      'Enter your credentials',
-                      style: TextStyle(
-                        color: ThemeManager.instance.getGreyTransparent5(),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Username Field
-                  _buildTextField(
-                    controller: _usernameController,
-                    hintText: 'Enter username',
-                    icon: Icons.person_outline,
-                    obscureText: false,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Password Field with Visibility Toggle
-                  _buildTextField(
-                    controller: _passwordController,
-                    hintText: 'Enter password',
-                    icon: Icons.lock_outline,
-                    obscureText: _obscurePassword,
-                    isPassword: true,
-                    onToggleVisibility: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Sign In Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 64,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _onLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeManager.instance
-                            .getPrimaryColor(),
-                        foregroundColor: ThemeManager.instance
-                            .getContrastColor(),
-                        disabledBackgroundColor: ThemeManager.instance
-                            .getPrimaryColor()
-                            .withOpacity(0.5),
-                        shape: const StadiumBorder(),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: ThemeManager.instance.getContrastColor(),
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Help Button
-                  Center(
-                    child: TextButton(
-                      onPressed: _launchHelpUrl,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 24,
-                        ),
-                      ),
+                    // Headers
+                    Center(
                       child: Text(
-                        'Need Help?',
+                        'Sign In to\nyour Account',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: ThemeManager.instance.getMatchColor(),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                          height: 1,
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        'Enter your credentials',
+                        style: TextStyle(
+                          color: ThemeManager.instance.getGreyTransparent5(),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Username Field
+                    _buildTextField(
+                      controller: _usernameController,
+                      hintText: 'Enter username',
+                      icon: Icons.person_outline,
+                      obscureText: false,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Password Field with Visibility Toggle
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Enter password',
+                      icon: Icons.lock_outline,
+                      obscureText: _obscurePassword,
+                      isPassword: true,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Sign In Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 64,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _onLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ThemeManager.instance
+                              .getPrimaryColor(),
+                          foregroundColor: ThemeManager.instance
+                              .getContrastColor(),
+                          disabledBackgroundColor: ThemeManager.instance
+                              .getPrimaryColor()
+                              .withOpacity(0.5),
+                          shape: const StadiumBorder(),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: ThemeManager.instance
+                                      .getContrastColor(),
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Change Domain Button
+                    Center(
+                      child: TextButton(
+                        onPressed: () async {
+                          await StorageService.instance.clearCurrentCompany();
+                          if (!mounted) return;
+                          Navigator.pushReplacement(
+                            context,
+                            PageTransitions.fadeSlideUpTransition(
+                              const DomainScreen(),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 24,
+                          ),
+                        ),
+                        child: Text(
+                          'Change Company',
+                          style: TextStyle(
+                            color: ThemeManager.instance.getMatchColor(),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -132,9 +132,15 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     NetworkImage(getLoginMain())
   ];
 
+  bool get hasSelectedTheme {
+    return (StorageService.instance.getBool('has_selected_theme') ?? false) ||
+        (StorageService.instance.getString(_currentThemeKey) != null);
+  }
+
   Future<void> setThemeStyle(Themes style) async {
     _currentTheme = style;
     await StorageService.instance.setString(_currentThemeKey, style.name);
+    await StorageService.instance.setBool('has_selected_theme', true);
     notifyListeners();
   }
 }

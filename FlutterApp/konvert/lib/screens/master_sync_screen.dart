@@ -21,7 +21,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
   bool _syncingProducts = false;
   bool _syncingChemists = false;
   bool _syncingTarget = false;
-  
+
   bool _isComplete = false;
 
   @override
@@ -57,21 +57,21 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
 
       // Save today's date as last sync date
       final now = DateTime.now();
-      final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final todayStr =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       await StorageService.instance.setLastSyncDate(todayStr);
 
       // Done
       setState(() => _isComplete = true);
-      
+
       // Briefly show completed state before routing
       await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
-      
+
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeTransition(const DashboardScreen(fromLogin: false)), 
+        PageTransitions.fadeTransition(const DashboardScreen(fromLogin: false)),
       );
-
     } catch (e) {
       ErrorManager.instance.showToastError(
         ErrorStruct(code: 'SYNC-001', technicalDetails: e.toString()),
@@ -82,7 +82,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          PageTransitions.fadeTransition(const DashboardScreen()), 
+          PageTransitions.fadeTransition(const DashboardScreen()),
         );
       }
     }
@@ -98,28 +98,32 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
             child: Image.asset(
               ThemeManager.instance.getMainBG(),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ColoredBox(color: Colors.black),
+              errorBuilder: (context, error, stackTrace) =>
+                  const ColoredBox(color: Colors.black),
             ),
           ),
-          
+
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32.0,
+                    vertical: 24.0,
+                  ),
                   child: Align(
                     alignment: Alignment.topLeft,
                     child: Image.asset(
-                      ThemeManager.instance.getLogoMark(), 
+                      ThemeManager.instance.getLogoMark(),
                       width: 42,
                       height: 32,
                       fit: BoxFit.contain,
                     ),
                   ),
                 ),
-                
+
                 const Spacer(flex: 1),
-                
+
                 // 3D Sphere Element
                 Image.asset(
                   ThemeManager.instance.getSyncMain(),
@@ -127,7 +131,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Headings
                 Text(
                   'Syncing',
@@ -149,9 +153,9 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
                     letterSpacing: -0.5,
                   ),
                 ),
-                
+
                 const Spacer(flex: 2),
-                
+
                 // Dynamic Status List
                 _buildStatusText('Syncing Tour Plan...', _syncingTourPlan),
                 const SizedBox(height: 8),
@@ -160,17 +164,21 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
                 _buildStatusText('Syncing Chemists...', _syncingChemists),
                 const SizedBox(height: 8),
                 _buildStatusText('Syncing Target...', _syncingTarget),
-                
+
                 const SizedBox(height: 36),
-                
+
                 // Loader
-                _isComplete 
-                  ? Icon(Icons.check_circle_outline, color: ThemeManager.instance.getPrimaryColor(), size: 32)
-                  : CircularProgressIndicator(
-                      color: ThemeManager.instance.getPrimaryColor(),
-                      strokeWidth: 3,
-                    ),
-                
+                _isComplete
+                    ? Icon(
+                        Icons.check_circle_outline,
+                        color: ThemeManager.instance.getPrimaryColor(),
+                        size: 32,
+                      )
+                    : CircularProgressIndicator(
+                        color: ThemeManager.instance.getPrimaryColor(),
+                        strokeWidth: 3,
+                      ),
+
                 const SizedBox(height: 52),
               ],
             ),
@@ -186,7 +194,9 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
       duration: const Duration(milliseconds: 300),
       style: TextStyle(
         // Turns stark MatchColor when active, remains faded grey when waiting
-        color: isActive ? ThemeManager.instance.getMatchColor() : ThemeManager.instance.getGreyTransparent5(),
+        color: isActive
+            ? ThemeManager.instance.getMatchColor()
+            : ThemeManager.instance.getGreyTransparent5(),
         fontSize: 12,
         fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
         letterSpacing: -0.3,

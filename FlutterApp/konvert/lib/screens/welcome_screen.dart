@@ -1,5 +1,6 @@
 // lib/screens/welcome_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../managers/theme_manager.dart';
@@ -79,7 +80,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
 
   void _startTOSPage() {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       PageTransitions.fadeSlideUpTransition(const TosScreen()), 
     );
@@ -96,101 +97,109 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ThemeManager.instance.getContrastColor(), 
-      body: Stack(
-        children: [
-          if (_bgController.value.isInitialized)
-            SizedBox.expand(
-              child: FittedBox(
-                fit: BoxFit.cover, 
-                child: SizedBox(
-                  width: _bgController.value.size.width, 
-                  height: _bgController.value.size.height, 
-                  child: VideoPlayer(_bgController), 
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: ThemeManager.instance.getContrastColor(), 
+        body: Stack(
+          children: [
+            if (_bgController.value.isInitialized)
+              SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover, 
+                  child: SizedBox(
+                    width: _bgController.value.size.width, 
+                    height: _bgController.value.size.height, 
+                    child: VideoPlayer(_bgController), 
+                  ),
+                ),
+              ),
+
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0), 
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16), 
+                    Image.asset(
+                      ThemeManager.instance.getLogoMark(), 
+                      width: 42, 
+                      height: 32, 
+                      fit: BoxFit.contain, 
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.broken_image, color: Colors.white, size: 32); 
+                      },
+                    ),
+                    const Spacer(), 
+                    Text(
+                      'Keep Your\nSales Moving',
+                      style: TextStyle(
+                        color: ThemeManager.instance.getMatchColor(), 
+                        fontSize: 48, 
+                        fontWeight: FontWeight.bold, 
+                        height: 1.1, 
+                        letterSpacing: -1.0, 
+                      ),
+                    ),
+                    const SizedBox(height: 10), 
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          color: ThemeManager.instance.getMatchColor(), 
+                          fontSize: 16, 
+                          height: 1.4, 
+                          letterSpacing: -0.2, 
+                        ),
+                        children: const [
+                          TextSpan(text: 'Track sales, manage teams, and generate\ninsights from anywhere.\n'), 
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 48), 
+                    SizedBox(
+                      width: double.infinity, 
+                      height: 64, 
+                      child: ElevatedButton(
+                        onPressed: _startTOSPage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ThemeManager.instance.getPrimaryColor(), 
+                          foregroundColor: ThemeManager.instance.getContrastColor(), 
+                          shape: const StadiumBorder(), 
+                          elevation: 0, 
+                        ),
+                        child: const Text(
+                          'Get Started',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: -0.3), 
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16), 
+                    Center(
+                      child: TextButton(
+                        onPressed: _openExploreFeatures, 
+                        style: TextButton.styleFrom(
+                          foregroundColor: ThemeManager.instance.getMatchColor(), 
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), 
+                        ),
+                        child: const Text(
+                          'Explore Features',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.2), 
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8), 
+                  ],
                 ),
               ),
             ),
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0), 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16), 
-                  Image.asset(
-                    ThemeManager.instance.getLogoMark(), 
-                    width: 42, 
-                    height: 32, 
-                    fit: BoxFit.contain, 
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, color: Colors.white, size: 32); 
-                    },
-                  ),
-                  const Spacer(), 
-                  Text(
-                    'Keep Your\nSales Moving',
-                    style: TextStyle(
-                      color: ThemeManager.instance.getMatchColor(), 
-                      fontSize: 48, 
-                      fontWeight: FontWeight.bold, 
-                      height: 1.1, 
-                      letterSpacing: -1.0, 
-                    ),
-                  ),
-                  const SizedBox(height: 10), 
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: ThemeManager.instance.getMatchColor(), 
-                        fontSize: 16, 
-                        height: 1.4, 
-                        letterSpacing: -0.2, 
-                      ),
-                      children: const [
-                        TextSpan(text: 'Track sales, manage teams, and generate\ninsights from anywhere.\n'), 
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 48), 
-                  SizedBox(
-                    width: double.infinity, 
-                    height: 64, 
-                    child: ElevatedButton(
-                      onPressed: _startTOSPage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeManager.instance.getPrimaryColor(), 
-                        foregroundColor: ThemeManager.instance.getContrastColor(), 
-                        shape: const StadiumBorder(), 
-                        elevation: 0, 
-                      ),
-                      child: const Text(
-                        'Get Started',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: -0.3), 
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16), 
-                  Center(
-                    child: TextButton(
-                      onPressed: _openExploreFeatures, 
-                      style: TextButton.styleFrom(
-                        foregroundColor: ThemeManager.instance.getMatchColor(), 
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), 
-                      ),
-                      child: const Text(
-                        'Explore Features',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.2), 
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8), 
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
