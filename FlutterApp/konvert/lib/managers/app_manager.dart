@@ -8,7 +8,8 @@ class AppManager {
   static final AppManager instance = AppManager._internal();
 
   void handleAppRestart() {
-    final NavigatorState? navigator = ErrorManager.instance.navigatorKey.currentState;
+    final NavigatorState? navigator =
+        ErrorManager.instance.navigatorKey.currentState;
     if (navigator == null) return;
 
     navigator.pushAndRemoveUntil(
@@ -19,11 +20,14 @@ class AppManager {
 
   Future<void> handleClearAndResetData() async {
     try {
-      // Safely nuke all data utilizing the unified storage pipeline
       await StorageService.instance.clearAllData();
-      debugPrint('AppManager: Application local preferences state successfully wiped.');
+      debugPrint(
+        'AppManager: Application local preferences state successfully wiped.',
+      );
     } catch (e) {
-      debugPrint('AppManager Error: Failed to drop local storage preferences: $e');
+      debugPrint(
+        'AppManager Error: Failed to drop local storage preferences: $e',
+      );
     } finally {
       handleAppRestart();
     }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/enums.dart';
 import '../services/storage_service.dart';
 
-class ThemeManager {
+class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   ThemeManager._internal();
   static final ThemeManager instance = ThemeManager._internal();
 
@@ -68,6 +68,7 @@ class ThemeManager {
   Themes _currentTheme = Themes.accent;
 
   Future<void> init() async {
+    WidgetsBinding.instance.addObserver(this);
     final savedThemeName = StorageService.instance.getString(_currentThemeKey);
     
     if (savedThemeName != null) {
@@ -78,7 +79,16 @@ class ThemeManager {
     }
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    if (_currentTheme == Themes.system) {
+      notifyListeners();
+    }
+  }
+
   Themes get currentTheme => _currentTheme;
+
+  bool get isLightMode => _isLightMode;
 
   // --- NEW LOGIC: Determine actual visual mode ---
   bool get _isLightMode {
@@ -125,5 +135,6 @@ class ThemeManager {
   Future<void> setThemeStyle(Themes style) async {
     _currentTheme = style;
     await StorageService.instance.setString(_currentThemeKey, style.name);
+    notifyListeners();
   }
 }

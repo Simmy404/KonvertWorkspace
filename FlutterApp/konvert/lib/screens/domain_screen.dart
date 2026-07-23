@@ -18,29 +18,43 @@ class DomainScreen extends StatefulWidget {
 }
 
 class _DomainScreenState extends State<DomainScreen> {
-  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController(text: '28');
   final TextEditingController _searchController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isExpanded = false;
   String _searchQuery = '';
 
-  // Pre-populated list matching your design mockups
   final List<Company> _companies = const [
-    Company(name: 'Abott Enterprise', url: 'https://www.abott.com'),
-    Company(name: 'Bristol Mayer Biotech', url: 'https://www.bristol.pk'),
-    Company(name: 'Faisal Pharma', url: 'https://www.faisalpharma.com'),
-    Company(name: 'Hassan Pharma', url: 'https://www.hassanpharma.com'),
+    Company(
+      name: 'Abott Enterprise',
+      url: 'https://www.abott.com',
+      displayUrl: 'abott.com',
+    ),
+    Company(
+      name: 'Bristol Mayer Biotech',
+      url: 'https://www.hassanpharma.com',
+      displayUrl: 'bristol.pk',
+    ),
+    Company(
+      name: 'Faisal Pharma',
+      url: 'https://www.faisalpharma.com',
+      displayUrl: 'faisalpharma.com',
+    ),
+    Company(
+      name: 'Hassan Pharma',
+      url: 'https://www.hassanpharma.com',
+      displayUrl: 'hassanpharma.com',
+    ),
   ];
-  
+
   late Company _selectedCompany;
 
   @override
   void initState() {
     super.initState();
     _selectedCompany = _companies[1]; // Default to Bristol Mayer Biotech
-    
-    // Attach listener for real-time search filtering
+
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -60,7 +74,10 @@ class _DomainScreenState extends State<DomainScreen> {
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         ErrorManager.instance.showToastError(
-          const ErrorStruct(code: 'DOM-001', technicalDetails: 'Could not launch URL'),
+          const ErrorStruct(
+            code: 'DOM-001',
+            technicalDetails: 'Could not launch URL',
+          ),
           3,
         );
       }
@@ -72,13 +89,15 @@ class _DomainScreenState extends State<DomainScreen> {
     }
   }
 
-
   Future<void> _onConfirm() async {
     final apiKey = _apiKeyController.text.trim();
 
     if (apiKey.isEmpty) {
       ErrorManager.instance.showToastError(
-        const ErrorStruct(code: 'DOM-003', technicalDetails: 'API Key cannot be empty.'),
+        const ErrorStruct(
+          code: 'DOM-003',
+          technicalDetails: 'API Key cannot be empty.',
+        ),
         3,
       );
       return;
@@ -86,7 +105,6 @@ class _DomainScreenState extends State<DomainScreen> {
 
     setState(() => _isLoading = true);
 
-    // 1. Send the network request
     final bool isSuccess = await ApiService.instance.authenticateDomain(
       domain: _selectedCompany.url,
       apiKey: apiKey,
@@ -95,21 +113,22 @@ class _DomainScreenState extends State<DomainScreen> {
     if (!mounted) return;
 
     if (isSuccess) {
-      // 2. Save company AND API key to local hardware storage
       await StorageService.instance.setCurrentCompany(
         name: _selectedCompany.name,
         url: _selectedCompany.url,
       );
       await StorageService.instance.setApiKey(apiKey);
-      
-      // 3. Transition to Login Screen
+
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeSlideUpTransition(const LoginScreen()), 
+        PageTransitions.fadeSlideUpTransition(const LoginScreen()),
       );
     } else {
       ErrorManager.instance.showToastError(
-        const ErrorStruct(code: 'DOM-004', technicalDetails: 'Invalid API Key or Domain.'),
+        const ErrorStruct(
+          code: 'DOM-004',
+          technicalDetails: 'Invalid API Key or Domain.',
+        ),
         4,
       );
     }
@@ -117,103 +136,199 @@ class _DomainScreenState extends State<DomainScreen> {
     setState(() => _isLoading = false);
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final bool isLight = ThemeManager.instance.isLightMode;
+
+    // Theme Color Tokens according to mockup:
+    final Color bgColor = isLight
+        ? const Color(0xFFF7F8FC)
+        : const Color(0xFF03071A);
+    final Color outerBoxBg = isLight
+        ? const Color(0xFFF1F0F3)
+        : const Color(0xFF131520);
+    final Color outerBoxBorder = isLight
+        ? const Color(0xFFE3E1E5)
+        : const Color(0xFF242634);
+
+    final Color searchBarBg = isLight ? Colors.white : const Color(0xFF262832);
+    final Color searchBarBorder = isLight
+        ? const Color(0xFFE5E4E8)
+        : const Color(0xFF383A48);
+    final Color searchIconColor = isLight
+        ? const Color(0xFF7A7A80)
+        : const Color(0xFF8E8E93);
+    final Color searchTextColor = isLight
+        ? const Color(0xFF1C1C1E)
+        : Colors.white;
+
+    final Color cardBg = isLight
+        ? const Color(0xFFEEF3FF)
+        : const Color(0xFF222432);
+    final Color selectedCardBorder = const Color(
+      0xFF9E8FFF,
+    ); // Lavender / Indigo purple stroke
+    final Color cardTitleColor = isLight
+        ? const Color(0xFF1C1C1E)
+        : Colors.white;
+    final Color cardUrlColor = isLight
+        ? const Color(0xFF6E6E73)
+        : const Color(0xFF9A9AA4);
+
+    final Color bottomHeaderBg = isLight
+        ? const Color(0xFFEEF3FF)
+        : const Color(0xFF151C30);
+    final Color bottomHeaderBorder = isLight
+        ? const Color(0xFFDCE2FF)
+        : const Color(0xFF263354);
+
+    final Color inputBg = isLight
+        ? const Color(0xFFF1F0F3)
+        : const Color(0xFF131520);
+    final Color inputBorder = isLight
+        ? const Color(0xFFE3E1E5)
+        : const Color(0xFF242634);
+    final Color inputIconColor = const Color(0xFF8E8E93);
+    final Color inputHintColor = const Color(0xFF8E8E93);
+
+    final Color buttonBg = isLight ? const Color(0xFF0038FF) : Colors.white;
+    final Color buttonTextColor = isLight ? Colors.white : Colors.black;
+    final String buttonText = isLight ? 'Connect' : 'Confirm';
+
+    final Color helpTextColor = isLight ? Colors.black : Colors.white;
+
     return Scaffold(
-      backgroundColor: Colors.black, 
-      resizeToAvoidBottomInset: true, 
+      backgroundColor: bgColor,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned.fill(
             child: Image.asset(
               ThemeManager.instance.getMainBG(),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ColoredBox(color: Colors.black),
+              errorBuilder: (context, error, stackTrace) =>
+                  ColoredBox(color: bgColor),
             ),
           ),
-          
+
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16), 
-                  
+                  const SizedBox(height: 8),
+
+                  // Brand Logo
                   Image.asset(
-                    ThemeManager.instance.getLogoMark(), 
-                    width: 42,
-                    height: 32,
+                    ThemeManager.instance.getLogoMark(),
+                    width: 44,
+                    height: 34,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image, 
-                      color: Colors.white, 
-                      size: 32
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.blur_on,
+                      color: isLight ? Colors.blue : Colors.white,
+                      size: 36,
                     ),
                   ),
-                  
-                  // This Expanded widget smartly swaps the top UI without moving the bottom fields
+
+                  const SizedBox(height: 20),
+
+                  // Main Domain Selection Container
                   Expanded(
-                    child: _isExpanded 
-                        ? _buildExpandedSelector()
-                        : _buildCollapsedView(),
+                    child: _isExpanded
+                        ? _buildExpandedSelector(
+                            outerBoxBg: outerBoxBg,
+                            outerBoxBorder: outerBoxBorder,
+                            searchBarBg: searchBarBg,
+                            searchBarBorder: searchBarBorder,
+                            searchIconColor: searchIconColor,
+                            searchTextColor: searchTextColor,
+                            cardBg: cardBg,
+                            selectedCardBorder: selectedCardBorder,
+                            cardTitleColor: cardTitleColor,
+                            cardUrlColor: cardUrlColor,
+                            bottomHeaderBg: bottomHeaderBg,
+                            bottomHeaderBorder: bottomHeaderBorder,
+                          )
+                        : _buildCollapsedView(
+                            bottomHeaderBg: bottomHeaderBg,
+                            bottomHeaderBorder: bottomHeaderBorder,
+                            cardTitleColor: cardTitleColor,
+                            cardUrlColor: cardUrlColor,
+                            inputIconColor: inputIconColor,
+                          ),
                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  _buildApiKeyField(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Confirm Button with Loading State
+
+                  const SizedBox(height: 16),
+
+                  // API Key Field
+                  _buildApiKeyField(
+                    inputBg: inputBg,
+                    inputBorder: inputBorder,
+                    inputIconColor: inputIconColor,
+                    inputHintColor: inputHintColor,
+                    textColor: searchTextColor,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Action Button
                   SizedBox(
                     width: double.infinity,
-                    height: 64, 
+                    height: 58,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _onConfirm, 
+                      onPressed: _isLoading ? null : _onConfirm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeManager.instance.getPrimaryColor(),
-                        foregroundColor: ThemeManager.instance.getContrastColor(),
-                        disabledBackgroundColor: ThemeManager.instance.getPrimaryColor().withOpacity(0.5),
+                        backgroundColor: buttonBg,
+                        foregroundColor: buttonTextColor,
+                        disabledBackgroundColor: buttonBg.withOpacity(0.5),
                         shape: const StadiumBorder(),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? SizedBox(
-                            width: 24, 
-                            height: 24, 
-                            child: CircularProgressIndicator(
-                              color: ThemeManager.instance.getContrastColor(), 
-                              strokeWidth: 3
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: buttonTextColor,
+                                strokeWidth: 3,
+                              ),
                             )
-                          )
-                        : const Text(
-                            'Confirm',
-                            style: TextStyle(
-                              fontSize: 18, 
-                              fontWeight: FontWeight.bold, 
-                              letterSpacing: -0.3
+                          : Text(
+                              buttonText,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.2,
+                                color: buttonTextColor,
+                              ),
                             ),
-                          ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 16),
-                  
+
+                  const SizedBox(height: 12),
+
+                  // Need Help Link
                   Center(
                     child: TextButton(
-                      onPressed: _launchHelpUrl, 
+                      onPressed: _launchHelpUrl,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), 
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 16,
+                        ),
                       ),
                       child: Text(
                         'Need Help?',
                         style: TextStyle(
-                          color: ThemeManager.instance.getMatchColor(),
+                          color: helpTextColor,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.2,
                         ),
                       ),
                     ),
@@ -227,8 +342,16 @@ class _DomainScreenState extends State<DomainScreen> {
     );
   }
 
-  // --- SUB-WIDGET: The normal, unexpanded view ---
-  Widget _buildCollapsedView() {
+  // --- SUB-WIDGET: Collapsed View ---
+  Widget _buildCollapsedView({
+    required Color bottomHeaderBg,
+    required Color bottomHeaderBorder,
+    required Color cardTitleColor,
+    required Color cardUrlColor,
+    required Color inputIconColor,
+  }) {
+    final bool isLight = ThemeManager.instance.isLightMode;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -237,11 +360,11 @@ class _DomainScreenState extends State<DomainScreen> {
             padding: const EdgeInsets.symmetric(vertical: 24.0),
             child: Center(
               child: Image.asset(
-                ThemeManager.instance.getDomainMain(), 
+                ThemeManager.instance.getDomainMain(),
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Icon(
-                  Icons.broken_image,
-                  color: Colors.white,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.language,
+                  color: isLight ? Colors.blue.shade300 : Colors.white54,
                   size: 100,
                 ),
               ),
@@ -252,114 +375,140 @@ class _DomainScreenState extends State<DomainScreen> {
           child: Text(
             'Connect Domain',
             style: TextStyle(
-              color: ThemeManager.instance.getMatchColor(),
+              color: isLight ? Colors.black : Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
             ),
           ),
         ),
-        const SizedBox(height: 0),
+        const SizedBox(height: 4),
         Center(
           child: Text(
             'Select your company and enter key',
             style: TextStyle(
-              color: ThemeManager.instance.getGreyTransparent5(),
+              color: isLight
+                  ? const Color(0xFF6E6E73)
+                  : const Color(0xFF9A9AA4),
               fontSize: 15,
               fontWeight: FontWeight.w400,
-              letterSpacing: -0.5
+              letterSpacing: -0.3,
             ),
           ),
         ),
         const SizedBox(height: 32),
-        _buildCompanySelector(isExpanded: false),
+        _buildCompanySelectorHeader(
+          isExpanded: false,
+          bgColor: bottomHeaderBg,
+          borderColor: bottomHeaderBorder,
+          titleColor: cardTitleColor,
+          urlColor: cardUrlColor,
+          iconColor: inputIconColor,
+        ),
       ],
     );
   }
 
-  // --- SUB-WIDGET: The fully expanded search panel ---
-  Widget _buildExpandedSelector() {
+  // --- SUB-WIDGET: Fully Expanded Selector Panel ---
+  Widget _buildExpandedSelector({
+    required Color outerBoxBg,
+    required Color outerBoxBorder,
+    required Color searchBarBg,
+    required Color searchBarBorder,
+    required Color searchIconColor,
+    required Color searchTextColor,
+    required Color cardBg,
+    required Color selectedCardBorder,
+    required Color cardTitleColor,
+    required Color cardUrlColor,
+    required Color bottomHeaderBg,
+    required Color bottomHeaderBorder,
+  }) {
     final filteredCompanies = _companies.where((c) {
-      return c.name.toLowerCase().contains(_searchQuery) || 
-             c.url.toLowerCase().contains(_searchQuery);
+      if (_searchQuery.isEmpty) return true;
+      return c.name.toLowerCase().contains(_searchQuery) ||
+          c.url.toLowerCase().contains(_searchQuery) ||
+          c.displayUrl.toLowerCase().contains(_searchQuery);
     }).toList();
 
     return Container(
-      margin: const EdgeInsets.only(top: 16, bottom: 0),
       decoration: BoxDecoration(
-        color: ThemeManager.instance.getGreyTransparent1(),
+        color: outerBoxBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ThemeManager.instance.getGreyTransparent3(),
-          width: 1,
-        ),
+        border: Border.all(color: outerBoxBorder, width: 1),
       ),
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          // 1. Pill-shaped Search Bar
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: ThemeManager.instance.getGreyTransparent1(),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: ThemeManager.instance.getGreyTransparent3(),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  Icon(Icons.search, color: ThemeManager.instance.getGreyTransparent5(), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: ThemeManager.instance.getMatchColor(), fontSize: 15),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Search Company',
-                        hintStyle: TextStyle(color: ThemeManager.instance.getGreyTransparent5()),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          // 1. Search Bar
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: searchBarBg,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: searchBarBorder, width: 1),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.search, color: searchIconColor, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    style: TextStyle(
+                      color: searchTextColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Search company',
+                      hintStyle: TextStyle(
+                        color: searchIconColor,
+                        fontSize: 16,
                       ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          
-          // 2. Scrollable Company List
+
+          const SizedBox(height: 10),
+
+          // 2. Company List Items
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const BouncingScrollPhysics(),
               itemCount: filteredCompanies.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final company = filteredCompanies[index];
-                final isSelected = company == _selectedCompany;
-                
+                final isSelected = company.name == _selectedCompany.name;
+
                 return GestureDetector(
                   onTap: () {
                     setState(() {
                       _selectedCompany = company;
                       _isExpanded = false;
-                      _searchController.clear(); // Reset search when collapsing
+                      _searchController.clear();
                     });
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: ThemeManager.instance.getGreyTransparent1(),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected 
-                            ? ThemeManager.instance.getPrimaryColor() 
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? Border.all(color: selectedCardBorder, width: 1.5)
+                          : Border.all(color: Colors.transparent, width: 1.5),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,16 +516,18 @@ class _DomainScreenState extends State<DomainScreen> {
                         Text(
                           company.name,
                           style: TextStyle(
-                            color: ThemeManager.instance.getMatchColor(),
+                            color: cardTitleColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 16,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          company.url,
+                          company.displayUrl,
                           style: TextStyle(
-                            color: ThemeManager.instance.getGreyTransparent5(),
-                            fontSize: 13,
+                            color: cardUrlColor,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
@@ -386,48 +537,50 @@ class _DomainScreenState extends State<DomainScreen> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
-          // 3. Anchor Bottom Toggle
-          _buildCompanySelector(isExpanded: true),
+
+          // 3. Bottom Selected Selector Trigger Header
+          _buildCompanySelectorHeader(
+            isExpanded: true,
+            bgColor: bottomHeaderBg,
+            borderColor: bottomHeaderBorder,
+            titleColor: cardTitleColor,
+            urlColor: cardUrlColor,
+            iconColor: searchIconColor,
+          ),
         ],
       ),
     );
   }
 
-  // --- SUB-WIDGET: The anchor toggle used in both states ---
-  Widget _buildCompanySelector({required bool isExpanded}) {
+  // --- SUB-WIDGET: Domain Selector Header Bar ---
+  Widget _buildCompanySelectorHeader({
+    required bool isExpanded,
+    required Color bgColor,
+    required Color borderColor,
+    required Color titleColor,
+    required Color urlColor,
+    required Color iconColor,
+  }) {
     return InkWell(
       onTap: () {
         setState(() {
           _isExpanded = !_isExpanded;
-          if (!_isExpanded) _searchController.clear();
         });
       },
-      borderRadius: isExpanded 
-          ? const BorderRadius.vertical(bottom: Radius.circular(16))
-          : BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: ThemeManager.instance.getGreyTransparent1(),
-          borderRadius: isExpanded 
-              ? const BorderRadius.vertical(bottom: Radius.circular(16))
-              : BorderRadius.circular(16),
-          border: isExpanded ? null : Border.all(
-            color: ThemeManager.instance.getGreyTransparent3(),
-            width: 1,
-          ),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: 1),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.language, 
-              color: ThemeManager.instance.getGreyTransparent5(), 
-              size: 24,
-            ),
-            const SizedBox(width: 16),
+            Icon(Icons.language, color: iconColor, size: 26),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,24 +588,23 @@ class _DomainScreenState extends State<DomainScreen> {
                   Text(
                     _selectedCompany.name,
                     style: TextStyle(
-                      color: ThemeManager.instance.getMatchColor(),
-                      fontSize: 15,
+                      color: titleColor,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    _selectedCompany.url,
-                    style: TextStyle(
-                      color: ThemeManager.instance.getGreyTransparent5(),
-                      fontSize: 13,
-                    ),
+                    _selectedCompany.displayUrl,
+                    style: TextStyle(color: urlColor, fontSize: 13),
                   ),
                 ],
               ),
             ),
             Icon(
-              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, 
-              color: ThemeManager.instance.getGreyTransparent5(),
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: iconColor,
+              size: 26,
             ),
           ],
         ),
@@ -460,42 +612,41 @@ class _DomainScreenState extends State<DomainScreen> {
     );
   }
 
-  Widget _buildApiKeyField() {
+  // --- SUB-WIDGET: API Key Field ---
+  Widget _buildApiKeyField({
+    required Color inputBg,
+    required Color inputBorder,
+    required Color inputIconColor,
+    required Color inputHintColor,
+    required Color textColor,
+  }) {
     return Container(
+      height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: ThemeManager.instance.getGreyTransparent1(), 
+        color: inputBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ThemeManager.instance.getGreyTransparent3(),
-          width: 1,
-        ),
+        border: Border.all(color: inputBorder, width: 1),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.lock_outline, 
-            color: ThemeManager.instance.getGreyTransparent5(), 
-            size: 24,
-          ),
-          const SizedBox(width: 16),
+          Icon(Icons.lock_outline, color: inputIconColor, size: 24),
+          const SizedBox(width: 14),
           Expanded(
             child: TextFormField(
               controller: _apiKeyController,
               obscureText: true,
               enabled: !_isLoading,
               style: TextStyle(
-                color: ThemeManager.instance.getPrimaryColor(), 
+                color: textColor,
                 fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: 'Enter API Key',
-                hintStyle: TextStyle(
-                  color: ThemeManager.instance.getGreyTransparent5(), 
-                  fontSize: 15,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 20),
+                hintStyle: TextStyle(color: inputHintColor, fontSize: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
                 isDense: true,
               ),
             ),

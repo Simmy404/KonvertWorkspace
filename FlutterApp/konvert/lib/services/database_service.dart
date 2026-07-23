@@ -109,10 +109,12 @@ class DatabaseService {
       await txn.delete('bricks'); // Clear old data
       final batch = txn.batch();
       for (var json in brickList) {
-        batch.insert('bricks', {
-          'brick_id': json['brik_id'],
-          'brick_name': json['brik_name'],
-        });
+        if (json is Map) {
+          batch.insert('bricks', {
+            'brick_id': int.tryParse(json['brik_id']?.toString() ?? '') ?? json['brik_id'],
+            'brick_name': json['brik_name']?.toString() ?? '',
+          });
+        }
       }
       await batch.commit(noResult: true);
     });
@@ -124,23 +126,25 @@ class DatabaseService {
       await txn.delete('customers');
       final batch = txn.batch();
       for (var json in customerList) {
-        batch.insert('customers', {
-          'customer_id': json['cust_id'],
-          'customer_type': json['cust_type'],
-          'customer_name': json['cust_name'],
-          'customer_brickid': json['cust_brikid'],
-          'customer_address': json['cust_address'],
-          'customer_city': json['cust_city'],
-          'customer_cperson': json['cust_cperson'],
-          'customer_phone': json['cust_phone'],
-          'customer_licno': json['cust_licno'],
-          'customer_lexdtd': json['cust_lexdtd'],
-          'customer_lcatg': json['cust_lcatg'],
-          'customer_ntnno': json['cust_ntnno'],
-          'customer_staxno': json['cust_staxno'],
-          'customer_lat': json['cust_lat'],
-          'customer_long': json['cust_long'],
-        });
+        if (json is Map) {
+          batch.insert('customers', {
+            'customer_id': int.tryParse(json['cust_id']?.toString() ?? '') ?? json['cust_id'],
+            'customer_type': json['cust_type']?.toString() ?? '',
+            'customer_name': json['cust_name']?.toString() ?? '',
+            'customer_brickid': json['cust_brikid']?.toString() ?? '',
+            'customer_address': json['cust_address']?.toString() ?? '',
+            'customer_city': json['cust_city']?.toString() ?? '',
+            'customer_cperson': json['cust_cperson']?.toString() ?? '',
+            'customer_phone': json['cust_phone']?.toString() ?? '',
+            'customer_licno': json['cust_licno']?.toString() ?? '',
+            'customer_lexdtd': json['cust_lexdtd']?.toString() ?? '',
+            'customer_lcatg': json['cust_lcatg']?.toString() ?? '',
+            'customer_ntnno': json['cust_ntnno']?.toString() ?? '',
+            'customer_staxno': json['cust_staxno']?.toString() ?? '',
+            'customer_lat': json['cust_lat']?.toString() ?? '',
+            'customer_long': json['cust_long']?.toString() ?? '',
+          });
+        }
       }
       await batch.commit(noResult: true);
     });
@@ -152,22 +156,92 @@ class DatabaseService {
       await txn.delete('products');
       final batch = txn.batch();
       for (var json in productList) {
-        batch.insert('products', {
-          'product_vendid': json['prod_vendid'],
-          'product_grpid': json['prod_grpid'],
-          'product_id': json['prod_id'],
-          'product_name': json['prod_name'],
-          'product_packsize': json['prod_packsize'],
-          'product_maxper': json['prod_maxper'],
-          'product_gstper': json['prod_gstper'],
-          'product_staxper': json['prod_staxper'],
-          'product_is_otc': json['prod_is_otc'],
-          'product_is_sch_g': json['prod_is_sch_g'],
-          'product_retail': json['prod_retail'],
-          'product_tp': json['prod_tp'],
-        });
+        if (json is Map) {
+          batch.insert('products', {
+            'product_vendid': int.tryParse(json['prod_vendid']?.toString() ?? '') ?? json['prod_vendid'],
+            'product_grpid': int.tryParse(json['prod_grpid']?.toString() ?? '') ?? json['prod_grpid'],
+            'product_id': int.tryParse(json['prod_id']?.toString() ?? '') ?? json['prod_id'],
+            'product_name': json['prod_name']?.toString() ?? '',
+            'product_packsize': json['prod_packsize']?.toString() ?? '',
+            'product_maxper': json['prod_maxper']?.toString() ?? '',
+            'product_gstper': json['prod_gstper']?.toString() ?? '',
+            'product_staxper': json['prod_staxper']?.toString() ?? '',
+            'product_is_otc': json['prod_is_otc']?.toString() ?? '',
+            'product_is_sch_g': json['prod_is_sch_g']?.toString() ?? '',
+            'product_retail': json['prod_retail']?.toString() ?? '',
+            'product_tp': json['prod_tp']?.toString() ?? '',
+          });
+        }
       }
       await batch.commit(noResult: true);
     });
+  }
+
+  Future<void> syncDoctors(List<dynamic> doctorList) async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (var json in doctorList) {
+        if (json is Map) {
+          batch.insert(
+            'customers',
+            {
+              'customer_id': int.tryParse(json['cust_id']?.toString() ?? json['doc_id']?.toString() ?? '') ?? json['cust_id'],
+              'customer_type': json['cust_type']?.toString() ?? 'Doctor',
+              'customer_name': json['cust_name']?.toString() ?? json['doc_name']?.toString() ?? '',
+              'customer_brickid': json['cust_brikid']?.toString() ?? json['doc_brikid']?.toString() ?? '',
+              'customer_address': json['cust_address']?.toString() ?? json['doc_address']?.toString() ?? '',
+              'customer_city': json['cust_city']?.toString() ?? json['doc_city']?.toString() ?? '',
+              'customer_cperson': json['cust_cperson']?.toString() ?? json['doc_cperson']?.toString() ?? '',
+              'customer_phone': json['cust_phone']?.toString() ?? json['doc_phone']?.toString() ?? '',
+              'customer_licno': json['cust_licno']?.toString() ?? '',
+              'customer_lexdtd': json['cust_lexdtd']?.toString() ?? '',
+              'customer_lcatg': json['cust_lcatg']?.toString() ?? '',
+              'customer_ntnno': json['cust_ntnno']?.toString() ?? '',
+              'customer_staxno': json['cust_staxno']?.toString() ?? '',
+              'customer_lat': json['cust_lat']?.toString() ?? '',
+              'customer_long': json['cust_long']?.toString() ?? '',
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  // --- QUERY & COUNT HELPERS ---
+
+  Future<int> getBricksCount() async {
+    final db = await instance.database;
+    final result = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM bricks'));
+    return result ?? 0;
+  }
+
+  Future<int> getProductsCount() async {
+    final db = await instance.database;
+    final result = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM products'));
+    return result ?? 0;
+  }
+
+  Future<int> getChemistsCount() async {
+    final db = await instance.database;
+    final result = Sqflite.firstIntValue(await db.rawQuery(
+      "SELECT COUNT(*) FROM customers WHERE LOWER(customer_type) LIKE '%chemist%' OR LOWER(customer_type) = 'c' OR customer_type = '1'"
+    ));
+    final count = result ?? 0;
+    if (count == 0) {
+      final total = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM customers'));
+      return total ?? 0;
+    }
+    return count;
+  }
+
+  Future<int> getDoctorsCount() async {
+    final db = await instance.database;
+    final result = Sqflite.firstIntValue(await db.rawQuery(
+      "SELECT COUNT(*) FROM customers WHERE LOWER(customer_type) LIKE '%doctor%' OR LOWER(customer_type) = 'd' OR customer_type = '2'"
+    ));
+    return result ?? 0;
   }
 }

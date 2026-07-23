@@ -4,6 +4,7 @@ import '../managers/theme_manager.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
 
@@ -19,7 +20,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
   bool _syncingTourPlan = false;
   bool _syncingProducts = false;
   bool _syncingChemists = false;
-  bool _syncingDoctors = false;
+  bool _syncingTarget = false;
   
   bool _isComplete = false;
 
@@ -44,17 +45,20 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
       final prodSuccess = await ApiService.instance.syncProducts();
       if (!prodSuccess) throw 'Failed to sync Products.';
 
-      // 3. Sync Customers (Chemists & Doctors)
-      setState(() {
-        _syncingChemists = true;
-        _syncingDoctors = true; // Based on the API, these share the same endpoint
-      });
+      // 3. Sync Customers (Chemists)
+      setState(() => _syncingChemists = true);
       final custSuccess = await ApiService.instance.syncCustomers();
-      if (!custSuccess) throw 'Failed to sync Customers.';
+      if (!custSuccess) throw 'Failed to sync Chemists.';
 
-      // 4. Sync Target (Silent in UI text, but necessary data)
+      // 4. Sync Target
+      setState(() => _syncingTarget = true);
       final targetSuccess = await ApiService.instance.syncTarget();
       if (!targetSuccess) throw 'Failed to sync Targets.';
+
+      // Save today's date as last sync date
+      final now = DateTime.now();
+      final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      await StorageService.instance.setLastSyncDate(todayStr);
 
       // Done
       setState(() => _isComplete = true);
@@ -65,7 +69,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
       
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeTransition(const DashboardScreen()), 
+        PageTransitions.fadeTransition(const DashboardScreen(fromLogin: false)), 
       );
 
     } catch (e) {
@@ -155,7 +159,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
                 const SizedBox(height: 8),
                 _buildStatusText('Syncing Chemists...', _syncingChemists),
                 const SizedBox(height: 8),
-                _buildStatusText('Syncing Doctors...', _syncingDoctors),
+                _buildStatusText('Syncing Target...', _syncingTarget),
                 
                 const SizedBox(height: 36),
                 

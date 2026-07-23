@@ -6,7 +6,11 @@ import '../managers/legal_manager.dart';
 import '../managers/theme_manager.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
+import '../services/storage_service.dart';
 import 'welcome_screen.dart';
+import 'dashboard_screen.dart';
+import 'domain_screen.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -133,9 +137,21 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     } else {
       _controller.pause();
+      final currentUser = StorageService.instance.getCurrentUser();
+      final currentCompany = StorageService.instance.getCurrentCompany();
+
+      Widget nextScreen;
+      if (currentUser != null && currentCompany != null) {
+        nextScreen = const DashboardScreen(fromLogin: false);
+      } else if (currentCompany != null) {
+        nextScreen = const LoginScreen();
+      } else {
+        nextScreen = const DomainScreen();
+      }
+
       Navigator.pushReplacement(
         context,
-        PageTransitions.fadeTransition(const Scaffold(body: Center(child: Text('Home Screen')))), 
+        PageTransitions.fadeTransition(nextScreen), 
       );
     }
   }

@@ -18,9 +18,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  
+  final TextEditingController _usernameController =
+      TextEditingController(text: 'huraira@hassanpharma.com');
+  final TextEditingController _passwordController =
+      TextEditingController(text: 'huraira123');
+
   bool _isLoading = false;
   bool _obscurePassword = true; // State to track password visibility
 
@@ -36,7 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         ErrorManager.instance.showToastError(
-          const ErrorStruct(code: 'LOG-001', technicalDetails: 'Could not launch URL'),
+          const ErrorStruct(
+            code: 'LOG-001',
+            technicalDetails: 'Could not launch URL',
+          ),
           3,
         );
       }
@@ -54,7 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (username.isEmpty || password.isEmpty) {
       ErrorManager.instance.showToastError(
-        const ErrorStruct(code: 'LOG-003', technicalDetails: 'Fields cannot be empty.'),
+        const ErrorStruct(
+          code: 'LOG-003',
+          technicalDetails: 'Fields cannot be empty.',
+        ),
         3,
       );
       return;
@@ -73,13 +81,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (authenticatedUser != null) {
       // 2. Save user to local storage
       await StorageService.instance.setCurrentUser(authenticatedUser);
-      
+
       if (!mounted) return;
-      
-      // 3. Instantly transition to Dashboard
+
+      // 3. Instantly transition to Dashboard (flags auto-sync condition A: user came from login)
       Navigator.pushReplacement(
         context,
-        PageTransitions.instantTransition(const DashboardScreen()), 
+        PageTransitions.instantTransition(const DashboardScreen(fromLogin: true)),
       );
     }
 
@@ -89,8 +97,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, 
-      resizeToAvoidBottomInset: true, 
+      backgroundColor: Colors.black,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           // Dynamic Background Layer
@@ -98,50 +106,55 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Image.asset(
               ThemeManager.instance.getMainBG(),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ColoredBox(color: Colors.black),
+              errorBuilder: (context, error, stackTrace) =>
+                  const ColoredBox(color: Colors.black),
             ),
           ),
-          
+
           // Foreground UI Layer
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 24.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16), 
-                  
+                  const SizedBox(height: 16),
+
                   // MATCHED: Exact logo dimensions
                   Image.asset(
-                    ThemeManager.instance.getLogoMark(), 
+                    ThemeManager.instance.getLogoMark(),
                     width: 42,
                     height: 32,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image, 
-                      color: Colors.white, 
-                      size: 32
+                      Icons.broken_image,
+                      color: Colors.white,
+                      size: 32,
                     ),
                   ),
-                  
+
                   // Expanded pushes content to dynamically fit space without scrolling
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24.0),
                       child: Center(
                         child: Image.asset(
-                          ThemeManager.instance.getLoginMain(), 
+                          ThemeManager.instance.getLoginMain(),
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.account_circle,
-                            color: Colors.white,
-                            size: 100,
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.account_circle,
+                                color: Colors.white,
+                                size: 100,
+                              ),
                         ),
                       ),
                     ),
                   ),
-                  
+
                   // Headers
                   Center(
                     child: Text(
@@ -164,13 +177,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: ThemeManager.instance.getGreyTransparent5(),
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
-                        letterSpacing: -0.5
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Username Field
                   _buildTextField(
                     controller: _usernameController,
@@ -178,9 +191,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.person_outline,
                     obscureText: false,
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Password Field with Visibility Toggle
                   _buildTextField(
                     controller: _passwordController,
@@ -194,50 +207,57 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Sign In Button
                   SizedBox(
                     width: double.infinity,
-                    height: 64, 
+                    height: 64,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _onLogin, 
+                      onPressed: _isLoading ? null : _onLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeManager.instance.getPrimaryColor(),
-                        foregroundColor: ThemeManager.instance.getContrastColor(),
-                        disabledBackgroundColor: ThemeManager.instance.getPrimaryColor().withOpacity(0.5),
+                        backgroundColor: ThemeManager.instance
+                            .getPrimaryColor(),
+                        foregroundColor: ThemeManager.instance
+                            .getContrastColor(),
+                        disabledBackgroundColor: ThemeManager.instance
+                            .getPrimaryColor()
+                            .withOpacity(0.5),
                         shape: const StadiumBorder(),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? SizedBox(
-                            width: 24, 
-                            height: 24, 
-                            child: CircularProgressIndicator(
-                              color: ThemeManager.instance.getContrastColor(), 
-                              strokeWidth: 3
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: ThemeManager.instance.getContrastColor(),
+                                strokeWidth: 3,
+                              ),
                             )
-                          )
-                        : const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 18, 
-                              fontWeight: FontWeight.bold, 
-                              letterSpacing: -0.3
+                          : const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.3,
+                              ),
                             ),
-                          ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Help Button
                   Center(
                     child: TextButton(
-                      onPressed: _launchHelpUrl, 
+                      onPressed: _launchHelpUrl,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), 
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 24,
+                        ),
                       ),
                       child: Text(
                         'Need Help?',
@@ -245,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: ThemeManager.instance.getMatchColor(),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2
+                          letterSpacing: -0.2,
                         ),
                       ),
                     ),
@@ -280,8 +300,8 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         children: [
           Icon(
-            icon, 
-            color: ThemeManager.instance.getGreyTransparent5(), 
+            icon,
+            color: ThemeManager.instance.getGreyTransparent5(),
             size: 24,
           ),
           const SizedBox(width: 16),
@@ -291,14 +311,14 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: obscureText,
               enabled: !_isLoading,
               style: TextStyle(
-                color: ThemeManager.instance.getMatchColor(), 
+                color: ThemeManager.instance.getMatchColor(),
                 fontSize: 16,
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: hintText,
                 hintStyle: TextStyle(
-                  color: ThemeManager.instance.getGreyTransparent5(), 
+                  color: ThemeManager.instance.getGreyTransparent5(),
                   fontSize: 15,
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 20),
@@ -311,7 +331,9 @@ class _LoginScreenState extends State<LoginScreen> {
             GestureDetector(
               onTap: onToggleVisibility,
               child: Icon(
-                obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                obscureText
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 color: ThemeManager.instance.getGreyTransparent5(),
                 size: 22,
               ),

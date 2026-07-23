@@ -44,6 +44,7 @@ class StorageService {
   static const String _targetTotalKey = 'target_total';
   static const String _targetTodayKey = 'target_today';
   static const String _targetOrdersKey = 'target_orders';
+  static const String _lastSyncDateKey = 'last_sync_date';
 
   Future<void> setTargets({
     required String monthTarget,
@@ -64,6 +65,14 @@ class StorageService {
       'today_sales': getString(_targetTodayKey) ?? '0',
       'no_of_orders': getString(_targetOrdersKey) ?? '0',
     };
+  }
+
+  Future<bool> setLastSyncDate(String dateStr) async {
+    return await setString(_lastSyncDateKey, dateStr);
+  }
+
+  String? getLastSyncDate() {
+    return getString(_lastSyncDateKey);
   }
 
   // --- DATABASE EXPOSURE (SQLite) ---
@@ -88,6 +97,14 @@ class StorageService {
       await DatabaseService.instance.syncProducts(productList);
     } catch (e) {
       _handleSilentError('DB-003', 'Failed to save products: $e');
+    }
+  }
+
+  Future<void> saveSyncDoctors(List<dynamic> doctorList) async {
+    try {
+      await DatabaseService.instance.syncDoctors(doctorList);
+    } catch (e) {
+      _handleSilentError('DB-004', 'Failed to save doctors: $e');
     }
   }
 

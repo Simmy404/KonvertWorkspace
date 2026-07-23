@@ -7,6 +7,7 @@ import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import '../utils/page_transitions.dart';
 import '../screens/tos_screen.dart';
+import 'explore_features_sheet.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final VideoPlayerController preinitializedController;
@@ -81,6 +82,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     Navigator.push(
       context,
       PageTransitions.fadeSlideUpTransition(const TosScreen()), 
+    );
+  }
+
+  void _openExploreFeatures() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ExploreFeaturesSheet(),
     );
   }
 
@@ -164,13 +174,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   const SizedBox(height: 16), 
                   Center(
                     child: TextButton(
-                      onPressed: _launchHelpUrl, 
+                      onPressed: _openExploreFeatures, 
                       style: TextButton.styleFrom(
                         foregroundColor: ThemeManager.instance.getMatchColor(), 
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24), 
                       ),
                       child: const Text(
-                        'Need Help?',
+                        'Explore Features',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.2), 
                       ),
                     ),
