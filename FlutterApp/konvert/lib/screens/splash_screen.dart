@@ -12,6 +12,7 @@ import 'theme_selection_screen.dart';
 import 'dashboard_screen.dart';
 import 'domain_screen.dart';
 import 'login_screen.dart';
+import 'lock_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -112,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Widget nextScreen;
     if (currentUser != null && currentCompany != null) {
-      nextScreen = const DashboardScreen(fromLogin: false);
+      nextScreen = const LockScreen();
     } else if (currentCompany != null) {
       nextScreen = const LoginScreen();
     } else if (hasSelectedTheme) {

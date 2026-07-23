@@ -38,6 +38,9 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   final String syncMainDark = 'assets/extras/syncMainDark.png';
   final String syncMainLight = 'assets/extras/syncMainLight.png';
 
+  final String lockMainDark = 'assets/extras/lockMainDark.png';
+  final String lockMainLight = 'assets/extras/lockMainLight.png';
+
   final Color contrastColorDark = const Color.fromARGB(255, 0, 0, 0);
   final Color contrastColorLight = const Color.fromARGB(255, 255, 255, 255);
 
@@ -70,7 +73,7 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> init() async {
     WidgetsBinding.instance.addObserver(this);
     final savedThemeName = StorageService.instance.getString(_currentThemeKey);
-    
+
     if (savedThemeName != null) {
       _currentTheme = Themes.values.firstWhere(
         (e) => e.name == savedThemeName,
@@ -94,13 +97,14 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   bool get _isLightMode {
     if (_currentTheme == Themes.accent) return true;
     if (_currentTheme == Themes.neon) return false;
-    
+
     // If Themes.system, read directly from the device's hardware display settings
     return PlatformDispatcher.instance.platformBrightness == Brightness.light;
   }
 
   // --- UPDATED GETTERS: Route colors based on _isLightMode ---
-  String getSplashScreen() => _isLightMode ? splashScreenLight : splashScreenDark;
+  String getSplashScreen() =>
+      _isLightMode ? splashScreenLight : splashScreenDark;
   String getWelcomeBG() => _isLightMode ? welcomeBGLight : welcomeBGDark;
   String getLogoMark() => _isLightMode ? logoMarkLight : logoMarkDark;
   String getErrorBG() => _isLightMode ? errorBGLight : errorBGDark;
@@ -109,27 +113,37 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   String getDomainMain() => _isLightMode ? domainMainLight : domainMainDark;
   String getLoginMain() => _isLightMode ? loginMainLight : loginMainDark;
   String getSyncMain() => _isLightMode ? syncMainLight : syncMainDark;
-  
-  Color getContrastColor() => _isLightMode ? contrastColorLight : contrastColorDark;
-  Color getMatchColor() => _isLightMode ? matchColorLight : matchColorDark;
-  Color getPrimaryColor() => _isLightMode ? primaryColorLight : primaryColorDark;
+  String getLockMain() => _isLightMode ? lockMainLight : lockMainDark;
 
-  Color getGreyTransparent1() => _isLightMode ? greyTransparent1Light : greyTransparent1Dark;
-  Color getGreyTransparent2() => _isLightMode ? greyTransparent2Light : greyTransparent2Dark;
-  Color getGreyTransparent3() => _isLightMode ? greyTransparent3Light : greyTransparent3Dark;
-  Color getGreyTransparent4() => _isLightMode ? greyTransparent4Light : greyTransparent4Dark;
-  Color getGreyTransparent5() => _isLightMode ? greyTransparent5Light : greyTransparent5Dark;
-  Color getGreyTransparent6() => _isLightMode ? greyTransparent6Light : greyTransparent6Dark;
+  Color getContrastColor() =>
+      _isLightMode ? contrastColorLight : contrastColorDark;
+  Color getMatchColor() => _isLightMode ? matchColorLight : matchColorDark;
+  Color getPrimaryColor() =>
+      _isLightMode ? primaryColorLight : primaryColorDark;
+
+  Color getGreyTransparent1() =>
+      _isLightMode ? greyTransparent1Light : greyTransparent1Dark;
+  Color getGreyTransparent2() =>
+      _isLightMode ? greyTransparent2Light : greyTransparent2Dark;
+  Color getGreyTransparent3() =>
+      _isLightMode ? greyTransparent3Light : greyTransparent3Dark;
+  Color getGreyTransparent4() =>
+      _isLightMode ? greyTransparent4Light : greyTransparent4Dark;
+  Color getGreyTransparent5() =>
+      _isLightMode ? greyTransparent5Light : greyTransparent5Dark;
+  Color getGreyTransparent6() =>
+      _isLightMode ? greyTransparent6Light : greyTransparent6Dark;
 
   List<ImageProvider> getImagesToPreload() => [
-    NetworkImage(getSplashScreen()), 
-    NetworkImage(getWelcomeBG()), 
-    NetworkImage(getLogoMark()), 
-    NetworkImage(getMainBG()), 
+    NetworkImage(getSplashScreen()),
+    NetworkImage(getWelcomeBG()),
+    NetworkImage(getLogoMark()),
+    NetworkImage(getMainBG()),
     NetworkImage(getThemeMain()),
     NetworkImage(getSyncMain()),
     NetworkImage(getDomainMain()),
-    NetworkImage(getLoginMain())
+    NetworkImage(getLoginMain()),
+    AssetImage(getLockMain()),
   ];
 
   bool get hasSelectedTheme {
