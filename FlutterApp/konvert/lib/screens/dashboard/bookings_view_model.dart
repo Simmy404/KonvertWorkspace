@@ -3,6 +3,7 @@ import '../../services/database_service.dart';
 import '../../models/booking_data.dart';
 
 class BookingsViewModel extends ChangeNotifier {
+  bool _isDisposed = false;
   bool isLoading = true;
   List<BookingData> allBookings = [];
   Map<int, List<BookingData>> groupedBookings = {};
@@ -11,9 +12,21 @@ class BookingsViewModel extends ChangeNotifier {
     fetchBookings();
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchBookings() async {
     isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       allBookings = await DatabaseService.instance.getAllBookings();
@@ -28,7 +41,7 @@ class BookingsViewModel extends ChangeNotifier {
       debugPrint('Error fetching bookings: $e');
     } finally {
       isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 

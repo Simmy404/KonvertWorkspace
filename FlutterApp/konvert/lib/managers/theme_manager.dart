@@ -135,14 +135,13 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
       _isLightMode ? greyTransparent6Light : greyTransparent6Dark;
 
   List<ImageProvider> getImagesToPreload() => [
-    NetworkImage(getSplashScreen()),
-    NetworkImage(getWelcomeBG()),
-    NetworkImage(getLogoMark()),
-    NetworkImage(getMainBG()),
-    NetworkImage(getThemeMain()),
-    NetworkImage(getSyncMain()),
-    NetworkImage(getDomainMain()),
-    NetworkImage(getLoginMain()),
+    AssetImage(getLogoMark()),
+    AssetImage(getErrorBG()),
+    AssetImage(getMainBG()),
+    AssetImage(getThemeMain()),
+    AssetImage(getSyncMain()),
+    AssetImage(getDomainMain()),
+    AssetImage(getLoginMain()),
     AssetImage(getLockMain()),
   ];
 

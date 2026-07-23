@@ -31,8 +31,8 @@ class PlaceOrderComponents {
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF13235A) : const Color(0xFFD6E6FF),
                   shape: BoxShape.circle,
@@ -40,7 +40,7 @@ class PlaceOrderComponents {
                 child: const Icon(
                   Icons.my_location_rounded,
                   color: Color(0xFF1E56E2),
-                  size: 20,
+                  size: 18,
                 ),
               ),
               const SizedBox(width: 10),
@@ -52,7 +52,7 @@ class PlaceOrderComponents {
                     Row(
                       children: [
                         Text(
-                          'User Location',
+                          'User GPS Location',
                           style: TextStyle(
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class PlaceOrderComponents {
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -151,6 +151,67 @@ class PlaceOrderComponents {
     );
   }
 
+  static Widget buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+    IconData? icon,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF1E56E2)
+              : (isDark ? const Color(0xFF121318) : Colors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF1E56E2)
+                : (isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0)),
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF1E56E2).withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 12,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static Widget buildEmptyState(String message, bool isDark) {
     return Center(
       child: Column(
@@ -158,10 +219,10 @@ class PlaceOrderComponents {
         children: [
           Icon(
             Icons.search_off_rounded,
-            size: 36,
+            size: 40,
             color: isDark ? Colors.white24 : Colors.grey.shade400,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             message,
             style: TextStyle(
@@ -175,17 +236,23 @@ class PlaceOrderComponents {
     );
   }
 
-  static Widget buildDialogInput(String label, String initialValue, Function(String) onChanged, bool isDark) {
+  static Widget buildDialogInput(
+    String label,
+    String initialValue,
+    Function(String) onChanged,
+    bool isDark,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: TextField(
-        keyboardType: TextInputType.number,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
         controller: TextEditingController(text: initialValue)
           ..selection = TextSelection.collapsed(offset: initialValue.length),
         onChanged: onChanged,
         style: TextStyle(
           color: isDark ? Colors.white : Colors.black,
-          fontSize: 12,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           labelText: label,
@@ -195,10 +262,18 @@ class PlaceOrderComponents {
           ),
           filled: true,
           fillColor: isDark ? const Color(0xFF1E1E2C) : const Color(0xFFF8FAFC),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: isDark ? const Color(0xFF2E2E3E) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: isDark ? const Color(0xFF2E2E3E) : const Color(0xFFE2E8F0),
+            ),
           ),
         ),
       ),

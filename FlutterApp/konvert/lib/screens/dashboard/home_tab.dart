@@ -25,11 +25,15 @@ class HomeTab extends StatelessWidget {
     return 'Good Night 👋';
   }
 
-  void _navigateToPlaceOrder(BuildContext context) {
-    Navigator.push(
+  Future<void> _navigateToPlaceOrder(BuildContext context) async {
+    final result = await Navigator.push(
       context,
       PageTransitions.fadeTransition(const PlaceOrderScreen()),
     );
+    if (result == true && context.mounted) {
+      final dashboardVM = Provider.of<DashboardViewModel>(context, listen: false);
+      dashboardVM.loadCatalogCounts();
+    }
   }
 
   Future<void> _onLogout(BuildContext context) async {
@@ -46,6 +50,7 @@ class HomeTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentUser = StorageService.instance.getCurrentUser();
     final targets = StorageService.instance.getTargets();
+    final dashboardVM = context.watch<DashboardViewModel>();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100), // padding for navbar
@@ -53,7 +58,7 @@ class HomeTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // TOP SECTION
-          _buildTopSection(context, isDark, currentUser, targets),
+          _buildTopSection(context, isDark, currentUser, targets, dashboardVM),
 
           const SizedBox(height: 24),
 
@@ -164,7 +169,13 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTopSection(BuildContext context, bool isDark, dynamic currentUser, Map<String, dynamic> targets) {
+  Widget _buildTopSection(
+    BuildContext context,
+    bool isDark,
+    dynamic currentUser,
+    Map<String, dynamic> targets,
+    DashboardViewModel dashboardVM,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -262,44 +273,91 @@ class HomeTab extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 24),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.85,
+          const SizedBox(height: 20),
+
+          // Target Header & Refresh Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTargetMetricCard(
-                label: 'Month Target',
-                value: targets['month_target']?.toString() ?? '0',
-                icon: Icons.track_changes_rounded,
-                accentColor: const Color(0xFF388E3C),
-                isDark: isDark,
+              Text(
+                'Target Overview',
+                style: TextStyle(
+                  color: isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF475569),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
+                ),
               ),
-              _buildTargetMetricCard(
-                label: 'Total Sales',
-                value: targets['total_sales']?.toString() ?? '0',
-                icon: Icons.trending_up_rounded,
-                accentColor: const Color(0xFF1E88E5),
-                isDark: isDark,
-              ),
-              _buildTargetMetricCard(
-                label: 'Today Sales',
-                value: targets['today_sales']?.toString() ?? '0',
-                icon: Icons.today_rounded,
-                accentColor: const Color(0xFFFB8C00),
-                isDark: isDark,
-              ),
-              _buildTargetMetricCard(
-                label: 'No. of Orders',
-                value: targets['no_of_orders']?.toString() ?? '0',
-                icon: Icons.shopping_bag_outlined,
-                accentColor: const Color(0xFF8E24AA),
-                isDark: isDark,
+              IconButton(
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
+                onPressed: dashboardVM.isRefreshingTargets
+                    ? null
+                    : () => dashboardVM.refreshTargets(),
+                icon: dashboardVM.isRefreshingTargets
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF1E56E2),
+                        ),
+                      )
+                    : Icon(
+                        Icons.refresh_rounded,
+                        color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
+                        size: 18,
+                      ),
+                tooltip: 'Refresh Targets',
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+
+          // Target Grid (Disabled while refreshing)
+          IgnorePointer(
+            ignoring: dashboardVM.isRefreshingTargets,
+            child: Opacity(
+              opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
+              child: GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.85,
+                children: [
+                  _buildTargetMetricCard(
+                    label: 'Month Target',
+                    value: targets['month_target']?.toString() ?? '0',
+                    icon: Icons.track_changes_rounded,
+                    accentColor: const Color(0xFF388E3C),
+                    isDark: isDark,
+                  ),
+                  _buildTargetMetricCard(
+                    label: 'Total Sales',
+                    value: targets['total_sales']?.toString() ?? '0',
+                    icon: Icons.trending_up_rounded,
+                    accentColor: const Color(0xFF1E88E5),
+                    isDark: isDark,
+                  ),
+                  _buildTargetMetricCard(
+                    label: 'Today Sales',
+                    value: targets['today_sales']?.toString() ?? '0',
+                    icon: Icons.today_rounded,
+                    accentColor: const Color(0xFFFB8C00),
+                    isDark: isDark,
+                  ),
+                  _buildTargetMetricCard(
+                    label: 'No. of Orders',
+                    value: targets['no_of_orders']?.toString() ?? '0',
+                    icon: Icons.shopping_bag_outlined,
+                    accentColor: const Color(0xFF8E24AA),
+                    isDark: isDark,
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 18),
           SizedBox(

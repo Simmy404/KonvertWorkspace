@@ -139,7 +139,7 @@ class ApiService {
   // Generic POST wrapper for sync requests
   Future<Map<String, dynamic>?> _postSyncRequest(String endpoint) async {
     final company = StorageService.instance.getCurrentCompany();
-    final user = StorageService.instance.getCurrentUser();
+    final user = StorageService.instance.getCurrentUser(includeSuspended: true);
 
     if (company == null || user == null) return null;
 
@@ -257,10 +257,9 @@ class ApiService {
       final jsonList = bookings.map((b) => b.toJson()).toList();
       final body = jsonEncode(jsonList);
 
-      final response = await http.post(
-        url,
-        body: {"data": body},
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(url, body: {"data": body})
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return true;
@@ -274,7 +273,7 @@ class ApiService {
 
   Future<List<BookingData>?> downloadBookings() async {
     final company = StorageService.instance.getCurrentCompany();
-    final user = StorageService.instance.getCurrentUser();
+    final user = StorageService.instance.getCurrentUser(includeSuspended: true);
     if (company == null || user == null) return null;
 
     String domain = company['url']!;
@@ -287,14 +286,14 @@ class ApiService {
     final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/downloadBookings.php');
 
     try {
-      final response = await http.post(
-        url,
-        body: {"userid": user.id.toString()},
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(url, body: {"userid": user.id.toString()})
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic> && decoded.containsKey('bookings')) {
+        if (decoded is Map<String, dynamic> &&
+            decoded.containsKey('bookings')) {
           final List<dynamic> list = decoded['bookings'];
           return list.map((json) => BookingData.fromJson(json)).toList();
         }
@@ -306,4 +305,3 @@ class ApiService {
     }
   }
 }
-

@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
+import 'login_screen.dart';
 
 class MasterSyncScreen extends StatefulWidget {
   const MasterSyncScreen({super.key});
@@ -34,6 +35,9 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
   }
 
   Future<void> _startMasterSync() async {
+    // Temporarily suspend user session until Master Sync is 100% complete
+    await StorageService.instance.suspendUserSession();
+
     try {
       // 1. Sync Bricks (Tour Plan)
       setState(() => _syncingTourPlan = true);
@@ -61,6 +65,9 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
           "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       await StorageService.instance.setLastSyncDate(todayStr);
 
+      // Restore active user session since master sync succeeded
+      await StorageService.instance.restoreUserSession();
+
       // Done
       setState(() => _isComplete = true);
 
@@ -77,12 +84,12 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
         ErrorStruct(code: 'SYNC-001', technicalDetails: e.toString()),
         5,
       );
-      // Even if it fails, fallback to dashboard so user isn't permanently trapped
+      // Since sync was incomplete/failed, user session is not restored. Take user back to LoginScreen.
       await Future.delayed(const Duration(seconds: 3));
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          PageTransitions.fadeTransition(const DashboardScreen()),
+          PageTransitions.fadeTransition(const LoginScreen()),
         );
       }
     }

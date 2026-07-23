@@ -121,10 +121,14 @@ class StorageService {
   // ==========================================
 
   static const String _currentUserKey = 'current_user_cache';
+  static const String _suspendedUserKey = 'suspended_user_cache';
 
   // --- USER STORAGE ---
   Future<bool> setCurrentUser(User user) async {
     try {
+      if (_prefs != null) {
+        await _prefs!.remove(_suspendedUserKey);
+      }
       final String payload = jsonEncode(user.toJson());
       return await setString(_currentUserKey, payload);
     } catch (e) {
@@ -133,9 +137,12 @@ class StorageService {
     }
   }
 
-  User? getCurrentUser() {
+  User? getCurrentUser({bool includeSuspended = false}) {
     try {
-      final String? payload = getString(_currentUserKey);
+      String? payload = getString(_currentUserKey);
+      if (payload == null && includeSuspended) {
+        payload = getString(_suspendedUserKey);
+      }
       if (payload != null) {
         final Map<String, dynamic> decoded = jsonDecode(payload);
         return User(
@@ -154,9 +161,44 @@ class StorageService {
     return null;
   }
 
+  /// Temporarily suspends active user session during Master Sync
+  Future<bool> suspendUserSession() async {
+    try {
+      final String? payload = getString(_currentUserKey);
+      if (payload != null) {
+        await setString(_suspendedUserKey, payload);
+        if (_prefs != null) {
+          await _prefs!.remove(_currentUserKey);
+        }
+      }
+      return true;
+    } catch (e) {
+      _handleSilentError('STR-013', 'Failed to suspend user session: $e');
+      return false;
+    }
+  }
+
+  /// Restores suspended user session once Master Sync completes
+  Future<bool> restoreUserSession() async {
+    try {
+      final String? payload = getString(_suspendedUserKey);
+      if (payload != null) {
+        await setString(_currentUserKey, payload);
+        if (_prefs != null) {
+          await _prefs!.remove(_suspendedUserKey);
+        }
+      }
+      return true;
+    } catch (e) {
+      _handleSilentError('STR-014', 'Failed to restore user session: $e');
+      return false;
+    }
+  }
+
   Future<bool> logoutUser() async {
     try {
       if (_prefs == null) await init();
+      await _prefs!.remove(_suspendedUserKey);
       return await _prefs!.remove(_currentUserKey);
     } catch (e) {
       _handleSilentError('STR-011', 'Failed to clear user cache: $e');

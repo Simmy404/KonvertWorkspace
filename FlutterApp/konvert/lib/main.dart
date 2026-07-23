@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'managers/app_manager.dart';
 import 'managers/error_manager.dart';
 import 'managers/legal_manager.dart';
@@ -41,7 +42,7 @@ void main() async {
   await StorageService.instance.init();
 
   // 3. Reset storage and cache if app version has changed
-  AppManager.instance.appVersion = '1.0.0';
+  AppManager.instance.appVersion = '0.0.1';
   await AppManager.instance.checkAndResetOnVersionChange();
 
   // 4. Hydrate dependent managers
@@ -61,15 +62,18 @@ class MyApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: ThemeManager.instance,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'Konvert',
-          debugShowCheckedModeBanner: false,
-          navigatorKey: ErrorManager.instance.navigatorKey,
-          scaffoldMessengerKey: ErrorManager.instance.messengerKey,
-          theme: ThemeManager.instance.isLightMode
-              ? ThemeData.light()
-              : ThemeData.dark(),
-          home: const SplashScreen(),
+        return ChangeNotifierProvider.value(
+          value: LocationManager.instance,
+          child: MaterialApp(
+            title: 'Konvert',
+            debugShowCheckedModeBanner: false,
+            navigatorKey: ErrorManager.instance.navigatorKey,
+            scaffoldMessengerKey: ErrorManager.instance.messengerKey,
+            theme: ThemeManager.instance.isLightMode
+                ? ThemeData.light()
+                : ThemeData.dark(),
+            home: const SplashScreen(),
+          ),
         );
       },
     );

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../services/database_service.dart';
+import '../../services/api_service.dart';
 import '../../managers/location_manager.dart';
 
 class DashboardViewModel extends ChangeNotifier {
+  bool _isDisposed = false;
   bool needsInitialSync = false;
   int selectedIndex = 0; // 0 = Home, 1 = Bookings, 2 = Tour Plan, 3 = Report
 
@@ -10,9 +12,22 @@ class DashboardViewModel extends ChangeNotifier {
   int productsCount = 0;
   int chemistsCount = 0;
   bool loadingCounts = true;
+  bool isRefreshingTargets = false;
 
   DashboardViewModel() {
     _init();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
   }
 
   Future<void> _init() async {
@@ -26,17 +41,32 @@ class DashboardViewModel extends ChangeNotifier {
 
   void setSelectedIndex(int index) {
     selectedIndex = index;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void setNeedsInitialSync(bool value) {
     needsInitialSync = value;
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  Future<void> refreshTargets() async {
+    if (isRefreshingTargets) return;
+    isRefreshingTargets = true;
+    _safeNotifyListeners();
+
+    try {
+      await ApiService.instance.syncTarget();
+    } catch (e) {
+      debugPrint('Error refreshing targets: $e');
+    } finally {
+      isRefreshingTargets = false;
+      _safeNotifyListeners();
+    }
   }
 
   Future<void> loadCatalogCounts() async {
     loadingCounts = true;
-    notifyListeners();
+    _safeNotifyListeners();
     
     try {
       bricksCount = await DatabaseService.instance.getBricksCount();
@@ -46,7 +76,7 @@ class DashboardViewModel extends ChangeNotifier {
       // Ignored for now
     } finally {
       loadingCounts = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 }
