@@ -77,8 +77,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return Scaffold(
             backgroundColor: isDark
-                ? const Color(0xFF030305)
-                : const Color(0xFFF4F6F9),
+                ? const Color(0xFF000000) // Pure Black to match image
+                : const Color(0xFFF8FAFC),
             body: SafeArea(
               bottom: false,
               child: Stack(
@@ -95,7 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
 
-                  // Bottom Navigation Bar
+                  // Floating Bottom Navigation Bar
                   Positioned(
                     left: 16,
                     right: 16,
@@ -117,28 +117,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isDark,
   ) {
     return Container(
-      height: 68,
+      height: 66,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [const Color(0xFF0B1953), const Color(0xFF050E36)]
-              : [const Color(0xFF1E56E2), const Color(0xFF0D3BB3)],
+              ? [const Color(0xFF0C1B54), const Color(0xFF040A29)]
+              : [const Color(0xFF1E56E2), const Color(0xFF0E38B1)],
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: isDark
               ? const Color(0xFF1E358A)
-              : Colors.white.withOpacity(0.3),
+              : Colors.white.withOpacity(0.4),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.6)
-                : const Color(0xFF003087).withOpacity(0.3),
-            blurRadius: 16,
+                ? Colors.black.withOpacity(0.7)
+                : const Color(0xFF003087).withOpacity(0.35),
+            blurRadius: 18,
             offset: const Offset(0, 8),
           ),
         ],
@@ -187,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: () => viewModel.setSelectedIndex(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: isSelected
             ? BoxDecoration(

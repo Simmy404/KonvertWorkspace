@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/booking_data.dart';
 import '../models/error_struct.dart';
 import '../managers/error_manager.dart';
+import '../managers/theme_manager.dart';
 import '../utils/page_transitions.dart';
 import 'place_order_screen.dart';
 import 'dashboard/bookings_view_model.dart';
@@ -17,7 +18,10 @@ class BookingsScreen extends StatefulWidget {
 
 class _BookingsScreenState extends State<BookingsScreen> {
   late BookingsViewModel _viewModel;
+  final TextEditingController _searchController = TextEditingController();
+  final Set<int> _expandedInvoices = {};
   bool _wasActive = false;
+  bool _initializedExpanded = false;
 
   @override
   void initState() {
@@ -27,8 +31,37 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _viewModel.dispose();
     super.dispose();
+  }
+
+  String _formatCurrency(double amount) {
+    final int val = amount.round();
+    final String str = val.toString();
+    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    final String formatted = str.replaceAllMapped(reg, (Match m) => '${m[1]},');
+    return 'Rs $formatted';
+  }
+
+  String _formatBookingTime(String rawTime) {
+    if (rawTime.trim().isEmpty) return '11:30am';
+    final trimmed = rawTime.trim();
+    if (trimmed.toLowerCase().contains('am') || trimmed.toLowerCase().contains('pm')) {
+      return trimmed;
+    }
+    try {
+      final parts = trimmed.split(':');
+      if (parts.length >= 2) {
+        int hour = int.parse(parts[0]);
+        final minute = parts[1].padLeft(2, '0');
+        final period = hour >= 12 ? 'pm' : 'am';
+        hour = hour % 12;
+        if (hour == 0) hour = 12;
+        return '$hour:${minute}$period';
+      }
+    } catch (_) {}
+    return trimmed;
   }
 
   Future<void> _editInvoice(BuildContext context, List<BookingData> items) async {
@@ -42,21 +75,44 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Future<void> _deleteInvoice(BuildContext context, int invoice) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = !ThemeManager.instance.isLightMode;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E2C) : Colors.white,
-        title: Text('Delete Invoice', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-        content: Text('Are you sure you want to delete invoice $invoice?', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Invoice',
+          style: TextStyle(
+            color: ThemeManager.instance.getMatchColor(),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete invoice #$invoice?',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black87,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Color(0xFFEF4444),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -67,24 +123,82 @@ class _BookingsScreenState extends State<BookingsScreen> {
     }
   }
 
-  Future<void> _uploadBookings(BuildContext context) async {
-    ErrorManager.instance.showToastError(
-      ErrorStruct(code: 'COMING_SOON', technicalDetails: 'Upload feature coming soon'),
-      2,
-    );
-  }
-  
-  Future<void> _downloadBookings(BuildContext context) async {
-    ErrorManager.instance.showToastError(
-      ErrorStruct(code: 'COMING_SOON', technicalDetails: 'Download feature coming soon'),
-      2,
+  void _showExportOptions(BuildContext context) {
+    final isDark = !ThemeManager.instance.isLightMode;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF161B26) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Booking Actions',
+              style: TextStyle(
+                color: ThemeManager.instance.getMatchColor(),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.refresh_rounded, color: ThemeManager.instance.getPrimaryColor()),
+              title: Text('Refresh Bookings', style: TextStyle(color: ThemeManager.instance.getMatchColor())),
+              onTap: () {
+                Navigator.pop(context);
+                _viewModel.fetchBookings();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.cloud_upload_rounded, color: ThemeManager.instance.getPrimaryColor()),
+              title: Text('Upload Bookings', style: TextStyle(color: ThemeManager.instance.getMatchColor())),
+              onTap: () {
+                Navigator.pop(context);
+                ErrorManager.instance.showToastError(
+                  const ErrorStruct(code: 'COMING_SOON', technicalDetails: 'Upload feature coming soon'),
+                  2,
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.download_rounded, color: ThemeManager.instance.getPrimaryColor()),
+              title: Text('Download Bookings', style: TextStyle(color: ThemeManager.instance.getMatchColor())),
+              onTap: () {
+                Navigator.pop(context);
+                ErrorManager.instance.showToastError(
+                  const ErrorStruct(code: 'COMING_SOON', technicalDetails: 'Download feature coming soon'),
+                  2,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     // Auto-refresh when Bookings tab becomes active
     final dashboardVM = context.watch<DashboardViewModel>();
     final isBookingsTab = dashboardVM.selectedIndex == 1;
@@ -97,207 +211,554 @@ class _BookingsScreenState extends State<BookingsScreen> {
       _wasActive = false;
     }
 
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Consumer<BookingsViewModel>(
-        builder: (context, viewModel, child) {
-          return Container(
-            color: isDark ? const Color(0xFF030305) : const Color(0xFFF4F6F9),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header & Sync Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ListenableBuilder(
+      listenable: ThemeManager.instance,
+      builder: (context, child) {
+        final isDark = !ThemeManager.instance.isLightMode;
+
+        return ChangeNotifierProvider.value(
+          value: _viewModel,
+          child: Consumer<BookingsViewModel>(
+            builder: (context, viewModel, child) {
+              final filteredGrouped = viewModel.filteredGroupedBookings;
+
+              // Expand first card by default on first load
+              if (!_initializedExpanded && filteredGrouped.isNotEmpty) {
+                _initializedExpanded = true;
+                _expandedInvoices.add(filteredGrouped.keys.first);
+              }
+
+              return Scaffold(
+                backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
+                body: Stack(
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Bookings',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
+                    // Main Theme Background Image
+                    Positioned.fill(
+                      child: Image.asset(
+                        ThemeManager.instance.getMainBG(),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => ColoredBox(
+                          color: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Manage your saved orders',
-                          style: TextStyle(
-                            color: isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF64748B),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => viewModel.fetchBookings(),
-                          icon: Icon(Icons.refresh_rounded, color: isDark ? Colors.white : Colors.black),
-                          tooltip: 'Refresh Bookings',
-                        ),
-                        IconButton(
-                          onPressed: () => _downloadBookings(context),
-                          icon: Icon(Icons.download_rounded, color: isDark ? Colors.white : Colors.black),
-                          tooltip: 'Download Bookings',
-                        ),
-                        IconButton(
-                          onPressed: () => _uploadBookings(context),
-                          icon: Icon(Icons.cloud_upload_rounded, color: isDark ? Colors.white : Colors.black),
-                          tooltip: 'Upload Bookings',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // List
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => viewModel.fetchBookings(),
-                    child: viewModel.isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : viewModel.groupedBookings.isEmpty
-                            ? ListView(
+
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+
+                            // Header Top Bar: Logo Mark & Action Icon
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Image.asset(
+                                  ThemeManager.instance.getLogoMark(),
+                                  height: 32,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) => Icon(
+                                    Icons.hexagon_outlined,
+                                    color: ThemeManager.instance.getMatchColor(),
+                                    size: 32,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _showExportOptions(context),
+                                  icon: Icon(
+                                    Icons.ios_share_rounded,
+                                    color: ThemeManager.instance.getMatchColor(),
+                                    size: 24,
+                                  ),
+                                  tooltip: 'Export & Options',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Main Title: "Bookings"
+                            Text(
+                              'Bookings',
+                              style: TextStyle(
+                                color: ThemeManager.instance.getMatchColor(),
+                                fontSize: 34,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.6,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Search Bar
+                            Container(
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF0C1427).withOpacity(0.65)
+                                    : Colors.white.withOpacity(0.85),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.15)
+                                      : Colors.black.withOpacity(0.1),
+                                  width: 1.2,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 18),
+                              child: Row(
                                 children: [
-                                  SizedBox(
-                                    height: MediaQuery.of(context).size.height * 0.4,
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'No bookings found',
-                                            style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 16),
-                                          ),
-                                        ],
+                                  Icon(
+                                    Icons.search_rounded,
+                                    color: isDark
+                                        ? const Color(0xFF829AB1)
+                                        : const Color(0xFF64748B),
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _searchController,
+                                      onChanged: (val) {
+                                        viewModel.setSearchQuery(val);
+                                      },
+                                      style: TextStyle(
+                                        color: ThemeManager.instance.getMatchColor(),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: 'Search ${viewModel.groupedBookings.length} Bookings',
+                                        hintStyle: TextStyle(
+                                          color: isDark
+                                              ? const Color(0xFF64748B)
+                                              : const Color(0xFF94A3B8),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.zero,
                                       ),
                                     ),
                                   ),
+                                  if (_searchController.text.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () {
+                                        _searchController.clear();
+                                        viewModel.setSearchQuery('');
+                                      },
+                                      child: Icon(
+                                        Icons.close_rounded,
+                                        color: isDark
+                                            ? const Color(0xFF829AB1)
+                                            : const Color(0xFF64748B),
+                                        size: 20,
+                                      ),
+                                    ),
                                 ],
-                              )
-                            : ListView.builder(
-                                itemCount: viewModel.groupedBookings.length,
-                                itemBuilder: (context, index) {
-                                  final invoice = viewModel.groupedBookings.keys.elementAt(index);
-                                  final items = viewModel.groupedBookings[invoice]!;
-                                  final grandTotal = items.fold<double>(0, (sum, b) => sum + b.bookingGrandTotal);
-                                  final remarks = items.first.bookingRemarks.trim();
-                                  
-                                  return Card(
-                                    color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    child: ExpansionTile(
-                                      iconColor: isDark ? Colors.white : Colors.black,
-                                      collapsedIconColor: isDark ? Colors.white54 : Colors.black54,
-                                      title: Text(
-                                        'Invoice #$invoice',
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white : Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Bookings List Area
+                            Expanded(
+                              child: RefreshIndicator(
+                                onRefresh: () => viewModel.fetchBookings(),
+                                color: ThemeManager.instance.getPrimaryColor(),
+                                child: viewModel.isLoading
+                                    ? Center(
+                                        child: CircularProgressIndicator(
+                                          color: ThemeManager.instance.getPrimaryColor(),
                                         ),
-                                      ),
-                                      subtitle: Text(
-                                        '${items.length} items | Total: Rs ${grandTotal.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white70 : Colors.black87,
-                                        ),
-                                      ),
-                                      children: [
-                                        const Divider(height: 1),
-                                        if (remarks.isNotEmpty)
-                                          Container(
-                                            width: double.infinity,
-                                            margin: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: isDark ? const Color(0xFF121318) : const Color(0xFFF1F5F9),
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Icon(
-                                                  Icons.note_alt_outlined,
-                                                  size: 16,
-                                                  color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
+                                      )
+                                    : filteredGrouped.isEmpty
+                                        ? ListView(
+                                            physics: const AlwaysScrollableScrollPhysics(),
+                                            children: [
+                                              SizedBox(
+                                                height: MediaQuery.of(context).size.height * 0.4,
+                                                child: Center(
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
                                                     children: [
-                                                      Text(
-                                                        'Order Remarks',
-                                                        style: TextStyle(
-                                                          color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
+                                                      Icon(
+                                                        Icons.receipt_long_outlined,
+                                                        size: 64,
+                                                        color: isDark
+                                                            ? Colors.white38
+                                                            : Colors.black26,
                                                       ),
-                                                      const SizedBox(height: 2),
+                                                      const SizedBox(height: 16),
                                                       Text(
-                                                        remarks,
+                                                        viewModel.groupedBookings.isEmpty
+                                                            ? 'No bookings found'
+                                                            : 'No matching bookings found',
                                                         style: TextStyle(
-                                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                                          fontSize: 12,
+                                                          color: isDark
+                                                              ? Colors.white54
+                                                              : Colors.black54,
+                                                          fontSize: 16,
                                                           fontWeight: FontWeight.w500,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                          ),
-                                        ...items.map((b) => ListTile(
-                                          title: Text('Product ID: ${b.bookingProdId}', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-                                          subtitle: Text('Qty: ${b.bookingQty} | Total: ${b.bookingGrandTotal}', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
-                                        )),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              TextButton.icon(
-                                                onPressed: () => _editInvoice(context, items),
-                                                icon: const Icon(Icons.edit_outlined, color: Color(0xFF1E56E2)),
-                                                label: const Text('Edit', style: TextStyle(color: Color(0xFF1E56E2))),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              TextButton.icon(
-                                                onPressed: () => _deleteInvoice(context, invoice),
-                                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                                label: const Text('Delete', style: TextStyle(color: Colors.red)),
                                               ),
                                             ],
+                                          )
+                                        : ListView.builder(
+                                            physics: const BouncingScrollPhysics(),
+                                            itemCount: filteredGrouped.length + 1,
+                                            itemBuilder: (context, index) {
+                                              if (index == filteredGrouped.length) {
+                                                // Spacing for floating bottom navbar
+                                                return const SizedBox(height: 90);
+                                              }
+
+                                              final invoice = filteredGrouped.keys.elementAt(index);
+                                              final items = filteredGrouped[invoice]!;
+                                              final isExpanded = _expandedInvoices.contains(invoice);
+
+                                              final grandTotal = items.fold<double>(
+                                                0,
+                                                (sum, b) => sum + b.bookingGrandTotal,
+                                              );
+                                              final timeStr = _formatBookingTime(items.first.bookingTime);
+                                              final customerName = viewModel.getCustomerName(items.first.bookingCustId);
+                                              final remarks = items.first.bookingRemarks.trim();
+
+                                              return Padding(
+                                                padding: const EdgeInsets.only(bottom: 12),
+                                                child: AnimatedContainer(
+                                                  duration: const Duration(milliseconds: 250),
+                                                  decoration: BoxDecoration(
+                                                    color: isDark
+                                                        ? const Color(0xFF141824).withOpacity(0.9)
+                                                        : Colors.white.withOpacity(0.95),
+                                                    borderRadius: BorderRadius.circular(18),
+                                                    border: Border.all(
+                                                      color: isDark
+                                                          ? Colors.white.withOpacity(0.08)
+                                                          : Colors.black.withOpacity(0.06),
+                                                      width: 1,
+                                                    ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: isDark
+                                                            ? Colors.black.withOpacity(0.3)
+                                                            : Colors.black.withOpacity(0.04),
+                                                        blurRadius: 10,
+                                                        offset: const Offset(0, 4),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Material(
+                                                    color: Colors.transparent,
+                                                    borderRadius: BorderRadius.circular(18),
+                                                    child: InkWell(
+                                                      borderRadius: BorderRadius.circular(18),
+                                                      onTap: () {
+                                                        setState(() {
+                                                          if (isExpanded) {
+                                                            _expandedInvoices.remove(invoice);
+                                                          } else {
+                                                            _expandedInvoices.add(invoice);
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.all(16),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            // Header Row (Time Pill, Customer Name, Summary, Arrow)
+                                                            Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                                              children: [
+                                                                // Time Pill
+                                                                Container(
+                                                                  padding: const EdgeInsets.symmetric(
+                                                                    horizontal: 12,
+                                                                    vertical: 6,
+                                                                  ),
+                                                                  decoration: BoxDecoration(
+                                                                    color: isDark
+                                                                        ? const Color(0xFF1E293D)
+                                                                        : const Color(0xFFE2E8F0),
+                                                                    borderRadius: BorderRadius.circular(20),
+                                                                  ),
+                                                                  child: Text(
+                                                                    timeStr,
+                                                                    style: TextStyle(
+                                                                      color: isDark
+                                                                          ? const Color(0xFF829AB1)
+                                                                          : const Color(0xFF475569),
+                                                                      fontSize: 12,
+                                                                      fontWeight: FontWeight.w600,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 14),
+
+                                                                // Name & Subtitle Summary
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Text(
+                                                                        customerName,
+                                                                        style: TextStyle(
+                                                                          color: ThemeManager.instance.getMatchColor(),
+                                                                          fontSize: 17,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          letterSpacing: -0.3,
+                                                                        ),
+                                                                      ),
+                                                                      const SizedBox(height: 2),
+                                                                      Text(
+                                                                        '${items.length} products | Total: ${_formatCurrency(grandTotal)}',
+                                                                        style: TextStyle(
+                                                                          color: isDark
+                                                                              ? const Color(0xFF94A3B8)
+                                                                              : const Color(0xFF64748B),
+                                                                          fontSize: 13,
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+
+                                                                // Expand/Collapse Chevron Icon
+                                                                Icon(
+                                                                  isExpanded
+                                                                      ? Icons.keyboard_arrow_up_rounded
+                                                                      : Icons.keyboard_arrow_down_rounded,
+                                                                  color: isDark
+                                                                      ? const Color(0xFF94A3B8)
+                                                                      : const Color(0xFF64748B),
+                                                                  size: 26,
+                                                                ),
+                                                              ],
+                                                            ),
+
+                                                            // Expanded Content Section
+                                                            if (isExpanded) ...[
+                                                              const SizedBox(height: 14),
+
+                                                              // Action Buttons (Edit & Delete)
+                                                              Row(
+                                                                children: [
+                                                                  // Edit Button
+                                                                  Expanded(
+                                                                    child: Material(
+                                                                      color: Colors.transparent,
+                                                                      child: InkWell(
+                                                                        onTap: () => _editInvoice(context, items),
+                                                                        borderRadius: BorderRadius.circular(12),
+                                                                        child: Container(
+                                                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                                                          decoration: BoxDecoration(
+                                                                            color: isDark
+                                                                                ? const Color(0xFF1E293D)
+                                                                                : const Color(0xFFEFF6FF),
+                                                                            borderRadius: BorderRadius.circular(12),
+                                                                          ),
+                                                                          child: Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                            children: [
+                                                                              Icon(
+                                                                                Icons.mode_edit_outline_rounded,
+                                                                                color: isDark
+                                                                                    ? const Color(0xFFFACC15)
+                                                                                    : const Color(0xFFD97706),
+                                                                                size: 18,
+                                                                              ),
+                                                                              const SizedBox(width: 8),
+                                                                              Text(
+                                                                                'Edit',
+                                                                                style: TextStyle(
+                                                                                  color: isDark
+                                                                                      ? const Color(0xFFFACC15)
+                                                                                      : const Color(0xFFD97706),
+                                                                                  fontSize: 15,
+                                                                                  fontWeight: FontWeight.bold,
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  const SizedBox(width: 10),
+
+                                                                  // Delete Button
+                                                                  Expanded(
+                                                                    child: Material(
+                                                                      color: Colors.transparent,
+                                                                      child: InkWell(
+                                                                        onTap: () => _deleteInvoice(context, invoice),
+                                                                        borderRadius: BorderRadius.circular(12),
+                                                                        child: Container(
+                                                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                                                          decoration: BoxDecoration(
+                                                                            color: isDark
+                                                                                ? const Color(0xFF1E293D)
+                                                                                : const Color(0xFFFEF2F2),
+                                                                            borderRadius: BorderRadius.circular(12),
+                                                                          ),
+                                                                          child: Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                            children: [
+                                                                              Icon(
+                                                                                Icons.delete_outline_rounded,
+                                                                                color: isDark
+                                                                                    ? const Color(0xFFF87171)
+                                                                                    : const Color(0xFFDC2626),
+                                                                                size: 18,
+                                                                              ),
+                                                                              const SizedBox(width: 8),
+                                                                              Text(
+                                                                                'Delete',
+                                                                                style: TextStyle(
+                                                                                  color: isDark
+                                                                                      ? const Color(0xFFF87171)
+                                                                                      : const Color(0xFFDC2626),
+                                                                                  fontSize: 15,
+                                                                                  fontWeight: FontWeight.bold,
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+
+                                                              // Order Remarks (if present)
+                                                              if (remarks.isNotEmpty) ...[
+                                                                const SizedBox(height: 12),
+                                                                Container(
+                                                                  width: double.infinity,
+                                                                  padding: const EdgeInsets.all(12),
+                                                                  decoration: BoxDecoration(
+                                                                    color: isDark
+                                                                        ? const Color(0xFF0F172A)
+                                                                        : const Color(0xFFF1F5F9),
+                                                                    borderRadius: BorderRadius.circular(12),
+                                                                    border: Border.all(
+                                                                      color: isDark
+                                                                          ? Colors.white.withOpacity(0.06)
+                                                                          : Colors.black.withOpacity(0.05),
+                                                                    ),
+                                                                  ),
+                                                                  child: Row(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons.note_alt_outlined,
+                                                                        size: 16,
+                                                                        color: isDark
+                                                                            ? const Color(0xFF829AB1)
+                                                                            : const Color(0xFF1E56E2),
+                                                                      ),
+                                                                      const SizedBox(width: 8),
+                                                                      Expanded(
+                                                                        child: Column(
+                                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                              'Remarks',
+                                                                              style: TextStyle(
+                                                                                color: isDark
+                                                                                    ? const Color(0xFF829AB1)
+                                                                                    : const Color(0xFF1E56E2),
+                                                                                fontSize: 11,
+                                                                                fontWeight: FontWeight.bold,
+                                                                              ),
+                                                                            ),
+                                                                            const SizedBox(height: 2),
+                                                                            Text(
+                                                                              remarks,
+                                                                              style: TextStyle(
+                                                                                color: ThemeManager.instance.getMatchColor(),
+                                                                                fontSize: 13,
+                                                                                fontWeight: FontWeight.w500,
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ],
+
+                                                              // Product items detail breakdown
+                                                              const SizedBox(height: 10),
+                                                              Divider(
+                                                                color: isDark
+                                                                    ? Colors.white.withOpacity(0.08)
+                                                                    : Colors.black.withOpacity(0.06),
+                                                                height: 1,
+                                                              ),
+                                                              const SizedBox(height: 8),
+                                                              ...items.map(
+                                                                (b) => Padding(
+                                                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                                                  child: Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                    children: [
+                                                                      Text(
+                                                                        'Product ID #${b.bookingProdId}',
+                                                                        style: TextStyle(
+                                                                          color: ThemeManager.instance.getMatchColor().withOpacity(0.9),
+                                                                          fontSize: 13,
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                      ),
+                                                                      Text(
+                                                                        'Qty: ${b.bookingQty}  •  ${_formatCurrency(b.bookingGrandTotal)}',
+                                                                        style: TextStyle(
+                                                                          color: isDark
+                                                                              ? const Color(0xFF94A3B8)
+                                                                              : const Color(0xFF64748B),
+                                                                          fontSize: 13,
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
                               ),
-                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 80), // Padding for bottom nav bar
-              ],
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
