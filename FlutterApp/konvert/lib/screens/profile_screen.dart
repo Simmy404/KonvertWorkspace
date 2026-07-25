@@ -329,6 +329,9 @@ class ProfileScreen extends StatelessWidget {
     final User? user = StorageService.instance.getCurrentUser();
     final String lastSync =
         StorageService.instance.getLastSyncDate() ?? 'Not Synced Yet';
+    final String branchId = (user?.bid != null && user!.bid != 0)
+        ? user.bid.toString()
+        : (StorageService.instance.getApiKey() ?? 'N/A');
 
     return ListenableBuilder(
       listenable: ThemeManager.instance,
@@ -457,50 +460,146 @@ class ProfileScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 12),
 
-                                  // Category / Status Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isLight
-                                          ? const Color(
-                                              0xFF1E56E2,
-                                            ).withValues(alpha: 0.1)
-                                          : const Color(
-                                              0xFF60A5FA,
-                                            ).withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: user?.isOnline == true
-                                                ? const Color(0xFF22C55E)
-                                                : const Color(0xFF3B82F6),
-                                            shape: BoxShape.circle,
+                                  // Category, User ID & Branch ID Badges
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      // Category Badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isLight
+                                              ? const Color(
+                                                  0xFF1E56E2,
+                                                ).withValues(alpha: 0.1)
+                                              : const Color(
+                                                  0xFF60A5FA,
+                                                ).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          user?.category.isNotEmpty == true
-                                              ? user!.category
-                                              : 'Active User',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: isLight
-                                                ? const Color(0xFF1E56E2)
-                                                : const Color(0xFF60A5FA),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: user?.isOnline == true
+                                                    ? const Color(0xFF22C55E)
+                                                    : const Color(0xFF3B82F6),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              user?.category.isNotEmpty == true
+                                                  ? user!.category
+                                                  : 'Active User',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: isLight
+                                                    ? const Color(0xFF1E56E2)
+                                                    : const Color(0xFF60A5FA),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // User ID Badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isLight
+                                              ? const Color(
+                                                  0xFF10B981,
+                                                ).withValues(alpha: 0.1)
+                                              : const Color(
+                                                  0xFF34D399,
+                                                ).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.badge_rounded,
+                                              size: 14,
+                                              color: isLight
+                                                  ? const Color(0xFF10B981)
+                                                  : const Color(0xFF34D399),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'User ID: ${user?.id ?? 'N/A'}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: isLight
+                                                    ? const Color(0xFF10B981)
+                                                    : const Color(0xFF34D399),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // Branch ID Badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isLight
+                                              ? const Color(
+                                                  0xFFFF6B35,
+                                                ).withValues(alpha: 0.1)
+                                              : const Color(
+                                                  0xFFFF8C5A,
+                                                ).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.storefront_rounded,
+                                              size: 14,
+                                              color: isLight
+                                                  ? const Color(0xFFFF6B35)
+                                                  : const Color(0xFFFF8C5A),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Branch ID: $branchId',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: isLight
+                                                    ? const Color(0xFFFF6B35)
+                                                    : const Color(0xFFFF8C5A),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -519,9 +618,20 @@ class ProfileScreen extends StatelessWidget {
                               borderColor: borderColor,
                             ),
                             _buildInfoTile(
+                              icon: Icons.category_outlined,
+                              label: 'User Category',
+                              value: user?.category.isNotEmpty == true
+                                  ? user!.category
+                                  : 'Active User',
+                              textColor: textColor,
+                              subtextColor: subtextColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                            ),
+                            _buildInfoTile(
                               icon: Icons.storefront_outlined,
                               label: 'Branch / Territory ID (BID)',
-                              value: user?.bid.toString() ?? 'N/A',
+                              value: branchId,
                               textColor: textColor,
                               subtextColor: subtextColor,
                               cardBg: cardBg,
