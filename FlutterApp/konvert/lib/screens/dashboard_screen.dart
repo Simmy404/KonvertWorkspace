@@ -22,16 +22,37 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late DashboardViewModel _viewModel;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     _viewModel = DashboardViewModel();
+    _pageController = PageController(initialPage: _viewModel.selectedIndex);
+    _viewModel.addListener(_onViewModelChanged);
 
     // Defer the check so it doesn't interrupt the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkInitialSync();
     });
+  }
+
+  void _onViewModelChanged() {
+    if (_pageController.hasClients &&
+        _pageController.page?.round() != _viewModel.selectedIndex) {
+      _pageController.animateToPage(
+        _viewModel.selectedIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _checkInitialSync() {
@@ -82,8 +103,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             body: Stack(
               children: [
                 Positioned.fill(
-                  child: IndexedStack(
-                    index: viewModel.selectedIndex,
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      if (_viewModel.selectedIndex != index) {
+                        _viewModel.setSelectedIndex(index);
+                      }
+                    },
                     children: [
                       HomeTab(onTriggerManualSync: _triggerManualSync),
                       const BookingsScreen(),
@@ -123,7 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ? [const Color(0xFF0C1B54), const Color(0xFF040A29)]
               : [const Color(0xFF1E56E2), const Color(0xFF0E38B1)],
         ),
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isDark
               ? const Color(0xFF1E358A)

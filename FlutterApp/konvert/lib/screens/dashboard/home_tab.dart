@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,6 +10,7 @@ import 'dashboard_view_model.dart';
 import '../../managers/location_manager.dart';
 import '../place_order_screen.dart';
 import '../login_screen.dart';
+import '../profile_screen.dart';
 import '../../utils/page_transitions.dart';
 
 // ==========================================
@@ -26,6 +29,19 @@ class _DashboardGoogleMap extends StatefulWidget {
 class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   GoogleMapController? _mapController;
 
+  void _resetCamera() {
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(widget.position.latitude, widget.position.longitude),
+            zoom: 16.5,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   void didUpdateWidget(covariant _DashboardGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -43,34 +59,92 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
       widget.position.longitude,
     );
 
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(target: centerLatLng, zoom: 16.5),
-      myLocationEnabled: true,
-      myLocationButtonEnabled: false,
-      zoomControlsEnabled: false,
-      mapType: MapType.normal,
-      onMapCreated: (controller) {
-        _mapController = controller;
-        if (widget.isDark) {
-          controller.setMapStyle(ThemeManager.instance.darkMapStyle);
-        }
-      },
-      markers: {
-        Marker(
-          markerId: const MarkerId('current_location'),
-          position: centerLatLng,
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: centerLatLng,
+            zoom: 16.5,
+          ),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          scrollGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          tiltGesturesEnabled: true,
+          rotateGesturesEnabled: true,
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+            Factory<OneSequenceGestureRecognizer>(
+              () => EagerGestureRecognizer(),
+            ),
+          },
+          mapType: MapType.normal,
+          onMapCreated: (controller) {
+            _mapController = controller;
+            if (widget.isDark) {
+              controller.setMapStyle(ThemeManager.instance.darkMapStyle);
+            }
+          },
+          markers: {
+            Marker(
+              markerId: const MarkerId('current_location'),
+              position: centerLatLng,
+            ),
+          },
+          circles: {
+            Circle(
+              circleId: const CircleId('current_location_50m_range'),
+              center: centerLatLng,
+              radius: 100.0,
+              fillColor: const Color(0xFF1E56E2).withValues(alpha: 0.18),
+              strokeColor: const Color(0xFF1E56E2),
+              strokeWidth: 2,
+            ),
+          },
         ),
-      },
-      circles: {
-        Circle(
-          circleId: const CircleId('current_location_50m_range'),
-          center: centerLatLng,
-          radius: 100.0,
-          fillColor: const Color(0xFF1E56E2).withValues(alpha: 0.18),
-          strokeColor: const Color(0xFF1E56E2),
-          strokeWidth: 2,
+
+        // Reset Camera / Re-center Position Button
+        Positioned(
+          top: 10,
+          right: 10,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _resetCamera,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: widget.isDark
+                      ? const Color(0xFF121318).withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: widget.isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.black.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.my_location_rounded,
+                  size: 18,
+                  color: widget.isDark
+                      ? const Color(0xFF60A5FA)
+                      : const Color(0xFF1E56E2),
+                ),
+              ),
+            ),
+          ),
         ),
-      },
+      ],
     );
   }
 }
@@ -105,12 +179,10 @@ class HomeTab extends StatelessWidget {
     }
   }
 
-  Future<void> _onLogout(BuildContext context) async {
-    await StorageService.instance.logoutUser();
-    if (!context.mounted) return;
-    Navigator.pushReplacement(
+  void _navigateToProfile(BuildContext context) {
+    Navigator.push(
       context,
-      PageTransitions.fadeTransition(const LoginScreen()),
+      PageTransitions.fadeTransition(const ProfileScreen()),
     );
   }
 
@@ -134,6 +206,7 @@ class HomeTab extends StatelessWidget {
           // ==========================================
           // BOTTOM SECTION: MY ACTIVITY & LOGOUT
           // ==========================================
+          const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 110),
             child: Column(
@@ -152,7 +225,7 @@ class HomeTab extends StatelessWidget {
                           color: isDark
                               ? Colors.white
                               : const Color(0xFF0F172A),
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.4,
                         ),
@@ -201,11 +274,6 @@ class HomeTab extends StatelessWidget {
                   iconColor: const Color(0xFF8E24AA),
                   isDark: isDark,
                 ),
-
-                const SizedBox(height: 20),
-
-                // Logout Button
-                _buildLogoutButton(context, isDark),
               ],
             ),
           ),
@@ -232,8 +300,8 @@ class HomeTab extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(32),
-              bottomRight: Radius.circular(32),
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
             boxShadow: [
               BoxShadow(
@@ -247,8 +315,8 @@ class HomeTab extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(32),
-              bottomRight: Radius.circular(32),
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
             child: Stack(
               children: [
@@ -295,7 +363,7 @@ class HomeTab extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // User Greeting with Avatar
-                      _buildUserGreeting(currentUser),
+                      _buildUserGreeting(context, currentUser),
                       const SizedBox(height: 24),
 
                       // Target Overview Header
@@ -315,10 +383,10 @@ class HomeTab extends StatelessWidget {
                         ignoring: dashboardVM.isRefreshingTargets,
                         child: Opacity(
                           opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
-                          child: _buildTargetCardsRow(targets),
+                          child: _buildTargetCardsRow(targets, isDark),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 4),
 
                       // Google Maps Card
                       _buildGoogleMapCard(context, isDark),
@@ -332,7 +400,7 @@ class HomeTab extends StatelessWidget {
 
         // Floating "+" Place Order Button (overlapping the bottom edge)
         Positioned(
-          bottom: -24,
+          bottom: -32,
           left: 0,
           right: 0,
           child: Center(child: _buildPlaceOrderFAB(context, isDark)),
@@ -406,66 +474,70 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // USER GREETING WITH AVATAR
   // ==========================================
-  Widget _buildUserGreeting(dynamic currentUser) {
-    return Row(
-      children: [
-        // Profile Avatar Circle
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFFF6B35), width: 2.5),
+  Widget _buildUserGreeting(BuildContext context, dynamic currentUser) {
+    return GestureDetector(
+      onTap: () => _navigateToProfile(context),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          // Dashed Profile Avatar Circle
+          CustomPaint(
+            painter: DashedCirclePainter(
+              color: const Color(0xFFFF6B35),
+              strokeWidth: 2.5,
+              dashCount: 14,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            ),
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.15),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
+          const SizedBox(width: 12),
+          // Name and Greeting
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                currentUser?.name ?? 'Muhammad Asim',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                  height: 1,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.person_outline_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
+              Text(
+                _getTimeAppropriateGreeting(),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(width: 14),
-        // Name and Greeting
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              currentUser?.name ?? 'Muhammad Asim',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _getTimeAppropriateGreeting(),
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   // ==========================================
   // TARGET CARDS (HORIZONTAL ROW)
   // ==========================================
-  Widget _buildTargetCardsRow(Map<String, dynamic> targets) {
+  Widget _buildTargetCardsRow(Map<String, dynamic> targets, bool isDark) {
     String formatValue(String raw) {
       final cleaned = raw.replaceAll(',', '').trim();
       final val = double.tryParse(cleaned) ?? 0;
@@ -494,63 +566,58 @@ class HomeTab extends StatelessWidget {
           child: _buildTargetCard(
             value: formatValue(targets['month_target']?.toString() ?? '0'),
             label: 'Monthly\nTarget',
+            isDark: isDark,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
             value: formatValue(targets['total_sales']?.toString() ?? '0'),
             label: 'Total\nSales',
+            isDark: isDark,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
             value: formatValue(targets['today_sales']?.toString() ?? '0'),
             label: 'Today\nSales',
+            isDark: isDark,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
             value: formatValue(targets['no_of_orders']?.toString() ?? '0'),
             label: 'No. of\nOrders',
+            isDark: isDark,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTargetCard({required String value, required String label}) {
+  Widget _buildTargetCard({
+    required String value,
+    required String label,
+    required bool isDark,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF7C3AED), Color(0xFF6D28D9), Color(0xFF5B21B6)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5B21B6).withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        gradient: ThemeManager.instance.getTargetCardGradient(isDark: isDark),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
+            style: TextStyle(
+              color: ThemeManager.instance.getTargetCardValueColor(
+                isDark: isDark,
+              ),
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
             ),
@@ -560,10 +627,13 @@ class HomeTab extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: ThemeManager.instance.getTargetCardLabelColor(
+                isDark: isDark,
+              ),
               fontSize: 10,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+              height: 1,
             ),
           ),
         ],
@@ -586,13 +656,7 @@ class HomeTab extends StatelessWidget {
               color: isDark
                   ? const Color(0xFF121318).withValues(alpha: 0.8)
                   : Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isDark
-                    ? const Color(0xFF2E3452)
-                    : Colors.white.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: locManager.isFetching
@@ -617,13 +681,7 @@ class HomeTab extends StatelessWidget {
           height: 180,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isDark
-                  ? const Color(0xFF2E3452)
-                  : Colors.white.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
@@ -633,7 +691,7 @@ class HomeTab extends StatelessWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(8),
             child: _DashboardGoogleMap(isDark: isDark, position: pos),
           ),
         );
@@ -648,26 +706,17 @@ class HomeTab extends StatelessWidget {
     return GestureDetector(
       onTap: () => _navigateToPlaceOrder(context),
       child: Container(
-        width: 56,
-        height: 56,
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-          ),
+          gradient: ThemeManager.instance.getPlaceOrderGradient(isDark: isDark),
           border: Border.all(
-            color: isDark ? const Color(0xFF3B5BDB) : Colors.white,
+            color: ThemeManager.instance.getPlaceOrderBorderColor(
+              isDark: isDark,
+            ),
             width: 3,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1E56E2).withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
@@ -749,45 +798,6 @@ class HomeTab extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // LOGOUT BUTTON
-  // ==========================================
-  Widget _buildLogoutButton(BuildContext context, bool isDark) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
-        onPressed: () => _onLogout(context),
-        icon: const Icon(
-          Icons.logout_rounded,
-          size: 20,
-          color: Color(0xFFFF5252),
-        ),
-        label: const Text(
-          'Log Out',
-          style: TextStyle(
-            color: Color(0xFFFF5252),
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.2,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: const Color(0xFFFF5252).withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-          backgroundColor: isDark
-              ? const Color(0xFFFF5252).withValues(alpha: 0.08)
-              : const Color(0xFFFF5252).withValues(alpha: 0.05),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
       ),
     );
   }

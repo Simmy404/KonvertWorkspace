@@ -71,6 +71,26 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   final Color greyTransparent6Dark = const Color.fromRGBO(255, 255, 255, 0.12);
   final Color greyTransparent6Light = const Color.fromRGBO(0, 0, 0, 0.12);
 
+  // Place Order Button Colors
+  final Color placeOrderTopDark = const Color(0xFF0059FF);
+  final Color placeOrderBottomDark = const Color(0xFF210099);
+  final Color placeOrderBorderDark = const Color(0xFFFFFFFF);
+
+  final Color placeOrderTopLight = const Color(0xFF0E06FF);
+  final Color placeOrderBottomLight = const Color(0xFF050094);
+  final Color placeOrderBorderLight = const Color(0xFFFFFFFF);
+
+  // Target Card Colors
+  final Color targetCardTopDark = const Color(0xFF6A00FF);
+  final Color targetCardBottomDark = const Color(0xFF000345);
+  final Color targetCardValueDark = const Color(0xFFFFFFFF);
+  final Color targetCardLabelDark = const Color(0xFF9AB7FF);
+
+  final Color targetCardTopLight = const Color(0xFF00FFEA);
+  final Color targetCardBottomLight = const Color(0x0000FFEA);
+  final Color targetCardValueLight = const Color(0xFF000000);
+  final Color targetCardLabelLight = const Color.fromARGB(255, 255, 255, 255);
+
   final String darkMapStyle = '''
 [
   {
@@ -138,12 +158,17 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   {
     "featureType": "road",
     "elementType": "geometry",
-    "stylers": [{"color": "#304a7d"}]
+    "stylers": [{"color": "#48628b"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.stroke",
+    "stylers": [{"color": "#18253f"}]
   },
   {
     "featureType": "road",
     "elementType": "labels.text.fill",
-    "stylers": [{"color": "#98a5be"}]
+    "stylers": [{"color": "#c5d5ea"}]
   },
   {
     "featureType": "road",
@@ -151,19 +176,24 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     "stylers": [{"color": "#1d2c4d"}]
   },
   {
+    "featureType": "road.arterial",
+    "elementType": "geometry",
+    "stylers": [{"color": "#5070a0"}]
+  },
+  {
     "featureType": "road.highway",
     "elementType": "geometry",
-    "stylers": [{"color": "#2c4568"}]
+    "stylers": [{"color": "#60a5fa"}]
   },
   {
     "featureType": "road.highway",
     "elementType": "geometry.stroke",
-    "stylers": [{"color": "#1f2835"}]
+    "stylers": [{"color": "#1d3b6e"}]
   },
   {
     "featureType": "road.highway",
     "elementType": "labels.text.fill",
-    "stylers": [{"color": "#b0d5ce"}]
+    "stylers": [{"color": "#ffffff"}]
   },
   {
     "featureType": "transit",
@@ -244,7 +274,8 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   String getLoginMain() => _isLightMode ? loginMainLight : loginMainDark;
   String getSyncMain() => _isLightMode ? syncMainLight : syncMainDark;
   String getLockMain() => _isLightMode ? lockMainLight : lockMainDark;
-  String getDashboardMain() => _isLightMode ? dashboardMainLight : dashboardMainDark;
+  String getDashboardMain() =>
+      _isLightMode ? dashboardMainLight : dashboardMainDark;
 
   Color getContrastColor() =>
       _isLightMode ? contrastColorLight : contrastColorDark;
@@ -264,6 +295,59 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
       _isLightMode ? greyTransparent5Light : greyTransparent5Dark;
   Color getGreyTransparent6() =>
       _isLightMode ? greyTransparent6Light : greyTransparent6Dark;
+
+  Color getPlaceOrderTopColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? placeOrderTopLight : placeOrderTopDark;
+  }
+
+  Color getPlaceOrderBottomColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? placeOrderBottomLight : placeOrderBottomDark;
+  }
+
+  Color getPlaceOrderBorderColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? placeOrderBorderLight : placeOrderBorderDark;
+  }
+
+  LinearGradient getPlaceOrderGradient({bool? isDark}) => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      getPlaceOrderTopColor(isDark: isDark),
+      getPlaceOrderBottomColor(isDark: isDark),
+    ],
+  );
+
+  Color getTargetCardTopColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? targetCardTopLight : targetCardTopDark;
+  }
+
+  Color getTargetCardBottomColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? targetCardBottomLight : targetCardBottomDark;
+  }
+
+  Color getTargetCardValueColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? targetCardValueLight : targetCardValueDark;
+  }
+
+  Color getTargetCardLabelColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? targetCardLabelLight : targetCardLabelDark;
+  }
+
+  LinearGradient getTargetCardGradient({bool? isDark}) => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      getTargetCardTopColor(isDark: isDark),
+      getTargetCardBottomColor(isDark: isDark),
+    ],
+  );
 
   List<ImageProvider> getImagesToPreload() => [
     AssetImage(getLogoMark()),
