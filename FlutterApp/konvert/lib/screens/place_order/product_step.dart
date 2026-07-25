@@ -32,41 +32,19 @@ class ProductStep extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Row(
-                    children: [
-                      if (state.selectedCustomer != null)
-                        Text(
-                          '${state.selectedCustomer!['customer_name']}',
-                          style: const TextStyle(
-                            color: Color(0xFF1E56E2),
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                  if (state.selectedCustomer != null)
+                    Expanded(
+                      child: Text(
+                        '${state.selectedCustomer!['customer_name']}',
+                        style: const TextStyle(
+                          color: Color(0xFF1E56E2),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        onPressed: state.isRefreshingProducts
-                            ? null
-                            : () => state.refreshProducts(),
-                        icon: state.isRefreshingProducts
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF1E56E2),
-                                ),
-                              )
-                            : Icon(
-                                Icons.refresh_rounded,
-                                color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                                size: 18,
-                              ),
-                        tooltip: 'Refresh Products',
+                        textAlign: TextAlign.right,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
               const SizedBox(height: 2),
@@ -127,18 +105,35 @@ class ProductStep extends StatelessWidget {
 
         // Products List (Disabled while refreshing)
         Expanded(
-          child: IgnorePointer(
-            ignoring: state.isRefreshingProducts,
-            child: Opacity(
-              opacity: state.isRefreshingProducts ? 0.5 : 1.0,
-              child: state.filteredProducts.isEmpty
-                  ? PlaceOrderComponents.buildEmptyState('No Products found', isDark)
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      itemCount: state.filteredProducts.length,
+          child: RefreshIndicator(
+            onRefresh: () => state.refreshProducts(),
+            color: const Color(0xFF1E56E2),
+            child: IgnorePointer(
+              ignoring: state.isRefreshingProducts,
+              child: Opacity(
+                opacity: state.isRefreshingProducts ? 0.5 : 1.0,
+                child: state.filteredProducts.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 250,
+                            child: PlaceOrderComponents.buildEmptyState(
+                              'No Products found',
+                              isDark,
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        itemCount: state.filteredProducts.length,
                       itemBuilder: (context, index) {
                         final product = state.filteredProducts[index];
                         final prodId = product['product_id'].toString();
@@ -391,6 +386,7 @@ class ProductStep extends StatelessWidget {
                         );
                       },
                     ),
+              ),
             ),
           ),
         ),

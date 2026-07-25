@@ -31,40 +31,15 @@ class CustomerStep extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Row(
-                    children: [
-                      if (state.selectedBrick != null)
-                        Text(
-                          '${state.selectedBrick!['brick_name']}',
-                          style: const TextStyle(
-                            color: Color(0xFF1E56E2),
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        onPressed: state.isRefreshingCustomers
-                            ? null
-                            : () => state.refreshCustomers(),
-                        icon: state.isRefreshingCustomers
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF1E56E2),
-                                ),
-                              )
-                            : Icon(
-                                Icons.refresh_rounded,
-                                color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                                size: 18,
-                              ),
-                        tooltip: 'Refresh Customers',
+                  if (state.selectedBrick != null)
+                    Text(
+                      '${state.selectedBrick!['brick_name']}',
+                      style: const TextStyle(
+                        color: Color(0xFF1E56E2),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
               const SizedBox(height: 2),
@@ -125,18 +100,35 @@ class CustomerStep extends StatelessWidget {
 
         // Customer List (Disabled while refreshing)
         Expanded(
-          child: IgnorePointer(
-            ignoring: state.isRefreshingCustomers,
-            child: Opacity(
-              opacity: state.isRefreshingCustomers ? 0.5 : 1.0,
-              child: state.filteredCustomers.isEmpty
-                  ? PlaceOrderComponents.buildEmptyState('No Customers found', isDark)
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      itemCount: state.filteredCustomers.length,
+          child: RefreshIndicator(
+            onRefresh: () => state.refreshCustomers(),
+            color: const Color(0xFF1E56E2),
+            child: IgnorePointer(
+              ignoring: state.isRefreshingCustomers,
+              child: Opacity(
+                opacity: state.isRefreshingCustomers ? 0.5 : 1.0,
+                child: state.filteredCustomers.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 250,
+                            child: PlaceOrderComponents.buildEmptyState(
+                              'No Customers found',
+                              isDark,
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        itemCount: state.filteredCustomers.length,
                       itemBuilder: (context, index) {
                         final customer = state.filteredCustomers[index];
                         final type = customer['customer_type']?.toString() ?? '';
@@ -283,6 +275,7 @@ class CustomerStep extends StatelessWidget {
                         );
                       },
                     ),
+              ),
             ),
           ),
         ),

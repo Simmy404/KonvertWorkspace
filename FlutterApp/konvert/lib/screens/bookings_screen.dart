@@ -162,14 +162,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: Icon(Icons.refresh_rounded, color: ThemeManager.instance.getPrimaryColor()),
-              title: Text('Refresh Bookings', style: TextStyle(color: ThemeManager.instance.getMatchColor())),
-              onTap: () {
-                Navigator.pop(context);
-                _viewModel.fetchBookings();
-              },
-            ),
-            ListTile(
               leading: Icon(Icons.cloud_upload_rounded, color: ThemeManager.instance.getPrimaryColor()),
               title: Text('Upload Bookings', style: TextStyle(color: ThemeManager.instance.getMatchColor())),
               onTap: () {
@@ -409,7 +401,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                             ],
                                           )
                                         : ListView.builder(
-                                            physics: const BouncingScrollPhysics(),
+                                            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                                             itemCount: filteredGrouped.length + 1,
                                             itemBuilder: (context, index) {
                                               if (index == filteredGrouped.length) {
