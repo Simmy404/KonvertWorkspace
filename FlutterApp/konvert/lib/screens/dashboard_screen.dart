@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../managers/theme_manager.dart';
 import '../services/storage_service.dart';
@@ -84,6 +85,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  Future<bool> _onWillPop(BuildContext context) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF161B26) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Exit Application',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to close the app?',
+            style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Exit',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return shouldPop ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -99,52 +148,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 return const Scaffold(backgroundColor: Colors.black);
               }
 
-              return Scaffold(
-                backgroundColor: isDark
-                    ? const Color(0xFF000000)
-                    : const Color(0xFFF8FAFC),
-                body: Stack(
-                  children: [
-                    // Main Theme Background Image covering the entire dashboard screen
-                    Positioned.fill(
-                      child: Image.asset(
-                        ThemeManager.instance.getMainBG(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => ColoredBox(
-                          color: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
+              return PopScope(
+                canPop: false,
+                onPopInvoked: (didPop) async {
+                  if (didPop) return;
+                  final shouldPop = await _onWillPop(context);
+                  if (shouldPop) {
+                    if (context.mounted) {
+                      SystemNavigator.pop();
+                    }
+                  }
+                },
+                child: Scaffold(
+                  backgroundColor: isDark
+                      ? const Color(0xFF000000)
+                      : const Color(0xFFF8FAFC),
+                  body: Stack(
+                    children: [
+                      // Main Theme Background Image covering the entire dashboard screen
+                      Positioned.fill(
+                        child: Image.asset(
+                          ThemeManager.instance.getMainBG(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              ColoredBox(
+                                color: isDark
+                                    ? const Color(0xFF000000)
+                                    : const Color(0xFFF8FAFC),
+                              ),
                         ),
                       ),
-                    ),
-                    Column(
-                      children: [
-                        Expanded(
-                          child: PageView(
-                            controller: _pageController,
-                            onPageChanged: (index) {
-                              if (_viewModel.selectedIndex != index) {
-                                _viewModel.setSelectedIndex(index);
-                              }
-                            },
-                            children: [
-                              HomeTab(onTriggerManualSync: _triggerManualSync),
-                              const BookingsScreen(),
-                              const TourPlanTab(),
-                              const ReportTab(),
-                            ],
+                      Column(
+                        children: [
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              onPageChanged: (index) {
+                                if (_viewModel.selectedIndex != index) {
+                                  _viewModel.setSelectedIndex(index);
+                                }
+                              },
+                              children: [
+                                HomeTab(
+                                  onTriggerManualSync: _triggerManualSync,
+                                ),
+                                const BookingsScreen(),
+                                const TourPlanTab(),
+                                const ReportTab(),
+                              ],
+                            ),
                           ),
-                        ),
 
-                        // Bottom Navigation Bar Area
-                        SafeArea(
-                          top: false,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                            child: _buildBottomNavBar(context, viewModel, isDark),
+                          // Bottom Navigation Bar Area
+                          SafeArea(
+                            top: false,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                              child: _buildBottomNavBar(
+                                context,
+                                viewModel,
+                                isDark,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
