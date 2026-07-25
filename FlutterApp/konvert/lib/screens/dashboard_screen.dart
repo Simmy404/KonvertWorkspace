@@ -100,9 +100,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: isDark
                 ? const Color(0xFF000000) // Pure Black to match image
                 : const Color(0xFFF8FAFC),
-            body: Stack(
+            body: Column(
               children: [
-                Positioned.fill(
+                Expanded(
                   child: PageView(
                     controller: _pageController,
                     onPageChanged: (index) {
@@ -119,12 +119,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
 
-                // Floating Bottom Navigation Bar
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 20,
-                  child: _buildBottomNavBar(context, viewModel, isDark),
+                // Bottom Navigation Bar Area
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                    child: _buildBottomNavBar(context, viewModel, isDark),
+                  ),
                 ),
               ],
             ),
@@ -142,25 +143,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       height: 68,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF0C1B54), const Color(0xFF040A29)]
-              : [const Color(0xFF1E56E2), const Color(0xFF0E38B1)],
-        ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF1E358A)
-              : Colors.white.withValues(alpha: 0.35),
-          width: 1.5,
-        ),
+        gradient: ThemeManager.instance.getNavBarGradient(isDark: isDark),
+        borderRadius: BorderRadius.circular(50),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.7)
-                : const Color(0xFF003087).withValues(alpha: 0.35),
+                ? Colors.black.withValues(alpha: 0.5)
+                : const Color(0xFF003087).withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -174,26 +163,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildNavItem(
               viewModel,
               index: 0,
-              icon: Icons.home_rounded,
+              selectedIcon: Icons.space_dashboard_rounded,
+              unselectedIcon: Icons.space_dashboard_outlined,
               label: 'Home',
+              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
               index: 1,
-              icon: Icons.receipt_long_rounded,
+              selectedIcon: Icons.shopping_bag_rounded,
+              unselectedIcon: Icons.shopping_bag_outlined,
               label: 'Bookings',
+              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
               index: 2,
-              icon: Icons.map_rounded,
+              selectedIcon: Icons.explore_rounded,
+              unselectedIcon: Icons.explore_outlined,
               label: 'Tour Plan',
+              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
               index: 3,
-              icon: Icons.bar_chart_rounded,
+              selectedIcon: Icons.analytics_rounded,
+              unselectedIcon: Icons.analytics_outlined,
               label: 'Report',
+              isDark: isDark,
             ),
           ],
         ),
@@ -204,10 +201,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildNavItem(
     DashboardViewModel viewModel, {
     required int index,
-    required IconData icon,
+    required IconData selectedIcon,
+    required IconData unselectedIcon,
     required String label,
+    required bool isDark,
   }) {
     final isSelected = viewModel.selectedIndex == index;
+
+    final Color selectedPillBg = isDark
+        ? const Color(0xFF0059FF).withValues(alpha: 0.20)
+        : const Color(0xFF0A192F).withValues(alpha: 0.12);
+
+    final Color selectedContentColor = isDark
+        ? const Color(0xFFE0F2FE)
+        : const Color(0xFF0A192F);
+
+    final Color unselectedContentColor = isDark
+        ? const Color(0xFFE0F2FE).withValues(alpha: 0.35)
+        : const Color(0xFF0A192F).withValues(alpha: 0.35);
 
     return GestureDetector(
       onTap: () => viewModel.setSelectedIndex(index),
@@ -221,30 +232,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         decoration: isSelected
             ? BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: selectedPillBg,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 1,
-                ),
               )
             : null,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon,
-              color: isSelected
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.55),
+              isSelected ? selectedIcon : unselectedIcon,
+              color: isSelected ? selectedContentColor : unselectedContentColor,
               size: isSelected ? 22 : 24,
             ),
             if (isSelected) ...[
               const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: selectedContentColor,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.2,

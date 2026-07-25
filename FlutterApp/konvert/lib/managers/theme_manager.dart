@@ -91,6 +91,15 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   final Color targetCardValueLight = const Color(0xFF000000);
   final Color targetCardLabelLight = const Color.fromARGB(255, 255, 255, 255);
 
+  // Bottom Nav Bar Colors
+  final Color navBarTopDark = const Color(0xFF003BFF).withValues(alpha: 0.58);
+  final Color navBarBottomDark = const Color(0xFF0004FF).withValues(alpha: 0.0);
+  final Color navBarBorderDark = const Color(0xFF8E61FF).withValues(alpha: 0.38);
+
+  final Color navBarTopLight = const Color(0xFFFFFFFF);
+  final Color navBarBottomLight = const Color(0xFFDBEAFF);
+  final Color navBarBorderLight = const Color(0xFF97D4FF).withValues(alpha: 0.76);
+
   final String darkMapStyle = '''
 [
   {
@@ -346,6 +355,30 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     colors: [
       getTargetCardTopColor(isDark: isDark),
       getTargetCardBottomColor(isDark: isDark),
+    ],
+  );
+
+  Color getNavBarTopColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? navBarTopLight : navBarTopDark;
+  }
+
+  Color getNavBarBottomColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? navBarBottomLight : navBarBottomDark;
+  }
+
+  Color getNavBarBorderColor({bool? isDark}) {
+    final useLight = isDark != null ? !isDark : _isLightMode;
+    return useLight ? navBarBorderLight : navBarBorderDark;
+  }
+
+  LinearGradient getNavBarGradient({bool? isDark}) => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      getNavBarTopColor(isDark: isDark),
+      getNavBarBottomColor(isDark: isDark),
     ],
   );
 

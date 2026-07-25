@@ -1,6 +1,8 @@
 // lib/screens/profile_screen.dart
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../managers/theme_manager.dart';
 import '../services/storage_service.dart';
 import '../models/user.dart';
@@ -11,11 +13,13 @@ class DashedCirclePainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
   final int dashCount;
+  final double gapRatio;
 
   DashedCirclePainter({
     required this.color,
     this.strokeWidth = 2.0,
     this.dashCount = 16,
+    this.gapRatio = 0.4,
   });
 
   @override
@@ -29,8 +33,9 @@ class DashedCirclePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
     final circumference = 2 * pi * radius;
-    final dashLength = (circumference / dashCount) * 0.65;
-    final spaceLength = (circumference / dashCount) * 0.35;
+    final dashRatio = (1.0 - gapRatio).clamp(0.1, 0.9);
+    final dashLength = (circumference / dashCount) * dashRatio;
+    final spaceLength = (circumference / dashCount) * gapRatio;
 
     double currentAngle = 0.0;
     while (currentAngle < 2 * pi) {
@@ -50,12 +55,126 @@ class DashedCirclePainter extends CustomPainter {
   bool shouldRepaint(covariant DashedCirclePainter oldDelegate) {
     return oldDelegate.color != color ||
         oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.dashCount != dashCount;
+        oldDelegate.dashCount != dashCount ||
+        oldDelegate.gapRatio != gapRatio;
   }
 }
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _showProfilePhotoOptions(BuildContext context) async {
+    final isDark = !ThemeManager.instance.isLightMode;
+    final bool hasCustomPfp =
+        StorageService.instance.getProfilePicture()?.isNotEmpty == true;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Change Profile Picture',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_rounded,
+                    color: Color(0xFF1E56E2),
+                  ),
+                  title: Text(
+                    'Choose from Gallery',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(context, ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Color(0xFF1E56E2),
+                  ),
+                  title: Text(
+                    'Take a Photo',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(context, ImageSource.camera);
+                  },
+                ),
+                if (hasCustomPfp)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Color(0xFFFF5252),
+                    ),
+                    title: const Text(
+                      'Remove Profile Picture',
+                      style: TextStyle(color: Color(0xFFFF5252)),
+                    ),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await StorageService.instance.deleteProfilePicture();
+                      ThemeManager.instance.notifyListeners();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 600,
+        maxHeight: 600,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final base64Str = base64Encode(bytes);
+        await StorageService.instance.saveProfilePicture(base64Str);
+        ThemeManager.instance.notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error picking profile picture: $e');
+    }
+  }
 
   Future<void> _onLogout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -117,6 +236,94 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
+  Widget _buildAvatarWidget(BuildContext context, bool isLight, User? user) {
+    final String? pfpBase64 = StorageService.instance.getProfilePicture();
+
+    Widget avatarContent;
+    if (pfpBase64 != null && pfpBase64.isNotEmpty) {
+      try {
+        final bytes = base64Decode(pfpBase64);
+        avatarContent = ClipOval(
+          child: Image.memory(
+            bytes,
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildDefaultAvatarContent(user),
+          ),
+        );
+      } catch (_) {
+        avatarContent = _buildDefaultAvatarContent(user);
+      }
+    } else {
+      avatarContent = _buildDefaultAvatarContent(user);
+    }
+
+    return GestureDetector(
+      onTap: () => _showProfilePhotoOptions(context),
+      child: CustomPaint(
+        painter: DashedCirclePainter(
+          color: isLight ? const Color(0xFF1E56E2) : const Color(0xFF60A5FA),
+          strokeWidth: 3.0,
+          dashCount: 16,
+          gapRatio: 0.4,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isLight
+                        ? [const Color(0xFF2563EB), const Color(0xFF1D4ED8)]
+                        : [const Color(0xFF3B82F6), const Color(0xFF1E40AF)],
+                  ),
+                ),
+                child: avatarContent,
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF6B35),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatarContent(User? user) {
+    return Center(
+      child: Text(
+        (user?.name.isNotEmpty == true) ? user!.name[0].toUpperCase() : 'U',
+        style: const TextStyle(
+          fontSize: 34,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final User? user = StorageService.instance.getCurrentUser();
@@ -128,8 +335,9 @@ class ProfileScreen extends StatelessWidget {
       builder: (context, child) {
         final isLight = ThemeManager.instance.isLightMode;
         final textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-        final subtextColor =
-            isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+        final subtextColor = isLight
+            ? const Color(0xFF64748B)
+            : const Color(0xFF94A3B8);
         final cardBg = isLight
             ? Colors.white.withValues(alpha: 0.9)
             : const Color(0xFF1E293B).withValues(alpha: 0.85);
@@ -222,50 +430,7 @@ class ProfileScreen extends StatelessWidget {
                               child: Column(
                                 children: [
                                   // Dashed PFP Avatar Circle
-                                  CustomPaint(
-                                    painter: DashedCirclePainter(
-                                      color: isLight
-                                          ? const Color(0xFF1E56E2)
-                                          : const Color(0xFF60A5FA),
-                                      strokeWidth: 3.0,
-                                      dashCount: 16,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: Container(
-                                        width: 80,
-                                        height: 80,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: isLight
-                                                ? [
-                                                    const Color(0xFF2563EB),
-                                                    const Color(0xFF1D4ED8),
-                                                  ]
-                                                : [
-                                                    const Color(0xFF3B82F6),
-                                                    const Color(0xFF1E40AF),
-                                                  ],
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            (user?.name.isNotEmpty == true)
-                                                ? user!.name[0].toUpperCase()
-                                                : 'U',
-                                            style: const TextStyle(
-                                              fontSize: 34,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  _buildAvatarWidget(context, isLight, user),
                                   const SizedBox(height: 16),
 
                                   // Name
@@ -300,10 +465,12 @@ class ProfileScreen extends StatelessWidget {
                                     ),
                                     decoration: BoxDecoration(
                                       color: isLight
-                                          ? const Color(0xFF1E56E2)
-                                              .withValues(alpha: 0.1)
-                                          : const Color(0xFF60A5FA)
-                                              .withValues(alpha: 0.15),
+                                          ? const Color(
+                                              0xFF1E56E2,
+                                            ).withValues(alpha: 0.1)
+                                          : const Color(
+                                              0xFF60A5FA,
+                                            ).withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Row(
@@ -397,8 +564,9 @@ class ProfileScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  backgroundColor: const Color(0xFFFF5252)
-                                      .withValues(alpha: 0.08),
+                                  backgroundColor: const Color(
+                                    0xFFFF5252,
+                                  ).withValues(alpha: 0.08),
                                 ),
                                 icon: const Icon(
                                   Icons.logout_rounded,

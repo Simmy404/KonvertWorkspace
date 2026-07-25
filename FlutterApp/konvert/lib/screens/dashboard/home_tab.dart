@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -179,106 +180,109 @@ class HomeTab extends StatelessWidget {
     }
   }
 
-  void _navigateToProfile(BuildContext context) {
-    Navigator.push(
+  Future<void> _navigateToProfile(BuildContext context) async {
+    await Navigator.push(
       context,
       PageTransitions.fadeTransition(const ProfileScreen()),
     );
+    if (context.mounted) {
+      final dashboardVM = Provider.of<DashboardViewModel>(
+        context,
+        listen: false,
+      );
+      dashboardVM.loadCatalogCounts();
+      dashboardVM.refreshTargets();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentUser = StorageService.instance.getCurrentUser();
-    final targets = StorageService.instance.getTargets();
-    final dashboardVM = context.watch<DashboardViewModel>();
+    return ListenableBuilder(
+      listenable: ThemeManager.instance,
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final currentUser = StorageService.instance.getCurrentUser();
+        final targets = StorageService.instance.getTargets();
+        final dashboardVM = context.watch<DashboardViewModel>();
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ==========================================
-          // TOP SECTION: BACKGROUND IMAGE AREA
-          // ==========================================
-          _buildTopSection(context, isDark, currentUser, targets, dashboardVM),
-
-          // ==========================================
-          // BOTTOM SECTION: MY ACTIVITY & LOGOUT
-          // ==========================================
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 110),
+        return RefreshIndicator(
+          onRefresh: () async {
+            await dashboardVM.refreshTargets();
+            await dashboardVM.loadCatalogCounts();
+          },
+          color: const Color(0xFF1E56E2),
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section Header
-                InkWell(
-                  onTap: () {},
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                // ==========================================
+                // TOP SECTION: BACKGROUND IMAGE AREA
+                // ==========================================
+                _buildTopSection(
+                  context,
+                  isDark,
+                  currentUser,
+                  targets,
+                  dashboardVM,
+                ),
+
+                // ==========================================
+                // BOTTOM SECTION: MY ACTIVITY & LOGOUT
+                // ==========================================
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'My Activity',
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF0F172A),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.4,
+                      // Section Header
+                      InkWell(
+                        onTap: () {},
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'My Activity',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 20,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 20,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      ),
+                      const SizedBox(height: 16),
+
+                      // Activity Items (4 Empty Cards)
+                      _buildActivityCard(isDark: isDark),
+                      _buildActivityCard(isDark: isDark),
+                      _buildActivityCard(isDark: isDark),
+                      _buildActivityCard(isDark: isDark),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Activity Items
-                _buildActivityCard(
-                  title: 'Order Synchronization',
-                  subtitle: 'All local bookings synced with server',
-                  time: 'Just now',
-                  icon: Icons.sync_rounded,
-                  iconColor: const Color(0xFF388E3C),
-                  isDark: isDark,
-                ),
-                _buildActivityCard(
-                  title: 'GPS Location Ping',
-                  subtitle: 'Active background location tracking',
-                  time: '2 mins ago',
-                  icon: Icons.my_location_rounded,
-                  iconColor: const Color(0xFF1E88E5),
-                  isDark: isDark,
-                ),
-                _buildActivityCard(
-                  title: 'Territory Catalog Update',
-                  subtitle: 'Bricks & Customer lists up to date',
-                  time: '1 hour ago',
-                  icon: Icons.folder_copy_outlined,
-                  iconColor: const Color(0xFFFB8C00),
-                  isDark: isDark,
-                ),
-                _buildActivityCard(
-                  title: 'Daily Route Target',
-                  subtitle: 'On track to meet monthly target',
-                  time: 'Today',
-                  icon: Icons.track_changes_rounded,
-                  iconColor: const Color(0xFF8E24AA),
-                  isDark: isDark,
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -358,7 +362,7 @@ class HomeTab extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Action Row: Logo + Icons
+                      // Top Action Bar: Logo + Icons
                       _buildTopActionBar(),
                       const SizedBox(height: 24),
 
@@ -367,14 +371,43 @@ class HomeTab extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // Target Overview Header
-                      Text(
-                        'Target Overview',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.2,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Target Overview',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          if (dashboardVM.isRefreshingTargets)
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white70,
+                                ),
+                              ),
+                            )
+                          else
+                            InkWell(
+                              onTap: () => dashboardVM.refreshTargets(),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Icon(
+                                  Icons.refresh_rounded,
+                                  size: 16,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 10),
 
@@ -475,6 +508,40 @@ class HomeTab extends StatelessWidget {
   // USER GREETING WITH AVATAR
   // ==========================================
   Widget _buildUserGreeting(BuildContext context, dynamic currentUser) {
+    final String? pfpBase64 = StorageService.instance.getProfilePicture();
+
+    Widget avatarChild;
+    if (pfpBase64 != null && pfpBase64.isNotEmpty) {
+      try {
+        final bytes = base64Decode(pfpBase64);
+        avatarChild = ClipOval(
+          child: Image.memory(
+            bytes,
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.person_outline_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+        );
+      } catch (_) {
+        avatarChild = const Icon(
+          Icons.person_outline_rounded,
+          color: Colors.white,
+          size: 26,
+        );
+      }
+    } else {
+      avatarChild = const Icon(
+        Icons.person_outline_rounded,
+        color: Colors.white,
+        size: 26,
+      );
+    }
+
     return GestureDetector(
       onTap: () => _navigateToProfile(context),
       behavior: HitTestBehavior.opaque,
@@ -485,7 +552,8 @@ class HomeTab extends StatelessWidget {
             painter: DashedCirclePainter(
               color: const Color(0xFFFF6B35),
               strokeWidth: 2.5,
-              dashCount: 14,
+              dashCount: 10,
+              gapRatio: 0.4,
             ),
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -496,11 +564,7 @@ class HomeTab extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.15),
                 ),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
+                child: Center(child: avatarChild),
               ),
             ),
           ),
@@ -538,33 +602,77 @@ class HomeTab extends StatelessWidget {
   // TARGET CARDS (HORIZONTAL ROW)
   // ==========================================
   Widget _buildTargetCardsRow(Map<String, dynamic> targets, bool isDark) {
-    String formatValue(String raw) {
+    ({String number, String unit}) formatValueParts(String raw) {
       final cleaned = raw.replaceAll(',', '').trim();
       final val = double.tryParse(cleaned) ?? 0;
-      if (val >= 1000000) {
+      if (val <= 0) return (number: '0', unit: '');
+
+      if (val >= 100000) {
+        // >= 100K -> convert to Millions (e.g. 294k -> 0.29M, 340k -> 0.34M, 1.5M, 12M)
         final m = val / 1000000;
-        if (m == m.roundToDouble()) {
-          return '${m.toInt()}M';
+        if (m >= 1000) {
+          final b = val / 1000000000;
+          if (b >= 10) {
+            return (number: '${b.round()}', unit: 'B');
+          }
+          final str = b.toStringAsFixed(1);
+          return (number: str.endsWith('.0') ? '${b.toInt()}' : str, unit: 'B');
         }
-        return '${m.toStringAsFixed(1)}M';
+        if (m >= 100) {
+          return (number: '${m.round()}', unit: 'M');
+        }
+        if (m >= 10) {
+          final str = m.toStringAsFixed(1);
+          return (number: str.endsWith('.0') ? '${m.toInt()}' : str, unit: 'M');
+        }
+        // m is 0.10 to 9.99 (up to 2 decimals, max 5 chars total e.g. 0.29M, 0.34M)
+        var str = m.toStringAsFixed(2);
+        if (str.endsWith('0')) {
+          str = m.toStringAsFixed(1);
+        }
+        if (str.endsWith('.0')) {
+          str = '${m.toInt()}';
+        }
+        return (number: str, unit: 'M');
       } else if (val >= 1000) {
+        // 1K to 99.9K
         final k = val / 1000;
-        if (k == k.roundToDouble()) {
-          return '${k.toInt()}K';
+        if (k >= 100) {
+          return (number: '${k.round()}', unit: 'K');
         }
-        return '${k.toStringAsFixed(1)}K';
+        if (k >= 10) {
+          final str = k.toStringAsFixed(1);
+          return (number: str.endsWith('.0') ? '${k.toInt()}' : str, unit: 'K');
+        }
+        // k is 1.00 to 9.99
+        var str = k.toStringAsFixed(2);
+        if (str.endsWith('0')) {
+          str = k.toStringAsFixed(1);
+        }
+        if (str.endsWith('.0')) {
+          str = '${k.toInt()}';
+        }
+        return (number: str, unit: 'K');
+      } else {
+        if (val == val.roundToDouble()) {
+          final str = val.toInt().toString();
+          return (number: str.length > 5 ? str.substring(0, 5) : str, unit: '');
+        }
+        final str = val.toStringAsFixed(1);
+        return (
+          number: str.length > 5 ? val.toInt().toString() : str,
+          unit: '',
+        );
       }
-      if (val == val.roundToDouble()) {
-        return val.toInt().toString();
-      }
-      return val.toStringAsFixed(1);
     }
 
     return Row(
       children: [
         Expanded(
           child: _buildTargetCard(
-            value: formatValue(targets['month_target']?.toString() ?? '0'),
+            valueParts: formatValueParts(
+              targets['month_target']?.toString() ?? '0',
+            ),
             label: 'Monthly\nTarget',
             isDark: isDark,
           ),
@@ -572,7 +680,9 @@ class HomeTab extends StatelessWidget {
         const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
-            value: formatValue(targets['total_sales']?.toString() ?? '0'),
+            valueParts: formatValueParts(
+              targets['total_sales']?.toString() ?? '0',
+            ),
             label: 'Total\nSales',
             isDark: isDark,
           ),
@@ -580,7 +690,9 @@ class HomeTab extends StatelessWidget {
         const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
-            value: formatValue(targets['today_sales']?.toString() ?? '0'),
+            valueParts: formatValueParts(
+              targets['today_sales']?.toString() ?? '0',
+            ),
             label: 'Today\nSales',
             isDark: isDark,
           ),
@@ -588,7 +700,9 @@ class HomeTab extends StatelessWidget {
         const SizedBox(width: 4),
         Expanded(
           child: _buildTargetCard(
-            value: formatValue(targets['no_of_orders']?.toString() ?? '0'),
+            valueParts: formatValueParts(
+              targets['no_of_orders']?.toString() ?? '0',
+            ),
             label: 'No. of\nOrders',
             isDark: isDark,
           ),
@@ -598,12 +712,16 @@ class HomeTab extends StatelessWidget {
   }
 
   Widget _buildTargetCard({
-    required String value,
+    required ({String number, String unit}) valueParts,
     required String label,
     required bool isDark,
   }) {
+    final valueColor = ThemeManager.instance.getTargetCardValueColor(
+      isDark: isDark,
+    );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
       decoration: BoxDecoration(
         gradient: ThemeManager.instance.getTargetCardGradient(isDark: isDark),
         borderRadius: BorderRadius.circular(8),
@@ -611,16 +729,32 @@ class HomeTab extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: ThemeManager.instance.getTargetCardValueColor(
-                isDark: isDark,
-              ),
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: valueParts.number,
+                  style: TextStyle(
+                    color: valueColor,
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                if (valueParts.unit.isNotEmpty)
+                  TextSpan(
+                    text: valueParts.unit,
+                    style: TextStyle(
+                      color: valueColor.withValues(alpha: 0.85),
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
@@ -727,22 +861,22 @@ class HomeTab extends StatelessWidget {
   // ACTIVITY CARD
   // ==========================================
   Widget _buildActivityCard({
-    required String title,
-    required String subtitle,
-    required String time,
-    required IconData icon,
-    required Color iconColor,
     required bool isDark,
+    String? title,
+    String? subtitle,
+    String? time,
+    IconData? icon,
+    Color? iconColor,
   }) {
+    final bool isEmpty = title == null || title.isEmpty;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      height: 60,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF121318) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
-        ),
         boxShadow: [
           BoxShadow(
             color: isDark
@@ -753,52 +887,64 @@ class HomeTab extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: isEmpty
+          ? const SizedBox.shrink()
+          : Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                if (icon != null && iconColor != null) ...[
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, size: 20, color: iconColor),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (subtitle != null && subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white54
+                                : const Color(0xFF64748B),
+                            fontSize: 11,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
-                    fontSize: 11,
+                if (time != null && time.isNotEmpty)
+                  Text(
+                    time,
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

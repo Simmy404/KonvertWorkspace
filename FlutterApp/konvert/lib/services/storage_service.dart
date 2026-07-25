@@ -122,6 +122,21 @@ class StorageService {
 
   static const String _currentUserKey = 'current_user_cache';
   static const String _suspendedUserKey = 'suspended_user_cache';
+  static const String _profilePicKey = 'user_profile_picture_base64';
+
+  // --- PROFILE PICTURE LOCAL STORAGE ---
+  Future<bool> saveProfilePicture(String base64Data) async {
+    return await setString(_profilePicKey, base64Data);
+  }
+
+  String? getProfilePicture() {
+    return getString(_profilePicKey);
+  }
+
+  Future<bool> deleteProfilePicture() async {
+    if (_prefs == null) await init();
+    return await _prefs!.remove(_profilePicKey);
+  }
 
   // --- USER STORAGE ---
   Future<bool> setCurrentUser(User user) async {
