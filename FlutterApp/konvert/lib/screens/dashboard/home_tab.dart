@@ -10,6 +10,9 @@ import '../place_order_screen.dart';
 import '../login_screen.dart';
 import '../../utils/page_transitions.dart';
 
+// ==========================================
+// DASHBOARD GOOGLE MAP (EXTRACTED STATEFUL)
+// ==========================================
 class _DashboardGoogleMap extends StatefulWidget {
   final bool isDark;
   final Position position;
@@ -62,8 +65,8 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
         Circle(
           circleId: const CircleId('current_location_50m_range'),
           center: centerLatLng,
-          radius: 100.0, // 50 meters geofence radius
-          fillColor: const Color(0xFF1E56E2).withOpacity(0.18),
+          radius: 100.0,
+          fillColor: const Color(0xFF1E56E2).withValues(alpha: 0.18),
           strokeColor: const Color(0xFF1E56E2),
           strokeWidth: 2,
         ),
@@ -72,6 +75,9 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   }
 }
 
+// ==========================================
+// HOME TAB
+// ==========================================
 class HomeTab extends StatelessWidget {
   final VoidCallback onTriggerManualSync;
 
@@ -117,20 +123,19 @@ class HomeTab extends StatelessWidget {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(
-        bottom: 110,
-      ), // Spacing for floating navbar
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TOP COMPONENT: DEEP GRADIENT HEADER CARD
+          // ==========================================
+          // TOP SECTION: BACKGROUND IMAGE AREA
+          // ==========================================
           _buildTopSection(context, isDark, currentUser, targets, dashboardVM),
 
-          const SizedBox(height: 24),
-
-          // BOTTOM SECTION: MY ACTIVITY & LOCATION MAP
+          // ==========================================
+          // BOTTOM SECTION: MY ACTIVITY & LOGOUT
+          // ==========================================
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 110),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -199,11 +204,6 @@ class HomeTab extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // Location Map (Google Maps)
-                _buildGoogleMapCard(context, isDark),
-
-                const SizedBox(height: 20),
-
                 // Logout Button
                 _buildLogoutButton(context, isDark),
               ],
@@ -214,21 +214,384 @@ class HomeTab extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // TOP SECTION WITH BACKGROUND IMAGE
+  // ==========================================
+  Widget _buildTopSection(
+    BuildContext context,
+    bool isDark,
+    dynamic currentUser,
+    Map<String, dynamic> targets,
+    DashboardViewModel dashboardVM,
+  ) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Background Image Container
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.6)
+                    : const Color(0xFF003087).withValues(alpha: 0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+            child: Stack(
+              children: [
+                // Background Image (stretched to fill)
+                Positioned.fill(
+                  child: Image.asset(
+                    ThemeManager.instance.getDashboardMain(),
+                    fit: BoxFit.fill,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF0C164F),
+                                  const Color(0xFF050B30),
+                                  const Color(0xFF020414),
+                                ]
+                              : [
+                                  const Color(0xFF1E56E2),
+                                  const Color(0xFF1447C0),
+                                  const Color(0xFF0D369B),
+                                ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Content over the background
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    MediaQuery.of(context).padding.top + 12,
+                    20,
+                    40,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Action Row: Logo + Icons
+                      _buildTopActionBar(),
+                      const SizedBox(height: 24),
+
+                      // User Greeting with Avatar
+                      _buildUserGreeting(currentUser),
+                      const SizedBox(height: 24),
+
+                      // Target Overview Header
+                      Text(
+                        'Target Overview',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Target Metric Cards (Horizontal Row)
+                      IgnorePointer(
+                        ignoring: dashboardVM.isRefreshingTargets,
+                        child: Opacity(
+                          opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
+                          child: _buildTargetCardsRow(targets),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Google Maps Card
+                      _buildGoogleMapCard(context, isDark),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Floating "+" Place Order Button (overlapping the bottom edge)
+        Positioned(
+          bottom: -24,
+          left: 0,
+          right: 0,
+          child: Center(child: _buildPlaceOrderFAB(context, isDark)),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // TOP ACTION BAR: LOGO + SYNC + NOTIFICATION
+  // ==========================================
+  Widget _buildTopActionBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Logo Mark
+        Image.asset(
+          ThemeManager.instance.logoMarkDark,
+          width: 38,
+          height: 30,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.auto_awesome,
+            color: ThemeManager.instance.getMatchColor(),
+            size: 30,
+          ),
+        ),
+        // Action Buttons
+        Row(
+          children: [
+            IconButton(
+              onPressed: onTriggerManualSync,
+              icon: const Icon(
+                Icons.wb_sunny_outlined,
+                color: Colors.white,
+                size: 22,
+              ),
+              tooltip: 'Master Sync',
+            ),
+            Stack(
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  tooltip: 'Notifications',
+                ),
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF5252),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // USER GREETING WITH AVATAR
+  // ==========================================
+  Widget _buildUserGreeting(dynamic currentUser) {
+    return Row(
+      children: [
+        // Profile Avatar Circle
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFFF6B35), width: 2.5),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.15),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: const Icon(
+              Icons.person_outline_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        // Name and Greeting
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              currentUser?.name ?? 'Muhammad Asim',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _getTimeAppropriateGreeting(),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // TARGET CARDS (HORIZONTAL ROW)
+  // ==========================================
+  Widget _buildTargetCardsRow(Map<String, dynamic> targets) {
+    String formatValue(String raw) {
+      final cleaned = raw.replaceAll(',', '').trim();
+      final val = double.tryParse(cleaned) ?? 0;
+      if (val >= 1000000) {
+        final m = val / 1000000;
+        if (m == m.roundToDouble()) {
+          return '${m.toInt()}M';
+        }
+        return '${m.toStringAsFixed(1)}M';
+      } else if (val >= 1000) {
+        final k = val / 1000;
+        if (k == k.roundToDouble()) {
+          return '${k.toInt()}K';
+        }
+        return '${k.toStringAsFixed(1)}K';
+      }
+      if (val == val.roundToDouble()) {
+        return val.toInt().toString();
+      }
+      return val.toStringAsFixed(1);
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: _buildTargetCard(
+            value: formatValue(targets['month_target']?.toString() ?? '0'),
+            label: 'Monthly\nTarget',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildTargetCard(
+            value: formatValue(targets['total_sales']?.toString() ?? '0'),
+            label: 'Total\nSales',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildTargetCard(
+            value: formatValue(targets['today_sales']?.toString() ?? '0'),
+            label: 'Today\nSales',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildTargetCard(
+            value: formatValue(targets['no_of_orders']?.toString() ?? '0'),
+            label: 'No. of\nOrders',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTargetCard({required String value, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF7C3AED), Color(0xFF6D28D9), Color(0xFF5B21B6)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5B21B6).withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // GOOGLE MAPS CARD
+  // ==========================================
   Widget _buildGoogleMapCard(BuildContext context, bool isDark) {
     return Consumer<LocationManager>(
       builder: (context, locManager, child) {
         final pos = locManager.currentPosition;
         if (pos == null) {
           return Container(
-            height: 160,
+            height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF121318) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              color: isDark
+                  ? const Color(0xFF121318).withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isDark
-                    ? const Color(0xFF22242E)
-                    : const Color(0xFFE2E8F0),
+                    ? const Color(0xFF2E3452)
+                    : Colors.white.withValues(alpha: 0.5),
+                width: 1.5,
               ),
             ),
             child: Center(
@@ -251,26 +614,26 @@ class HomeTab extends StatelessWidget {
         }
 
         return Container(
-          height: 160,
+          height: 180,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
-              width: 1.2,
+              color: isDark
+                  ? const Color(0xFF2E3452)
+                  : Colors.white.withValues(alpha: 0.5),
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.4)
-                    : const Color(0xFF003087).withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             child: _DashboardGoogleMap(isDark: isDark, position: pos),
           ),
         );
@@ -278,297 +641,42 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTopSection(
-    BuildContext context,
-    bool isDark,
-    dynamic currentUser,
-    Map<String, dynamic> targets,
-    DashboardViewModel dashboardVM,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF0C164F),
-                  const Color(0xFF050B30),
-                  const Color(0xFF020414),
-                ]
-              : [
-                  const Color(0xFF1E56E2),
-                  const Color(0xFF1447C0),
-                  const Color(0xFF0D369B),
-                ],
+  // ==========================================
+  // FLOATING "+" PLACE ORDER BUTTON
+  // ==========================================
+  Widget _buildPlaceOrderFAB(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => _navigateToPlaceOrder(context),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+          ),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3B5BDB) : Colors.white,
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1E56E2).withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.6)
-                : const Color(0xFF003087).withOpacity(0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Action Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Logo Mark
-              Image.asset(
-                ThemeManager.instance.getLogoMark(),
-                width: 38,
-                height: 30,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.auto_awesome,
-                  color: ThemeManager.instance.getMatchColor(),
-                  size: 30,
-                ),
-              ),
-              // Action Buttons
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: onTriggerManualSync,
-                    icon: const Icon(
-                      Icons.wb_sunny_outlined,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    tooltip: 'Master Sync',
-                  ),
-                  Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.notifications_none_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        tooltip: 'Notifications',
-                      ),
-                      Positioned(
-                        right: 12,
-                        top: 12,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFF5252),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // User Greeting
-          Text(
-            currentUser?.name ?? 'Muhammad Asim',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _getTimeAppropriateGreeting(),
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 22),
-
-          // Target Header & Refresh Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Target Overview',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              IconButton(
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: dashboardVM.isRefreshingTargets
-                    ? null
-                    : () => dashboardVM.refreshTargets(),
-                icon: dashboardVM.isRefreshingTargets
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.refresh_rounded,
-                        color: Colors.white70,
-                        size: 18,
-                      ),
-                tooltip: 'Refresh Targets',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Target Metrics Grid
-          IgnorePointer(
-            ignoring: dashboardVM.isRefreshingTargets,
-            child: Opacity(
-              opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
-              child: GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.85,
-                children: [
-                  _buildTargetMetricCard(
-                    label: 'Month Target',
-                    value: targets['month_target']?.toString() ?? '0',
-                    icon: Icons.track_changes_rounded,
-                    accentColor: const Color(0xFF4ADE80),
-                  ),
-                  _buildTargetMetricCard(
-                    label: 'Total Sales',
-                    value: targets['total_sales']?.toString() ?? '0',
-                    icon: Icons.trending_up_rounded,
-                    accentColor: const Color(0xFF60A5FA),
-                  ),
-                  _buildTargetMetricCard(
-                    label: 'Today Sales',
-                    value: targets['today_sales']?.toString() ?? '0',
-                    icon: Icons.today_rounded,
-                    accentColor: const Color(0xFFFBBF24),
-                  ),
-                  _buildTargetMetricCard(
-                    label: 'No. of Orders',
-                    value: targets['no_of_orders']?.toString() ?? '0',
-                    icon: Icons.shopping_bag_outlined,
-                    accentColor: const Color(0xFFC084FC),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Primary Place Order Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () => _navigateToPlaceOrder(context),
-              icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-              label: const Text(
-                'Place Order',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? const Color(0xFF1E56E2)
-                    : Colors.white,
-                foregroundColor: isDark
-                    ? Colors.white
-                    : const Color(0xFF1E56E2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-                shadowColor: isDark
-                    ? const Color(0xFF1E56E2).withOpacity(0.4)
-                    : Colors.black.withOpacity(0.2),
-              ),
-            ),
-          ),
-        ],
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
     );
   }
 
-  Widget _buildTargetMetricCard({
-    required String label,
-    required String value,
-    required IconData icon,
-    required Color accentColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Icon(icon, size: 16, color: accentColor),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // ==========================================
+  // ACTIVITY CARD
+  // ==========================================
   Widget _buildActivityCard({
     required String title,
     required String subtitle,
@@ -589,8 +697,8 @@ class HomeTab extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : const Color(0xFF003087).withOpacity(0.04),
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFF003087).withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -602,7 +710,7 @@ class HomeTab extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.12),
+              color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 20, color: iconColor),
@@ -645,6 +753,9 @@ class HomeTab extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // LOGOUT BUTTON
+  // ==========================================
   Widget _buildLogoutButton(BuildContext context, bool isDark) {
     return SizedBox(
       width: double.infinity,
@@ -667,12 +778,12 @@ class HomeTab extends StatelessWidget {
         ),
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: const Color(0xFFFF5252).withOpacity(0.4),
+            color: const Color(0xFFFF5252).withValues(alpha: 0.4),
             width: 1.5,
           ),
           backgroundColor: isDark
-              ? const Color(0xFFFF5252).withOpacity(0.08)
-              : const Color(0xFFFF5252).withOpacity(0.05),
+              ? const Color(0xFFFF5252).withValues(alpha: 0.08)
+              : const Color(0xFFFF5252).withValues(alpha: 0.05),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

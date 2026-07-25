@@ -41,6 +41,9 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   final String lockMainDark = 'assets/extras/lockMainDark.png';
   final String lockMainLight = 'assets/extras/lockMainLight.png';
 
+  final String dashboardMainDark = 'assets/extras/dashboardMainDark.png';
+  final String dashboardMainLight = 'assets/extras/dashboardMainLight.png';
+
   final Color contrastColorDark = const Color.fromARGB(255, 0, 0, 0);
   final Color contrastColorLight = const Color.fromARGB(255, 255, 255, 255);
 
@@ -241,6 +244,7 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   String getLoginMain() => _isLightMode ? loginMainLight : loginMainDark;
   String getSyncMain() => _isLightMode ? syncMainLight : syncMainDark;
   String getLockMain() => _isLightMode ? lockMainLight : lockMainDark;
+  String getDashboardMain() => _isLightMode ? dashboardMainLight : dashboardMainDark;
 
   Color getContrastColor() =>
       _isLightMode ? contrastColorLight : contrastColorDark;
@@ -270,6 +274,7 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     AssetImage(getDomainMain()),
     AssetImage(getLoginMain()),
     AssetImage(getLockMain()),
+    AssetImage(getDashboardMain()),
   ];
 
   bool get hasSelectedTheme {

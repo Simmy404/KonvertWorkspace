@@ -8,69 +8,83 @@ class TourPlanTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Consumer<DashboardViewModel>(
       builder: (context, viewModel, child) {
         return Container(
           color: isDark ? const Color(0xFF030305) : const Color(0xFFF4F6F9),
-          child: RefreshIndicator(
-            onRefresh: () => viewModel.loadCatalogCounts(),
-            color: const Color(0xFF1E56E2),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tour Plan',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Assigned bricks and daily route plan',
-                          style: TextStyle(
-                            color: isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF64748B),
-                            fontSize: 14,
-                          ),
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.map_outlined, size: 64, color: Colors.grey),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Tour Plan (${viewModel.bricksCount} Bricks Synced)',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+          child: SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              onRefresh: () => viewModel.loadCatalogCounts(),
+              color: const Color(0xFF1E56E2),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 20,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tour Plan',
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            'Assigned bricks and daily route plan',
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.6)
+                                  : const Color(0xFF64748B),
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.map_outlined,
+                                    size: 64,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Tour Plan (${viewModel.bricksCount} Bricks Synced)',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
-      }
+      },
     );
   }
 }

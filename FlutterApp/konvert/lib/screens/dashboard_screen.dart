@@ -79,31 +79,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: isDark
                 ? const Color(0xFF000000) // Pure Black to match image
                 : const Color(0xFFF8FAFC),
-            body: SafeArea(
-              bottom: false,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: IndexedStack(
-                      index: viewModel.selectedIndex,
-                      children: [
-                        HomeTab(onTriggerManualSync: _triggerManualSync),
-                        const BookingsScreen(),
-                        const TourPlanTab(),
-                        const ReportTab(),
-                      ],
-                    ),
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: IndexedStack(
+                    index: viewModel.selectedIndex,
+                    children: [
+                      HomeTab(onTriggerManualSync: _triggerManualSync),
+                      const BookingsScreen(),
+                      const TourPlanTab(),
+                      const ReportTab(),
+                    ],
                   ),
+                ),
 
-                  // Floating Bottom Navigation Bar
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 20,
-                    child: _buildBottomNavBar(context, viewModel, isDark),
-                  ),
-                ],
-              ),
+                // Floating Bottom Navigation Bar
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 20,
+                  child: _buildBottomNavBar(context, viewModel, isDark),
+                ),
+              ],
             ),
           );
         },
@@ -117,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isDark,
   ) {
     return Container(
-      height: 66,
+      height: 68,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -126,51 +123,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ? [const Color(0xFF0C1B54), const Color(0xFF040A29)]
               : [const Color(0xFF1E56E2), const Color(0xFF0E38B1)],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(34),
         border: Border.all(
           color: isDark
               ? const Color(0xFF1E358A)
-              : Colors.white.withOpacity(0.4),
+              : Colors.white.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.7)
-                : const Color(0xFF003087).withOpacity(0.35),
-            blurRadius: 18,
+                ? Colors.black.withValues(alpha: 0.7)
+                : const Color(0xFF003087).withValues(alpha: 0.35),
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            viewModel,
-            index: 0,
-            icon: Icons.home_rounded,
-            label: 'Home',
-          ),
-          _buildNavItem(
-            viewModel,
-            index: 1,
-            icon: Icons.receipt_long_rounded,
-            label: 'Bookings',
-          ),
-          _buildNavItem(
-            viewModel,
-            index: 2,
-            icon: Icons.map_rounded,
-            label: 'Tour Plan',
-          ),
-          _buildNavItem(
-            viewModel,
-            index: 3,
-            icon: Icons.bar_chart_rounded,
-            label: 'Report',
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(
+              viewModel,
+              index: 0,
+              icon: Icons.home_rounded,
+              label: 'Home',
+            ),
+            _buildNavItem(
+              viewModel,
+              index: 1,
+              icon: Icons.receipt_long_rounded,
+              label: 'Bookings',
+            ),
+            _buildNavItem(
+              viewModel,
+              index: 2,
+              icon: Icons.map_rounded,
+              label: 'Tour Plan',
+            ),
+            _buildNavItem(
+              viewModel,
+              index: 3,
+              icon: Icons.bar_chart_rounded,
+              label: 'Report',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,32 +187,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: () => viewModel.setSelectedIndex(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 12,
+          vertical: 10,
+        ),
         decoration: isSelected
             ? BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               )
             : null,
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
-              size: isSelected ? 24 : 22,
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.55),
+              size: isSelected ? 22 : 24,
             ),
-            if (isSelected) const SizedBox(height: 4),
-            if (isSelected)
+            if (isSelected) ...[
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
                 ),
               ),
+            ],
           ],
         ),
       ),

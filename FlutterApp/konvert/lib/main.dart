@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import 'managers/app_manager.dart';
 import 'managers/error_manager.dart';
 import 'managers/legal_manager.dart';
@@ -14,6 +15,14 @@ void main() async {
   // 1. THIS IS THE CRITICAL LINE.
   // It guarantees the engine is running before async platform channels are called.
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
+  );
 
   // Global Framework Error Handler -> Debug Console
   FlutterError.onError = (FlutterErrorDetails details) {
