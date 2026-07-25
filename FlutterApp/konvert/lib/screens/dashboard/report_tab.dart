@@ -8,7 +8,7 @@ class ReportTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      color: isDark ? const Color(0xFF030305) : const Color(0xFFF4F6F9),
+      color: Colors.transparent,
       child: SafeArea(
         bottom: false,
         child: Padding(

@@ -12,7 +12,7 @@ class TourPlanTab extends StatelessWidget {
     return Consumer<DashboardViewModel>(
       builder: (context, viewModel, child) {
         return Container(
-          color: isDark ? const Color(0xFF030305) : const Color(0xFFF4F6F9),
+          color: Colors.transparent,
           child: SafeArea(
             bottom: false,
             child: RefreshIndicator(

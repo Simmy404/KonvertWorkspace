@@ -871,21 +871,15 @@ class HomeTab extends StatelessWidget {
     final bool isEmpty = title == null || title.isEmpty;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 5),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       height: 60,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121318) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.3)
-                : const Color(0xFF003087).withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: isDark
+            ? const Color.fromARGB(20, 164, 219, 255)
+            : const Color.fromARGB(20, 0, 43, 71),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: isEmpty
           ? const SizedBox.shrink()

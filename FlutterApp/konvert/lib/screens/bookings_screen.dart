@@ -221,26 +221,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
               }
 
               return Scaffold(
-                backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
-                body: Stack(
-                  children: [
-                    // Main Theme Background Image
-                    Positioned.fill(
-                      child: Image.asset(
-                        ThemeManager.instance.getMainBG(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => ColoredBox(
-                          color: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
-                        ),
-                      ),
-                    ),
-
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                backgroundColor: Colors.transparent,
+                body: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                             const SizedBox(height: 12),
 
                             // Header Top Bar: Logo Mark & Action Icon
@@ -744,9 +731,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
+                  );
             },
           ),
         );

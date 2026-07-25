@@ -90,45 +90,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
-      child: Consumer<DashboardViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.needsInitialSync) {
-            return const Scaffold(backgroundColor: Colors.black);
-          }
+      child: ListenableBuilder(
+        listenable: ThemeManager.instance,
+        builder: (context, child) {
+          return Consumer<DashboardViewModel>(
+            builder: (context, viewModel, child) {
+              if (viewModel.needsInitialSync) {
+                return const Scaffold(backgroundColor: Colors.black);
+              }
 
-          return Scaffold(
-            backgroundColor: isDark
-                ? const Color(0xFF000000) // Pure Black to match image
-                : const Color(0xFFF8FAFC),
-            body: Column(
-              children: [
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      if (_viewModel.selectedIndex != index) {
-                        _viewModel.setSelectedIndex(index);
-                      }
-                    },
-                    children: [
-                      HomeTab(onTriggerManualSync: _triggerManualSync),
-                      const BookingsScreen(),
-                      const TourPlanTab(),
-                      const ReportTab(),
-                    ],
-                  ),
-                ),
+              return Scaffold(
+                backgroundColor: isDark
+                    ? const Color(0xFF000000)
+                    : const Color(0xFFF8FAFC),
+                body: Stack(
+                  children: [
+                    // Main Theme Background Image covering the entire dashboard screen
+                    Positioned.fill(
+                      child: Image.asset(
+                        ThemeManager.instance.getMainBG(),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => ColoredBox(
+                          color: isDark ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Expanded(
+                          child: PageView(
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              if (_viewModel.selectedIndex != index) {
+                                _viewModel.setSelectedIndex(index);
+                              }
+                            },
+                            children: [
+                              HomeTab(onTriggerManualSync: _triggerManualSync),
+                              const BookingsScreen(),
+                              const TourPlanTab(),
+                              const ReportTab(),
+                            ],
+                          ),
+                        ),
 
-                // Bottom Navigation Bar Area
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                    child: _buildBottomNavBar(context, viewModel, isDark),
-                  ),
+                        // Bottom Navigation Bar Area
+                        SafeArea(
+                          top: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                            child: _buildBottomNavBar(context, viewModel, isDark),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
