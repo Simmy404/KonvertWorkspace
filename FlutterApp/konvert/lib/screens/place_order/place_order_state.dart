@@ -114,7 +114,10 @@ class PlaceOrderState extends ChangeNotifier {
       // Find matching customer
       selectedCustomer = allCustomers.firstWhere(
         (c) => c['customer_id'].toString() == cIdStr,
-        orElse: () => {'customer_id': cIdStr, 'customer_name': 'Customer #$cIdStr'},
+        orElse: () => {
+          'customer_id': cIdStr,
+          'customer_name': 'Customer #$cIdStr',
+        },
       );
 
       // Populate cart with existing items
@@ -276,7 +279,8 @@ class PlaceOrderState extends ChangeNotifier {
       final type = c['customer_type'].toString().toLowerCase();
       final address = c['customer_address'].toString().toLowerCase();
 
-      final matchesQuery = query.isEmpty ||
+      final matchesQuery =
+          query.isEmpty ||
           name.contains(query) ||
           type.contains(query) ||
           address.contains(query);
@@ -315,7 +319,8 @@ class PlaceOrderState extends ChangeNotifier {
     final query = productSearchController.text.trim().toLowerCase();
     filteredProducts = allProducts.where((p) {
       final name = p['product_name'].toString().toLowerCase();
-      final isOtc = p['product_is_otc'] != null &&
+      final isOtc =
+          p['product_is_otc'] != null &&
           p['product_is_otc'].toString().trim().isNotEmpty;
 
       final matchesQuery = query.isEmpty || name.contains(query);
@@ -336,17 +341,19 @@ class PlaceOrderState extends ChangeNotifier {
     if (isRefreshingProducts) return;
     final prodId = product['product_id'].toString();
     final existingIndex = cart.indexWhere((p) => p.prodID == prodId);
-    
+
     if (existingIndex >= 0) {
       cart[existingIndex].qty += 1;
     } else {
       final price = double.tryParse(product['product_tp'].toString()) ?? 0.0;
-      cart.add(PlaceOrderProduct(
-        prodID: prodId,
-        name: product['product_name']?.toString() ?? 'Product',
-        qty: 1,
-        price: price,
-      ));
+      cart.add(
+        PlaceOrderProduct(
+          prodID: prodId,
+          name: product['product_name']?.toString() ?? 'Product',
+          qty: 1,
+          price: price,
+        ),
+      );
     }
     _safeNotifyListeners();
   }
@@ -412,7 +419,9 @@ class PlaceOrderState extends ChangeNotifier {
 
     final int invoiceNo;
     if (editingInvoiceNumber != null) {
-      await DatabaseService.instance.deleteBookingByInvoice(editingInvoiceNumber.toString());
+      await DatabaseService.instance.deleteBookingByInvoice(
+        editingInvoiceNumber.toString(),
+      );
       invoiceNo = editingInvoiceNumber!;
     } else {
       final timestamp = DateTime.now().millisecondsSinceEpoch;

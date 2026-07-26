@@ -14,7 +14,8 @@ class PlaceOrderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PlaceOrderState(existingInvoiceItems: existingInvoiceItems),
+      create: (_) =>
+          PlaceOrderState(existingInvoiceItems: existingInvoiceItems),
       child: const _PlaceOrderView(),
     );
   }
@@ -121,7 +122,9 @@ class _PlaceOrderView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isEditing ? 'Edit Order #${state.editingInvoiceNumber}' : 'Place New Order',
+                      isEditing
+                          ? 'Edit Order #${state.editingInvoiceNumber}'
+                          : 'Place New Order',
                       style: TextStyle(
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                         fontSize: 16,
@@ -129,7 +132,8 @@ class _PlaceOrderView extends StatelessWidget {
                         letterSpacing: -0.3,
                       ),
                     ),
-                    if (state.selectedBrick != null || state.selectedCustomer != null)
+                    if (state.selectedBrick != null ||
+                        state.selectedCustomer != null)
                       Text(
                         '${state.selectedBrick != null ? state.selectedBrick!['brick_name'] : ''}${state.selectedCustomer != null ? ' › ${state.selectedCustomer!['customer_name']}' : ''}',
                         style: const TextStyle(
@@ -146,27 +150,28 @@ class _PlaceOrderView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Interactive 3-Step Pill Bar
+          // Interactive 3-Step Icon Bar
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStepPill(
-                label: '1. Bricks',
+              _buildStepIcon(
+                iconData: Icons.location_city_rounded,
                 isActive: state.currentStep == 0,
                 isCompleted: state.currentStep > 0,
                 onTap: () => state.jumpToStep(0),
                 isDark: isDark,
               ),
-              const SizedBox(width: 6),
-              _buildStepPill(
-                label: '2. Customers',
+              _buildStepDivider(isDark, state.currentStep > 0),
+              _buildStepIcon(
+                iconData: Icons.people_alt_rounded,
                 isActive: state.currentStep == 1,
                 isCompleted: state.currentStep > 1,
                 onTap: () => state.jumpToStep(1),
                 isDark: isDark,
               ),
-              const SizedBox(width: 6),
-              _buildStepPill(
-                label: '3. Products',
+              _buildStepDivider(isDark, state.currentStep > 1),
+              _buildStepIcon(
+                iconData: Icons.shopping_bag_rounded,
                 isActive: state.currentStep == 2,
                 isCompleted: false,
                 onTap: () => state.jumpToStep(2),
@@ -179,67 +184,46 @@ class _PlaceOrderView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepPill({
-    required String label,
+  Widget _buildStepDivider(bool isDark, bool isCompleted) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        color: isCompleted
+            ? const Color(0xFF1E56E2)
+            : (isDark ? const Color(0xFF2A324A) : const Color(0xFFE2E8F0)),
+      ),
+    );
+  }
+
+  Widget _buildStepIcon({
+    required IconData iconData,
     required bool isActive,
     required bool isCompleted,
     required VoidCallback onTap,
     required bool isDark,
   }) {
     final canTap = isActive || isCompleted;
+    final color = isActive
+        ? const Color(0xFF1E56E2)
+        : isCompleted
+        ? (isDark ? Colors.white70 : const Color(0xFF1E56E2))
+        : (isDark ? Colors.white38 : const Color(0xFF94A3B8));
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: canTap ? onTap : null,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: isActive
-                ? const Color(0xFF1E56E2)
-                : isCompleted
-                ? (isDark ? const Color(0xFF1E2D68) : const Color(0xFFD6E6FF))
-                : (isDark ? const Color(0xFF121318) : const Color(0xFFE2E8F0)),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF1E56E2).withOpacity(0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isCompleted)
-                const Padding(
-                  padding: EdgeInsets.only(right: 3.0),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    size: 12,
-                    color: Color(0xFF1E56E2),
-                  ),
-                ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isActive
-                      ? Colors.white
-                      : isCompleted
-                      ? (isDark ? Colors.white70 : const Color(0xFF1E56E2))
-                      : (isDark ? Colors.white38 : const Color(0xFF64748B)),
-                  fontSize: 10,
-                  fontWeight: isActive || isCompleted
-                      ? FontWeight.bold
-                      : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: canTap ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isActive
+              ? (isDark
+                    ? const Color(0xFF1E56E2).withOpacity(0.2)
+                    : const Color(0xFF1E56E2).withOpacity(0.1))
+              : Colors.transparent,
         ),
+        child: Icon(iconData, size: 24, color: color),
       ),
     );
   }

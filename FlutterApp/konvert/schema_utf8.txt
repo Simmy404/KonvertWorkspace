@@ -1,0 +1,133 @@
+﻿
+> lib\api\hassanpharma_new.sql:30:CREATE TABLE `accountheads` (
+  lib\api\hassanpharma_new.sql:31:  `id` int(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:32:  `sid` varchar(20) NOT NULL,
+  lib\api\hassanpharma_new.sql:33:  `seq` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:34:  `acname` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:35:  `coa` varchar(12) NOT NULL
+  lib\api\hassanpharma_new.sql:36:) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  lib\api\hassanpharma_new.sql:37:
+  lib\api\hassanpharma_new.sql:38:--
+  lib\api\hassanpharma_new.sql:39:-- Dumping data for table `accountheads`
+  lib\api\hassanpharma_new.sql:40:--
+  lib\api\hassanpharma_new.sql:41:
+  lib\api\hassanpharma_new.sql:42:INSERT INTO `accountheads` (`id`, `sid`, `seq`, `acname`, `coa`) VALUES
+  lib\api\hassanpharma_new.sql:43:(1, '10', '', 'Capital Account', '01'),
+  lib\api\hassanpharma_new.sql:44:(2, '11', '', 'Accumulated Profits', '01'),
+  lib\api\hassanpharma_new.sql:45:(3, '12', '', 'Investors Account', '10'),
+  lib\api\hassanpharma_new.sql:46:(4, '15', '', 'Current Liabilities', '15'),
+  lib\api\hassanpharma_new.sql:47:(5, '20', '', 'Long Term Borrowings', '10'),
+  lib\api\hassanpharma_new.sql:48:(6, '25', '', 'Accrued Liabilities', '15'),
+  lib\api\hassanpharma_new.sql:49:(7, '55', '', 'Fixed Assets', '20'),
+  lib\api\hassanpharma_new.sql:50:(8, '56', '', 'Long Term Assets', '25'),
+> lib\api\hassanpharma_new.sql:70:CREATE TABLE `admin` (
+  lib\api\hassanpharma_new.sql:71:  `admin_id` int(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:72:  `BID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:73:  `branch_id` int(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:74:  `admin_name` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:75:  `login_id` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:76:  `password` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:77:  `email_id` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:78:  `contact` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:79:  `add_admin` varchar(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:80:  `add_branch` varchar(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:81:  `profileimage` tinytext NOT NULL
+  lib\api\hassanpharma_new.sql:82:) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  lib\api\hassanpharma_new.sql:83:
+  lib\api\hassanpharma_new.sql:84:--
+  lib\api\hassanpharma_new.sql:85:-- Dumping data for table `admin`
+  lib\api\hassanpharma_new.sql:86:--
+  lib\api\hassanpharma_new.sql:87:
+  lib\api\hassanpharma_new.sql:88:INSERT INTO `admin` (`admin_id`, `BID`, `branch_id`, `admin_name`, `login_id`, 
+`password`, `email_id`, `contact`, `add_admin`, `add_branch`, `profileimage`) VALUES
+  lib\api\hassanpharma_new.sql:89:(9, '28', 28, 'Bashir Ahmad', 'supervisor', 'Raza@3310#', 'almashreqs@gmail.com', 
+'03004499883', 'Yes', 'Yes', ''),
+  lib\api\hassanpharma_new.sql:90:(23, '28', 28, 'Malik Taseer Hassnain', 'hassanpharmajbd@gmail.com', '12141672', 
+'hassanpharmajbd@gmail.com', '03016345677', '', '', ''),
+> lib\api\hassanpharma_new.sql:99:CREATE TABLE `area` (
+  lib\api\hassanpharma_new.sql:100:  `id` int(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:101:  `BID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:102:  `dtd` date NOT NULL,
+  lib\api\hassanpharma_new.sql:103:  `zone_id` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:104:  `cityid` varchar(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:105:  `acname` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:106:  `sm` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:107:  `oldcode` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:108:  `act` varchar(12) NOT NULL
+  lib\api\hassanpharma_new.sql:109:) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  lib\api\hassanpharma_new.sql:110:
+  lib\api\hassanpharma_new.sql:111:--
+  lib\api\hassanpharma_new.sql:112:-- Dumping data for table `area`
+  lib\api\hassanpharma_new.sql:113:--
+  lib\api\hassanpharma_new.sql:114:
+  lib\api\hassanpharma_new.sql:115:INSERT INTO `area` (`id`, `BID`, `dtd`, `zone_id`, `cityid`, `acname`, `sm`, 
+`oldcode`, `act`) VALUES
+  lib\api\hassanpharma_new.sql:116:(100, '28', '2022-11-30', '', '100', 'Adhi Kok', '', '', ''),
+  lib\api\hassanpharma_new.sql:117:(101, '28', '2022-11-30', '', '101', 'Girote', '', '', ''),
+  lib\api\hassanpharma_new.sql:118:(102, '28', '2022-11-30', '', '102', 'Civil Line', '', '', ''),
+  lib\api\hassanpharma_new.sql:119:(103, '28', '2022-11-30', '', '102', 'College Road', '', '', ''),
+> lib\api\hassanpharma_new.sql:146:CREATE TABLE `bns_slabs` (
+  lib\api\hassanpharma_new.sql:147:  `id` int(11) NOT NULL,
+  lib\api\hassanpharma_new.sql:148:  `dtd` date NOT NULL,
+  lib\api\hassanpharma_new.sql:149:  `BID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:150:  `UID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:151:  `prod_id` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:152:  `batno` varchar(50) NOT NULL,
+  lib\api\hassanpharma_new.sql:153:  `acno` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:154:  `qty1` int(5) NOT NULL,
+  lib\api\hassanpharma_new.sql:155:  `qty2` int(5) NOT NULL,
+  lib\api\hassanpharma_new.sql:156:  `bns` int(11) NOT NULL,
+  lib\api\hassanpharma_new.sql:157:  `dt1` date NOT NULL,
+  lib\api\hassanpharma_new.sql:158:  `dt2` date NOT NULL,
+  lib\api\hassanpharma_new.sql:159:  `stetus` varchar(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:160:  `sign1` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:161:  `sign` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:162:  `act` varchar(12) NOT NULL
+  lib\api\hassanpharma_new.sql:163:) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  lib\api\hassanpharma_new.sql:164:
+  lib\api\hassanpharma_new.sql:165:-- --------------------------------------------------------
+  lib\api\hassanpharma_new.sql:166:
+> lib\api\hassanpharma_new.sql:171:CREATE TABLE `bookingdays` (
+  lib\api\hassanpharma_new.sql:172:  `id` int(11) NOT NULL,
+  lib\api\hassanpharma_new.sql:173:  `dtd` date NOT NULL,
+  lib\api\hassanpharma_new.sql:174:  `acname` varchar(20) NOT NULL,
+  lib\api\hassanpharma_new.sql:175:  `act` varchar(12) NOT NULL
+  lib\api\hassanpharma_new.sql:176:) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  lib\api\hassanpharma_new.sql:177:
+  lib\api\hassanpharma_new.sql:178:--
+  lib\api\hassanpharma_new.sql:179:-- Dumping data for table `bookingdays`
+  lib\api\hassanpharma_new.sql:180:--
+  lib\api\hassanpharma_new.sql:181:
+  lib\api\hassanpharma_new.sql:182:INSERT INTO `bookingdays` (`id`, `dtd`, `acname`, `act`) VALUES
+  lib\api\hassanpharma_new.sql:183:(1, '2024-09-30', 'Monday', ''),
+  lib\api\hassanpharma_new.sql:184:(2, '2024-09-30', 'Tuesday', ''),
+  lib\api\hassanpharma_new.sql:185:(3, '2024-09-30', 'Wednesday', ''),
+  lib\api\hassanpharma_new.sql:186:(4, '2024-09-30', 'Thursday', ''),
+  lib\api\hassanpharma_new.sql:187:(5, '2024-09-30', 'Friday', ''),
+  lib\api\hassanpharma_new.sql:188:(6, '2024-09-30', 'Saturday', ''),
+  lib\api\hassanpharma_new.sql:189:(7, '2024-09-30', 'Sunday', '');
+  lib\api\hassanpharma_new.sql:190:
+  lib\api\hassanpharma_new.sql:191:-- --------------------------------------------------------
+> lib\api\hassanpharma_new.sql:197:CREATE TABLE `bookings` (
+  lib\api\hassanpharma_new.sql:198:  `id` int(11) NOT NULL,
+  lib\api\hassanpharma_new.sql:199:  `dtd` date NOT NULL,
+  lib\api\hassanpharma_new.sql:200:  `sdtd` datetime NOT NULL,
+  lib\api\hassanpharma_new.sql:201:  `BID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:202:  `UID` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:203:  `purno` varchar(20) NOT NULL,
+  lib\api\hassanpharma_new.sql:204:  `acno` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:205:  `prod_id` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:206:  `rate` decimal(12,2) NOT NULL,
+  lib\api\hassanpharma_new.sql:207:  `qty` decimal(10,0) NOT NULL,
+  lib\api\hassanpharma_new.sql:208:  `bns` decimal(6,0) NOT NULL,
+  lib\api\hassanpharma_new.sql:209:  `total` decimal(12,2) NOT NULL,
+  lib\api\hassanpharma_new.sql:210:  `dper` decimal(5,2) NOT NULL,
+  lib\api\hassanpharma_new.sql:211:  `damnt` decimal(12,2) NOT NULL,
+  lib\api\hassanpharma_new.sql:212:  `latitude` varchar(20) NOT NULL,
+  lib\api\hassanpharma_new.sql:213:  `longitude` varchar(20) NOT NULL,
+  lib\api\hassanpharma_new.sql:214:  `billno` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:215:  `bkby` varchar(12) NOT NULL,
+  lib\api\hassanpharma_new.sql:216:  `timespan` varchar(10) NOT NULL,
+  lib\api\hassanpharma_new.sql:217:  `part` text NOT NULL,
+
+

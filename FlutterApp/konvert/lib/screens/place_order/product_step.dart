@@ -145,29 +145,23 @@ class ProductStep extends StatelessWidget {
                         final isOtc = product['product_is_otc'] != null &&
                             product['product_is_otc'].toString().trim().isNotEmpty;
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF121318) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
+                        return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
                               color: cartItem != null
-                                  ? const Color(0xFF1E56E2)
-                                  : (isDark
-                                        ? const Color(0xFF22242E)
-                                        : const Color(0xFFE2E8F0)),
-                              width: cartItem != null ? 1.5 : 1.0,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDark
-                                    ? Colors.black.withOpacity(0.2)
-                                    : const Color(0xFF003087).withOpacity(0.03),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                                  ? (isDark ? const Color(0xFF1E56E2).withOpacity(0.1) : const Color(0xFF1E56E2).withOpacity(0.05))
+                                  : (isDark ? const Color(0xFF1B1D22) : const Color(0xFFF6F8FD)),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: cartItem != null
+                                    ? const Color(0xFF1E56E2).withOpacity(0.5)
+                                    : (isDark
+                                          ? Colors.white.withOpacity(0.05)
+                                          : Colors.black.withOpacity(0.03)),
+                                width: cartItem != null ? 1.2 : 1.0,
                               ),
-                            ],
-                          ),
+                            ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -362,20 +356,24 @@ class ProductStep extends StatelessWidget {
                                         label: const Text(
                                           'Add',
                                           style: TextStyle(
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF1E56E2),
-                                          foregroundColor: Colors.white,
+                                          backgroundColor: isDark
+                                              ? const Color(0xFF1E56E2).withOpacity(0.2)
+                                              : const Color(0xFF1E56E2).withOpacity(0.1),
+                                          foregroundColor: isDark
+                                              ? const Color(0xFF83ABED)
+                                              : const Color(0xFF1E56E2),
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
+                                            horizontal: 12,
                                             vertical: 6,
                                           ),
                                           minimumSize: const Size(0, 30),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(20),
                                           ),
                                           elevation: 0,
                                         ),

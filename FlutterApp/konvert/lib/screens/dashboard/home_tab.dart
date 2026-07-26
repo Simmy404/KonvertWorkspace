@@ -233,7 +233,7 @@ class HomeTab extends StatelessWidget {
                 // ==========================================
                 // BOTTOM SECTION: MY ACTIVITY & LOGOUT
                 // ==========================================
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: Column(
@@ -297,143 +297,150 @@ class HomeTab extends StatelessWidget {
     DashboardViewModel dashboardVM,
   ) {
     return Stack(
-      clipBehavior: Clip.none,
       children: [
-        // Background Image Container
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.6)
-                    : const Color(0xFF003087).withValues(alpha: 0.25),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+        // Main Column defining Stack height (Image Container + 32px bottom space for FAB)
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.6)
+                        : const Color(0xFF003087).withValues(alpha: 0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-            child: Stack(
-              children: [
-                // Background Image (stretched to fill)
-                Positioned.fill(
-                  child: Image.asset(
-                    ThemeManager.instance.getDashboardMain(),
-                    fit: BoxFit.fill,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? [
-                                  const Color(0xFF0C164F),
-                                  const Color(0xFF050B30),
-                                  const Color(0xFF020414),
-                                ]
-                              : [
-                                  const Color(0xFF1E56E2),
-                                  const Color(0xFF1447C0),
-                                  const Color(0xFF0D369B),
-                                ],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+                child: Stack(
+                  children: [
+                    // Background Image (stretched to fill)
+                    Positioned.fill(
+                      child: Image.asset(
+                        ThemeManager.instance.getDashboardMain(),
+                        fit: BoxFit.fill,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? [
+                                      const Color(0xFF0C164F),
+                                      const Color(0xFF050B30),
+                                      const Color(0xFF020414),
+                                    ]
+                                  : [
+                                      const Color(0xFF1E56E2),
+                                      const Color(0xFF1447C0),
+                                      const Color(0xFF0D369B),
+                                    ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-                // Content over the background
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    MediaQuery.of(context).padding.top + 12,
-                    20,
-                    40,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Action Bar: Logo + Icons
-                      _buildTopActionBar(),
-                      const SizedBox(height: 24),
-
-                      // User Greeting with Avatar
-                      _buildUserGreeting(context, currentUser),
-                      const SizedBox(height: 24),
-
-                      // Target Overview Header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Content over the background
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        MediaQuery.of(context).padding.top + 12,
+                        20,
+                        40,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Target Overview',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.85),
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.2,
+                          // Top Action Bar: Logo + Icons
+                          _buildTopActionBar(),
+                          const SizedBox(height: 24),
+
+                          // User Greeting with Avatar
+                          _buildUserGreeting(context, currentUser),
+                          const SizedBox(height: 24),
+
+                          // Target Overview Header
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Target Overview',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              if (dashboardVM.isRefreshingTargets)
+                                const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white70,
+                                    ),
+                                  ),
+                                )
+                              else
+                                InkWell(
+                                  onTap: () => dashboardVM.refreshTargets(),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      Icons.refresh_rounded,
+                                      size: 16,
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Target Metric Cards (Horizontal Row)
+                          IgnorePointer(
+                            ignoring: dashboardVM.isRefreshingTargets,
+                            child: Opacity(
+                              opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
+                              child: _buildTargetCardsRow(targets, isDark),
                             ),
                           ),
-                          if (dashboardVM.isRefreshingTargets)
-                            const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white70,
-                                ),
-                              ),
-                            )
-                          else
-                            InkWell(
-                              onTap: () => dashboardVM.refreshTargets(),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Icon(
-                                  Icons.refresh_rounded,
-                                  size: 16,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ),
+                          const SizedBox(height: 4),
+
+                          // Google Maps Card
+                          _buildGoogleMapCard(context, isDark),
                         ],
                       ),
-                      const SizedBox(height: 10),
-
-                      // Target Metric Cards (Horizontal Row)
-                      IgnorePointer(
-                        ignoring: dashboardVM.isRefreshingTargets,
-                        child: Opacity(
-                          opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
-                          child: _buildTargetCardsRow(targets, isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Google Maps Card
-                      _buildGoogleMapCard(context, isDark),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+
+            // 32px space so the FAB stays 100% within the Stack layout & hit-test bounds
+            const SizedBox(height: 32),
+          ],
         ),
 
-        // Floating "+" Place Order Button (overlapping the bottom edge)
+        // Floating "+" Place Order Button (overlapping the bottom edge, 100% inside Stack bounds)
         Positioned(
-          bottom: -32,
+          bottom: 0,
           left: 0,
           right: 0,
           child: Center(child: _buildPlaceOrderFAB(context, isDark)),
@@ -837,22 +844,27 @@ class HomeTab extends StatelessWidget {
   // FLOATING "+" PLACE ORDER BUTTON
   // ==========================================
   Widget _buildPlaceOrderFAB(BuildContext context, bool isDark) {
-    return GestureDetector(
-      onTap: () => _navigateToPlaceOrder(context),
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: ThemeManager.instance.getPlaceOrderGradient(isDark: isDark),
-          border: Border.all(
-            color: ThemeManager.instance.getPlaceOrderBorderColor(
-              isDark: isDark,
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: () => _navigateToPlaceOrder(context),
+        customBorder: const CircleBorder(),
+        child: Ink(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: ThemeManager.instance.getPlaceOrderGradient(isDark: isDark),
+            border: Border.all(
+              color: ThemeManager.instance.getPlaceOrderBorderColor(
+                isDark: isDark,
+              ),
+              width: 3,
             ),
-            width: 3,
           ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
         ),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
     );
   }

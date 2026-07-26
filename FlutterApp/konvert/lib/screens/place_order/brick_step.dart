@@ -97,29 +97,19 @@ class BrickStep extends StatelessWidget {
 
                           return Material(
                             color: Colors.transparent,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 6),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
                                 color: isDark
-                                    ? const Color(0xFF121318)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
+                                    ? const Color(0xFF1B1D22)
+                                    : const Color(0xFFF6F8FD),
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isDark
-                                      ? const Color(0xFF22242E)
-                                      : const Color(0xFFE2E8F0),
+                                      ? Colors.white.withOpacity(0.05)
+                                      : Colors.black.withOpacity(0.03),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: isDark
-                                        ? Colors.black.withOpacity(0.2)
-                                        : const Color(
-                                            0xFF003087,
-                                          ).withOpacity(0.03),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
@@ -139,11 +129,11 @@ class BrickStep extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color: isAllBricks
                                               ? (isDark
-                                                    ? const Color(0xFF1E358A)
-                                                    : const Color(0xFFEAF2FF))
+                                                  ? const Color(0xFF1E358A)
+                                                  : const Color(0xFFEAF2FF))
                                               : (isDark
-                                                    ? const Color(0xFF162544)
-                                                    : const Color(0xFFF1F5F9)),
+                                                  ? const Color(0xFF162544)
+                                                  : const Color(0xFFF1F5F9)),
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
@@ -155,8 +145,8 @@ class BrickStep extends StatelessWidget {
                                           color: isAllBricks
                                               ? const Color(0xFF1E56E2)
                                               : (isDark
-                                                    ? Colors.white70
-                                                    : const Color(0xFF475569)),
+                                                  ? Colors.white70
+                                                  : const Color(0xFF475569)),
                                           size: 18,
                                         ),
                                       ),
@@ -205,16 +195,17 @@ class BrickStep extends StatelessWidget {
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
+                                          horizontal: 10,
+                                          vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
                                           color: isDark
-                                              ? const Color(0xFF1E1E2C)
-                                              : const Color(0xFFF1F5F9),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                                              ? const Color(0xFF1E56E2)
+                                                  .withOpacity(0.2)
+                                              : const Color(0xFF1E56E2)
+                                                  .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -223,17 +214,17 @@ class BrickStep extends StatelessWidget {
                                               'Select',
                                               style: TextStyle(
                                                 color: isDark
-                                                    ? Colors.white70
+                                                    ? const Color(0xFF83ABED)
                                                     : const Color(0xFF1E56E2),
-                                                fontSize: 11,
+                                                fontSize: 12,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            const SizedBox(width: 2),
+                                            const SizedBox(width: 4),
                                             Icon(
-                                              Icons.chevron_right_rounded,
+                                              Icons.arrow_forward_rounded,
                                               color: isDark
-                                                  ? Colors.white70
+                                                  ? const Color(0xFF83ABED)
                                                   : const Color(0xFF1E56E2),
                                               size: 14,
                                             ),
