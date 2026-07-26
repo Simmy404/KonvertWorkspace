@@ -43,7 +43,7 @@ class TourPlanTab extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Assigned bricks and daily route plan',
+                            'Your daily route plan',
                             style: TextStyle(
                               color: isDark
                                   ? Colors.white.withOpacity(0.6)
@@ -64,7 +64,7 @@ class TourPlanTab extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Tour Plan (${viewModel.bricksCount} Bricks Synced)',
+                                    'Tour Plan',
                                     style: const TextStyle(
                                       color: Colors.grey,
                                       fontSize: 16,

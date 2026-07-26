@@ -18,7 +18,7 @@ class MasterSyncScreen extends StatefulWidget {
 
 class _MasterSyncScreenState extends State<MasterSyncScreen> {
   // UI checklist state trackers
-  bool _syncingTourPlan = false;
+  bool _syncingBricks = false;
   bool _syncingProducts = false;
   bool _syncingChemists = false;
   bool _syncingTarget = false;
@@ -39,10 +39,10 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
     await StorageService.instance.suspendUserSession();
 
     try {
-      // 1. Sync Bricks (Tour Plan)
-      setState(() => _syncingTourPlan = true);
+      // 1. Sync Bricks
+      setState(() => _syncingBricks = true);
       final brickSuccess = await ApiService.instance.syncBricks();
-      if (!brickSuccess) throw 'Failed to sync Tour Plan.';
+      if (!brickSuccess) throw 'Failed to sync Bricks.';
 
       // 2. Sync Products
       setState(() => _syncingProducts = true);
@@ -164,7 +164,7 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
                 const Spacer(flex: 2),
 
                 // Dynamic Status List
-                _buildStatusText('Syncing Tour Plan...', _syncingTourPlan),
+                _buildStatusText('Syncing Bricks...', _syncingBricks),
                 const SizedBox(height: 8),
                 _buildStatusText('Syncing Products...', _syncingProducts),
                 const SizedBox(height: 8),
