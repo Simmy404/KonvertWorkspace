@@ -175,18 +175,33 @@ class ProductStep extends StatelessWidget {
                                             cartItem,
                                           ),
                                   child: Container(
-                                    width: 38,
-                                    height: 38,
+                                    width: 44,
+                                    height: 44,
                                     decoration: BoxDecoration(
-                                      color: ThemeManager.instance.isLightMode
-                                          ? const Color(0xFFE0F2FE)
-                                          : const Color(0xFF0F1E3D),
-                                      borderRadius: BorderRadius.circular(10),
+                                      gradient: LinearGradient(
+                                        colors: cartItem != null 
+                                          ? [const Color(0xFF1E56E2), const Color(0xFF3B82F6)]
+                                          : (ThemeManager.instance.isLightMode
+                                              ? [const Color(0xFFF0F9FF), const Color(0xFFE0F2FE)]
+                                              : [const Color(0xFF0F1E3D), const Color(0xFF1E3A8A)]),
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: cartItem != null ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF1E56E2).withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        )
+                                      ] : null,
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.medication_outlined,
-                                      color: Color(0xFF0284C7),
-                                      size: 20,
+                                      color: cartItem != null 
+                                          ? Colors.white 
+                                          : const Color(0xFF0284C7),
+                                      size: 22,
                                     ),
                                   ),
                                 ),
@@ -277,11 +292,19 @@ class ProductStep extends StatelessWidget {
                                 cartItem != null
                                     ? Container(
                                         decoration: BoxDecoration(
-                                          color: ThemeManager.instance.getContainerColor(),
-                                          borderRadius: BorderRadius.circular(10),
+                                          color: ThemeManager.instance.isLightMode ? Colors.white : const Color(0xFF0F172A),
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            if (ThemeManager.instance.isLightMode)
+                                              BoxShadow(
+                                                color: const Color(0xFF1E56E2).withOpacity(0.08),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              )
+                                          ],
                                           border: Border.all(
-                                            color: ThemeManager.instance.getAccentBlue(),
-                                            width: 1,
+                                            color: const Color(0xFF1E56E2).withOpacity(0.2),
+                                            width: 1.5,
                                           ),
                                         ),
                                         child: Row(
@@ -335,7 +358,7 @@ class ProductStep extends StatelessWidget {
                                           ],
                                         ),
                                       )
-                                    : ElevatedButton.icon(
+                                    : ElevatedButton(
                                         onPressed: state.isRefreshingProducts
                                             ? null
                                             : () {
@@ -349,26 +372,36 @@ class ProductStep extends StatelessWidget {
                                                   autofocusFirstInput: true,
                                                 );
                                               },
-                                        icon: const Icon(Icons.add_rounded, size: 14),
-                                        label: const Text(
-                                          'Add',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: ThemeManager.instance.getAccentBlue().withOpacity(ThemeManager.instance.isLightMode ? 0.1 : 0.2),
-                                          foregroundColor: ThemeManager.instance.isLightMode ? const Color(0xFF1E56E2) : const Color(0xFF83ABED),
+                                          backgroundColor: ThemeManager.instance.isLightMode ? Colors.white : const Color(0xFF1E293B),
+                                          foregroundColor: const Color(0xFF1E56E2),
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
+                                            horizontal: 16,
+                                            vertical: 0,
                                           ),
-                                          minimumSize: const Size(0, 30),
+                                          minimumSize: const Size(0, 32),
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(20),
+                                            side: BorderSide(
+                                              color: const Color(0xFF1E56E2).withOpacity(0.3),
+                                              width: 1.5,
+                                            )
                                           ),
                                           elevation: 0,
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.add_rounded, size: 16),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Add',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                               ],
@@ -471,26 +504,41 @@ class ProductStep extends StatelessWidget {
             ),
 
             // Right: Primary Action Button
-            ElevatedButton.icon(
-              onPressed: hasItems
-                  ? () => _showCartDetailsModal(context, state)
-                  : null,
-              icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
-              label: Text(
-                state.editingInvoiceNumber != null ? 'Update Order' : 'Review & Save',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            Container(
+              decoration: BoxDecoration(
+                gradient: hasItems ? const LinearGradient(
+                  colors: [Color(0xFF1E56E2), Color(0xFF3B82F6)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ) : null,
+                color: hasItems ? null : (ThemeManager.instance.isLightMode ? const Color(0xFFCBD5E1) : const Color(0xFF1E1E2C)),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: hasItems ? [
+                  BoxShadow(
+                    color: const Color(0xFF1E56E2).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ] : null,
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E56E2),
-                disabledBackgroundColor: ThemeManager.instance.isLightMode
-                    ? const Color(0xFFCBD5E1)
-                    : const Color(0xFF1E1E2C),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              child: ElevatedButton.icon(
+                onPressed: hasItems
+                    ? () => _showCartDetailsModal(context, state)
+                    : null,
+                icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
+                label: Text(
+                  state.editingInvoiceNumber != null ? 'Update Order' : 'Review & Save',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                elevation: 0,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
           ],
