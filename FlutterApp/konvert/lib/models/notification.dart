@@ -5,7 +5,7 @@ enum NotificationType { normal, request, important }
 class AppNotification {
   final String id;
   final String title;
-  final String body;
+  final List<String> body;
   final DateTime timestamp;
   final bool isRead;
   final NotificationType type;
@@ -22,7 +22,7 @@ class AppNotification {
   AppNotification copyWith({
     String? id,
     String? title,
-    String? body,
+    List<String>? body,
     DateTime? timestamp,
     bool? isRead,
     NotificationType? type,
@@ -52,7 +52,9 @@ class AppNotification {
     return AppNotification(
       id: map['id'] ?? '',
       title: map['title'] ?? '',
-      body: map['body'] ?? '',
+      body: map['body'] is String
+          ? [map['body']]
+          : List<String>.from(map['body'] ?? []),
       timestamp: DateTime.parse(map['timestamp']),
       isRead: map['isRead'] ?? false,
       type: NotificationType.values.firstWhere(

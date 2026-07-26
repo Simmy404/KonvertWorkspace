@@ -242,7 +242,8 @@ class ApiService {
 
   Future<bool> uploadBookings(List<BookingData> bookings) async {
     final company = StorageService.instance.getCurrentCompany();
-    if (company == null) return false;
+    final user = StorageService.instance.getCurrentUser(includeSuspended: true);
+    if (company == null || user == null) return false;
 
     String domain = company['url']!;
     if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
@@ -254,15 +255,18 @@ class ApiService {
     final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/uploadBookings.php');
 
     try {
-      final jsonList = bookings.map((b) {
-        final jsonMap = b.toJson();
-        jsonMap.remove('booking_images');
-        return jsonMap;
-      }).toList();
-      final body = jsonEncode(jsonList);
+      final jsonList = bookings.map((b) => b.toJson()).toList();
+      final payload = jsonEncode({'bookings': jsonList});
 
       final response = await http
-          .post(url, body: {"data": body})
+          .post(
+            url,
+            body: {
+              'bid': user.bid.toString(),
+              'userid': user.id.toString(),
+              'jsonObj_bookings': payload,
+            },
+          )
           .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {

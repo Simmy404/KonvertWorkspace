@@ -134,9 +134,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
         decoration: BoxDecoration(
           color: ThemeManager.instance.getSurfaceColor(),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(
-            color: ThemeManager.instance.getBorderColor(),
-          ),
+          border: Border.all(color: ThemeManager.instance.getBorderColor()),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -171,15 +169,67 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 'Upload Bookings',
                 style: TextStyle(color: ThemeManager.instance.getMatchColor()),
               ),
-              onTap: () {
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                DashboardViewModel? dashVM;
+                try {
+                  dashVM = Provider.of<DashboardViewModel>(
+                    context,
+                    listen: false,
+                  );
+                } catch (_) {}
+
                 Navigator.pop(context);
-                ErrorManager.instance.showToastError(
-                  const ErrorStruct(
-                    code: 'COMING_SOON',
-                    technicalDetails: 'Upload feature coming soon',
+
+                if (_viewModel.allBookings.isEmpty) {
+                  ErrorManager.instance.showToastError(
+                    const ErrorStruct(
+                      code: 'NO_BOOKINGS',
+                      technicalDetails: 'No local bookings available to upload',
+                    ),
+                    2,
+                  );
+                  return;
+                }
+
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Uploading bookings to server...'),
+                    duration: Duration(seconds: 15),
                   ),
-                  2,
                 );
+
+                try {
+                  final success = await _viewModel.uploadBookings(
+                    dashboardViewModel: dashVM,
+                  );
+                  messenger.hideCurrentSnackBar();
+                  if (success) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Bookings uploaded successfully!'),
+                        backgroundColor: Color(0xFF16A34A),
+                      ),
+                    );
+                  } else {
+                    ErrorManager.instance.showToastError(
+                      const ErrorStruct(
+                        code: 'UPLOAD_FAILED',
+                        technicalDetails: 'Failed to upload bookings to server',
+                      ),
+                      3,
+                    );
+                  }
+                } catch (e) {
+                  messenger.hideCurrentSnackBar();
+                  ErrorManager.instance.showToastError(
+                    ErrorStruct(
+                      code: 'UPLOAD_ERROR',
+                      technicalDetails: 'Error during upload: $e',
+                    ),
+                    3,
+                  );
+                }
               },
             ),
             ListTile(
@@ -325,7 +375,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                     hintText:
                                         'Search ${viewModel.groupedBookings.length} Bookings',
                                     hintStyle: TextStyle(
-                                      color: ThemeManager.instance.getTextSecondary(),
+                                      color: ThemeManager.instance
+                                          .getTextSecondary(),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -343,7 +394,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                   },
                                   child: Icon(
                                     Icons.close_rounded,
-                                    color: ThemeManager.instance.getTextTertiary(),
+                                    color: ThemeManager.instance
+                                        .getTextTertiary(),
                                     size: 20,
                                   ),
                                 ),
@@ -381,7 +433,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                               Icon(
                                                 Icons.receipt_long_outlined,
                                                 size: 64,
-                                                color: ThemeManager.instance.getTextTertiary(),
+                                                color: ThemeManager.instance
+                                                    .getTextTertiary(),
                                               ),
                                               const SizedBox(height: 16),
                                               Text(
@@ -391,7 +444,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                     ? 'No bookings found'
                                                     : 'No matching bookings found',
                                                 style: TextStyle(
-                                                  color: ThemeManager.instance.getTextSecondary(),
+                                                  color: ThemeManager.instance
+                                                      .getTextSecondary(),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w500,
                                                 ),
@@ -443,7 +497,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                             milliseconds: 250,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: ThemeManager.instance.getListItemColor(),
+                                            color: ThemeManager.instance
+                                                .getListItemColor(),
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
@@ -491,9 +546,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 vertical: 4,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: ThemeManager.instance.isLightMode
-                                                                ? const Color(0xFFD4E3FB)
-                                                                : const Color(0xFF1A2C4D),
+                                                            color:
+                                                                ThemeManager
+                                                                    .instance
+                                                                    .isLightMode
+                                                                ? const Color(
+                                                                    0xFFD4E3FB,
+                                                                  )
+                                                                : const Color(
+                                                                    0xFF1A2C4D,
+                                                                  ),
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   20,
@@ -502,9 +564,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                           child: Text(
                                                             timeStr,
                                                             style: TextStyle(
-                                                              color: ThemeManager.instance.isLightMode
-                                                                  ? const Color(0xFF4F73A6)
-                                                                  : const Color(0xFF83ABED),
+                                                              color:
+                                                                  ThemeManager
+                                                                      .instance
+                                                                      .isLightMode
+                                                                  ? const Color(
+                                                                      0xFF4F73A6,
+                                                                    )
+                                                                  : const Color(
+                                                                      0xFF83ABED,
+                                                                    ),
                                                               fontSize: 10,
                                                               fontWeight:
                                                                   FontWeight
@@ -526,7 +595,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 customerName,
                                                                 style: TextStyle(
-                                                                  color: ThemeManager.instance.getTextPrimary(),
+                                                                  color: ThemeManager
+                                                                      .instance
+                                                                      .getTextPrimary(),
                                                                   fontSize: 14,
                                                                   fontWeight:
                                                                       FontWeight
@@ -539,7 +610,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 '${items.length} products | Total: ${_formatCurrency(grandTotal)}',
                                                                 style: TextStyle(
-                                                                  color: ThemeManager.instance.getTextSecondary(),
+                                                                  color: ThemeManager
+                                                                      .instance
+                                                                      .getTextSecondary(),
                                                                   fontSize: 12,
                                                                   fontWeight:
                                                                       FontWeight
@@ -557,7 +630,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                     .keyboard_arrow_up_rounded
                                                               : Icons
                                                                     .keyboard_arrow_down_rounded,
-                                                          color: ThemeManager.instance.getTextSecondary(),
+                                                          color: ThemeManager
+                                                              .instance
+                                                              .getTextSecondary(),
                                                           size: 26,
                                                         ),
                                                       ],
@@ -594,9 +669,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                             12,
                                                                       ),
                                                                   decoration: BoxDecoration(
-                                                                    color: ThemeManager.instance.isLightMode
-                                                                        ? const Color(0xFFE2F1FE)
-                                                                        : const Color(0xFF19253B),
+                                                                    color:
+                                                                        ThemeManager
+                                                                            .instance
+                                                                            .isLightMode
+                                                                        ? const Color(
+                                                                            0xFFE2F1FE,
+                                                                          )
+                                                                        : const Color(
+                                                                            0xFF19253B,
+                                                                          ),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
                                                                           12,
@@ -664,9 +746,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                             12,
                                                                       ),
                                                                   decoration: BoxDecoration(
-                                                                    color: ThemeManager.instance.isLightMode
-                                                                        ? const Color(0xFFE2F1FE)
-                                                                        : const Color(0xFF19253B),
+                                                                    color:
+                                                                        ThemeManager
+                                                                            .instance
+                                                                            .isLightMode
+                                                                        ? const Color(
+                                                                            0xFFE2F1FE,
+                                                                          )
+                                                                        : const Color(
+                                                                            0xFF19253B,
+                                                                          ),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
                                                                           12,
@@ -725,13 +814,17 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 12,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: ThemeManager.instance.getSurfaceColor(),
+                                                            color: ThemeManager
+                                                                .instance
+                                                                .getSurfaceColor(),
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
                                                                 ),
                                                             border: Border.all(
-                                                              color: ThemeManager.instance.getBorderColor(),
+                                                              color: ThemeManager
+                                                                  .instance
+                                                                  .getBorderColor(),
                                                             ),
                                                           ),
                                                           child: Row(
@@ -743,9 +836,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 Icons
                                                                     .note_alt_outlined,
                                                                 size: 16,
-                                                                color: ThemeManager.instance.isLightMode
-                                                                    ? const Color(0xFF1E56E2)
-                                                                    : const Color(0xFF829AB1),
+                                                                color:
+                                                                    ThemeManager
+                                                                        .instance
+                                                                        .isLightMode
+                                                                    ? const Color(
+                                                                        0xFF1E56E2,
+                                                                      )
+                                                                    : const Color(
+                                                                        0xFF829AB1,
+                                                                      ),
                                                               ),
                                                               const SizedBox(
                                                                 width: 8,
@@ -759,9 +859,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                     Text(
                                                                       'Remarks',
                                                                       style: TextStyle(
-                                                                        color: ThemeManager.instance.isLightMode
-                                                                            ? const Color(0xFF1E56E2)
-                                                                            : const Color(0xFF829AB1),
+                                                                        color:
+                                                                            ThemeManager.instance.isLightMode
+                                                                            ? const Color(
+                                                                                0xFF1E56E2,
+                                                                              )
+                                                                            : const Color(
+                                                                                0xFF829AB1,
+                                                                              ),
                                                                         fontSize:
                                                                             11,
                                                                         fontWeight:
@@ -796,7 +901,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                         height: 10,
                                                       ),
                                                       Divider(
-                                                        color: !ThemeManager.instance.isLightMode
+                                                        color:
+                                                            !ThemeManager
+                                                                .instance
+                                                                .isLightMode
                                                             ? Colors.white
                                                                   .withOpacity(
                                                                     0.08,
@@ -837,7 +945,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 'Qty: ${b.bookingQty}  •  ${_formatCurrency(b.bookingGrandTotal)}',
                                                                 style: TextStyle(
-                                                                  color: !ThemeManager.instance.isLightMode
+                                                                  color:
+                                                                      !ThemeManager
+                                                                          .instance
+                                                                          .isLightMode
                                                                       ? const Color(
                                                                           0xFF94A3B8,
                                                                         )

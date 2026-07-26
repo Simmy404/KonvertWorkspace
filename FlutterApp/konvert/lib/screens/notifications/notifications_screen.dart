@@ -40,7 +40,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // Apply Search
       final matchesSearch =
           n.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          n.body.toLowerCase().contains(_searchQuery.toLowerCase());
+          n.body.join(' ').toLowerCase().contains(_searchQuery.toLowerCase());
 
       if (!matchesSearch) return false;
 
@@ -306,14 +306,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: ThemeManager.instance.getTextSecondary(),
+                                      color: ThemeManager.instance
+                                          .getTextSecondary(),
                                     ),
                                   ),
                                 ),
                                 ...items
-                                    .map(
-                                      (n) => _buildNotificationItem(n),
-                                    )
+                                    .map((n) => _buildNotificationItem(n))
                                     .toList(),
                               ],
                             );
@@ -455,8 +454,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                   ),
                   Text(
-                    notification.body,
-                    maxLines: 2,
+                    notification.body.join(' - '),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,

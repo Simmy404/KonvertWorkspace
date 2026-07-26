@@ -131,14 +131,17 @@ class NotificationDetailsScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          Text(
-                            notification.body,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: ThemeManager.instance.getTextSecondary(),
-                              height: 1.5,
+                          ...notification.body.map((line) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              line,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: ThemeManager.instance.getTextSecondary(),
+                                height: 1.5,
+                              ),
                             ),
-                          ),
+                          )),
                           const Spacer(),
                           Align(
                             alignment: Alignment.bottomRight,

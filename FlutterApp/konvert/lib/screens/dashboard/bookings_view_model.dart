@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../services/database_service.dart';
 import '../../models/booking_data.dart';
+import '../../services/api_service.dart';
+
+import 'dashboard_view_model.dart';
 
 class BookingsViewModel extends ChangeNotifier {
   bool _isDisposed = false;
@@ -99,6 +102,21 @@ class BookingsViewModel extends ChangeNotifier {
   Future<void> deleteInvoice(int invoice) async {
     await DatabaseService.instance.deleteBookingByInvoice(invoice.toString());
     await fetchBookings();
+  }
+
+  Future<bool> uploadBookings({DashboardViewModel? dashboardViewModel}) async {
+    if (allBookings.isEmpty) return false;
+    final success = await ApiService.instance.uploadBookings(allBookings);
+    if (success) {
+      await DatabaseService.instance.deleteAllBookings();
+      if (dashboardViewModel != null) {
+        await dashboardViewModel.refreshTargets();
+      } else {
+        await ApiService.instance.syncTarget();
+      }
+      await fetchBookings();
+    }
+    return success;
   }
 }
 

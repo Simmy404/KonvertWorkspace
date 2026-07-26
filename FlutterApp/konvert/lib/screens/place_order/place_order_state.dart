@@ -485,7 +485,13 @@ class PlaceOrderState extends ChangeNotifier {
     final mockNotification = AppNotification(
       id: 'notif_${DateTime.now().millisecondsSinceEpoch}',
       title: 'Booking complete',
-      body: 'You can now move on to the next target',
+      body: [
+        'Invoice: #$invoiceNo',
+        'Customer: ${selectedCustomer?['customer_name'] ?? 'Unknown'}',
+        'Brick: ${selectedBrick?['brick_name'] ?? 'Unknown'}',
+        'Products: ${cart.length}',
+        if (remarks.isNotEmpty) 'Remarks: $remarks',
+      ],
       timestamp: DateTime.now(),
       isRead: false,
       type: NotificationType.normal,

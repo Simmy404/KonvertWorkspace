@@ -15,7 +15,7 @@ class NotificationService {
 
     try {
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('ic_launcher');
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
       const DarwinInitializationSettings initializationSettingsDarwin =
           DarwinInitializationSettings(
@@ -32,11 +32,18 @@ class NotificationService {
 
       await _notificationsPlugin.initialize(initializationSettings);
 
-      // Request notification permissions for Android 13+ (API 33+)
+      // Create high-importance notification channel for Android 8.0+
       final androidImplementation =
           _notificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
+        const AndroidNotificationChannel channel = AndroidNotificationChannel(
+          'konvert_default_channel',
+          'Konvert Notifications',
+          description: 'Notifications for Konvert App updates and alerts',
+          importance: Importance.max,
+        );
+        await androidImplementation.createNotificationChannel(channel);
         await androidImplementation.requestNotificationsPermission();
       }
 
@@ -61,8 +68,9 @@ class NotificationService {
 
       // Generate a valid positive 32-bit integer ID for Android notification channel
       final int notifId = notification.id.hashCode.abs() % 2147483647;
+      final String bodyText = notification.body.join('\n');
 
-      const AndroidNotificationDetails androidNotificationDetails =
+      final AndroidNotificationDetails androidNotificationDetails =
           AndroidNotificationDetails(
         'konvert_default_channel',
         'Konvert Notifications',
@@ -70,12 +78,13 @@ class NotificationService {
         importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
-        icon: 'ic_launcher',
+        icon: '@mipmap/ic_launcher',
+        styleInformation: BigTextStyleInformation(bodyText),
       );
 
-      const NotificationDetails notificationDetails = NotificationDetails(
+      final NotificationDetails notificationDetails = NotificationDetails(
         android: androidNotificationDetails,
-        iOS: DarwinNotificationDetails(
+        iOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
@@ -85,7 +94,7 @@ class NotificationService {
       await _notificationsPlugin.show(
         notifId,
         notification.title,
-        notification.body,
+        bodyText,
         notificationDetails,
       );
     } catch (e, stack) {
