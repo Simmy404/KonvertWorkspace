@@ -135,13 +135,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final groupedNotifications = _groupNotifications(_filteredNotifications);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF020414)
-          : const Color(0xFFF8FAFC),
+      backgroundColor: ThemeManager.instance.getAppBackgroundColor(),
       body: Stack(
         children: [
           Positioned.fill(
@@ -149,9 +146,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ThemeManager.instance.getMainBG(),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => ColoredBox(
-                color: isDark
-                    ? const Color(0xFF020414)
-                    : const Color(0xFFF8FAFC),
+                color: ThemeManager.instance.getAppBackgroundColor(),
               ),
             ),
           ),
@@ -177,9 +172,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       Text(
                         'Notifications',
                         style: TextStyle(
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF0022FF),
+                          color: ThemeManager.instance.isLightMode
+                              ? const Color(0xFF0022FF)
+                              : Colors.white,
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.6,
@@ -198,14 +193,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   child: Container(
                     height: 52,
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF111526)
-                          : const Color(0xFFF6F8FD),
+                      color: ThemeManager.instance.getSurfaceColor(),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF2A324A)
-                            : const Color(0xFFD4DDF3),
+                        color: ThemeManager.instance.getBorderColor(),
                         width: 1.2,
                       ),
                     ),
@@ -214,9 +205,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       children: [
                         Icon(
                           Icons.search_rounded,
-                          color: isDark
-                              ? const Color(0xFF829AB1)
-                              : const Color(0xFF64748B),
+                          color: ThemeManager.instance.getTextTertiary(),
                           size: 22,
                         ),
                         const SizedBox(width: 12),
@@ -236,9 +225,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             decoration: InputDecoration(
                               hintText: 'Search notifications',
                               hintStyle: TextStyle(
-                                color: isDark
-                                    ? const Color(0xFF64748B)
-                                    : const Color(0xFF94A3B8),
+                                color: ThemeManager.instance.getTextSecondary(),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -258,9 +245,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             },
                             child: Icon(
                               Icons.close_rounded,
-                              color: isDark
-                                  ? const Color(0xFF829AB1)
-                                  : const Color(0xFF64748B),
+                              color: ThemeManager.instance.getTextTertiary(),
                               size: 20,
                             ),
                           ),
@@ -278,9 +263,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   child: Row(
                     children: [
-                      _buildFilterChip('Unread', isDark),
-                      _buildFilterChip('Important', isDark),
-                      _buildFilterChip('Requests', isDark),
+                      _buildFilterChip('Unread'),
+                      _buildFilterChip('Important'),
+                      _buildFilterChip('Requests'),
                     ],
                   ),
                 ),
@@ -294,7 +279,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           child: Text(
                             'No notifications found',
                             style: TextStyle(
-                              color: isDark ? Colors.white54 : Colors.black54,
+                              color: ThemeManager.instance.getTextSecondary(),
                               fontSize: 14,
                             ),
                           ),
@@ -321,15 +306,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark
-                                          ? const Color(0xFF94A3B8)
-                                          : const Color(0xFF7A7EA1),
+                                      color: ThemeManager.instance.getTextSecondary(),
                                     ),
                                   ),
                                 ),
                                 ...items
                                     .map(
-                                      (n) => _buildNotificationItem(n, isDark),
+                                      (n) => _buildNotificationItem(n),
                                     )
                                     .toList(),
                               ],
@@ -345,78 +328,84 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isDark) {
+  Widget _buildFilterChip(String label) {
     final isActive = _selectedFilters.contains(label);
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
-      child: FilterChip(
-        label: Text(label),
-        selected: isActive,
-        onSelected: (selected) {
+      child: GestureDetector(
+        onTap: () {
           setState(() {
-            if (selected) {
-              _selectedFilters.add(label);
-            } else {
+            if (isActive) {
               _selectedFilters.remove(label);
+            } else {
+              _selectedFilters.add(label);
             }
           });
         },
-        backgroundColor: isDark
-            ? const Color(0xFF111526)
-            : const Color(0xFFF6F8FD),
-        selectedColor: isDark
-            ? const Color.fromARGB(80, 41, 51, 73)
-            : const Color(0xFFD4DDF3),
-        labelStyle: TextStyle(
-          color: isActive
-              ? (isDark ? Colors.white : const Color(0xFF0022FF))
-              : (isDark ? const Color(0xFF829AB1) : const Color(0xFF64748B)),
-          fontSize: 13,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
             color: isActive
-                ? (isDark ? const Color(0xFF829AB1) : const Color(0xFF64748B))
-                : (isDark ? const Color(0xFF2A324A) : const Color(0xFFD4DDF3)),
-            width: 0,
+                ? ThemeManager.instance.getAccentBlue()
+                : ThemeManager.instance.getContainerColor(),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isActive
+                  ? ThemeManager.instance.getAccentBlue()
+                  : ThemeManager.instance.getBorderColor(),
+            ),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF1E56E2).withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive
+                  ? Colors.white
+                  : ThemeManager.instance.getTextSecondary(),
+              fontSize: 13,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            ),
           ),
         ),
-        showCheckmark: false,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
 
-  Widget _buildNotificationItem(AppNotification notification, bool isDark) {
+  Widget _buildNotificationItem(AppNotification notification) {
     final String iconPath;
     final Color bgColor;
     final Color iconBgColor;
 
     if (notification.type == NotificationType.request) {
-      iconPath = isDark
-          ? 'assets/extras/notificationRequestDark.png'
-          : 'assets/extras/notificationRequestLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationRequestLight.png'
+          : 'assets/extras/notificationRequestDark.png';
       iconBgColor = const Color(0xFFFEF3C7);
     } else if (notification.type == NotificationType.important) {
-      iconPath = isDark
-          ? 'assets/extras/notificationImportantDark.png'
-          : 'assets/extras/notificationImportantLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationImportantLight.png'
+          : 'assets/extras/notificationImportantDark.png';
       iconBgColor = const Color(0xFFFEE2E2);
     } else {
-      iconPath = isDark
-          ? 'assets/extras/notificationNormalDark.png'
-          : 'assets/extras/notificationNormalLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationNormalLight.png'
+          : 'assets/extras/notificationNormalDark.png';
       iconBgColor = const Color(0xFFE0E7FF);
     }
 
     if (notification.isRead) {
-      bgColor = isDark
-          ? const Color.fromARGB(80, 41, 51, 73)
-          : const Color(0xFFF3F4F9);
+      bgColor = ThemeManager.instance.getListItemColor();
     } else {
-      bgColor = isDark ? const Color.fromARGB(150, 41, 51, 73) : Colors.white;
+      bgColor = ThemeManager.instance.getSurfaceColor();
     }
 
     return GestureDetector(
@@ -427,17 +416,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: notification.isRead || isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.2)
-                        : Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          border: Border.all(
+            color: ThemeManager.instance.getBorderColor(),
+            width: 1.2,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,9 +428,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               width: 28,
               height: 36,
               decoration: BoxDecoration(
-                color: notification.isRead && !isDark
-                    ? Colors.transparent
-                    : (isDark ? Colors.transparent : Colors.transparent),
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -465,13 +445,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: isDark
+                      color: ThemeManager.instance.isLightMode
                           ? (notification.isRead
-                                ? Colors.white70
-                                : Colors.white)
-                          : (notification.isRead
                                 ? Colors.black87
-                                : Colors.black),
+                                : Colors.black)
+                          : (notification.isRead
+                                ? Colors.white70
+                                : Colors.white),
                     ),
                   ),
                   Text(
@@ -480,7 +460,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                      color: ThemeManager.instance.getTextSecondary(),
                       height: 1,
                     ),
                   ),

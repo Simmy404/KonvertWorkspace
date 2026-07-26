@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/place_order_product.dart';
 import 'place_order_state.dart';
 import 'place_order_components.dart';
+import '../../managers/theme_manager.dart';
 
 class ProductStep extends StatelessWidget {
   const ProductStep({super.key});
@@ -12,7 +13,6 @@ class ProductStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<PlaceOrderState>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,7 +29,7 @@ class ProductStep extends StatelessWidget {
                   Text(
                     'Select Products',
                     style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: ThemeManager.instance.getTextPrimary(),
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -57,12 +57,11 @@ class ProductStep extends StatelessWidget {
                   onChanged: state.filterProducts,
                   enabled: !state.isRefreshingProducts,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
+                    color: ThemeManager.instance.getTextPrimary(),
                     fontSize: 13,
                   ),
                   decoration: PlaceOrderComponents.buildSearchDecoration(
                     'Search Products by Name...',
-                    isDark,
                     () {
                       state.productSearchController.clear();
                       state.filterProducts('');
@@ -80,7 +79,6 @@ class ProductStep extends StatelessWidget {
                       label: 'All Products (${state.allProducts.length})',
                       isSelected: state.selectedProductCategoryFilter == 'all',
                       onTap: () => state.filterProductsByCategory('all'),
-                      isDark: isDark,
                     ),
                     const SizedBox(width: 6),
                     PlaceOrderComponents.buildFilterChip(
@@ -88,7 +86,6 @@ class ProductStep extends StatelessWidget {
                       icon: Icons.medication_outlined,
                       isSelected: state.selectedProductCategoryFilter == 'rx',
                       onTap: () => state.filterProductsByCategory('rx'),
-                      isDark: isDark,
                     ),
                     const SizedBox(width: 6),
                     PlaceOrderComponents.buildFilterChip(
@@ -96,7 +93,6 @@ class ProductStep extends StatelessWidget {
                       icon: Icons.local_pharmacy_outlined,
                       isSelected: state.selectedProductCategoryFilter == 'otc',
                       onTap: () => state.filterProductsByCategory('otc'),
-                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -122,7 +118,6 @@ class ProductStep extends StatelessWidget {
                             height: 250,
                             child: PlaceOrderComponents.buildEmptyState(
                               'No Products found',
-                              isDark,
                             ),
                           ),
                         ],
@@ -152,15 +147,13 @@ class ProductStep extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: cartItem != null
-                                  ? (isDark ? const Color(0xFF1E56E2).withOpacity(0.1) : const Color(0xFF1E56E2).withOpacity(0.05))
-                                  : (isDark ? const Color(0xFF1B1D22) : const Color(0xFFF6F8FD)),
+                                  ? (ThemeManager.instance.isLightMode ? const Color(0xFF1E56E2).withOpacity(0.05) : const Color(0xFF1E56E2).withOpacity(0.1))
+                                  : ThemeManager.instance.getListItemColor(),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: cartItem != null
                                     ? const Color(0xFF1E56E2).withOpacity(0.5)
-                                    : (isDark
-                                          ? Colors.white.withOpacity(0.05)
-                                          : Colors.black.withOpacity(0.03)),
+                                    : ThemeManager.instance.getBorderColor(),
                                 width: cartItem != null ? 1.2 : 1.0,
                               ),
                             ),
@@ -180,15 +173,14 @@ class ProductStep extends StatelessWidget {
                                             state,
                                             product,
                                             cartItem,
-                                            isDark,
                                           ),
                                   child: Container(
                                     width: 38,
                                     height: 38,
                                     decoration: BoxDecoration(
-                                      color: isDark
-                                          ? const Color(0xFF0F1E3D)
-                                          : const Color(0xFFE0F2FE),
+                                      color: ThemeManager.instance.isLightMode
+                                          ? const Color(0xFFE0F2FE)
+                                          : const Color(0xFF0F1E3D),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: const Icon(
@@ -211,7 +203,6 @@ class ProductStep extends StatelessWidget {
                                               state,
                                               product,
                                               cartItem,
-                                              isDark,
                                             ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,9 +213,7 @@ class ProductStep extends StatelessWidget {
                                               child: Text(
                                                 product['product_name'] ?? '',
                                                 style: TextStyle(
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : const Color(0xFF0F172A),
+                                                  color: ThemeManager.instance.getTextPrimary(),
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 13,
                                                 ),
@@ -261,9 +250,7 @@ class ProductStep extends StatelessWidget {
                                             Text(
                                               'TP: Rs ${product['product_tp'] ?? '0'}',
                                               style: TextStyle(
-                                                color: isDark
-                                                    ? Colors.white70
-                                                    : const Color(0xFF475569),
+                                                color: ThemeManager.instance.getTextSecondary(),
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -290,12 +277,10 @@ class ProductStep extends StatelessWidget {
                                 cartItem != null
                                     ? Container(
                                         decoration: BoxDecoration(
-                                          color: isDark
-                                              ? const Color(0xFF1E1E2C)
-                                              : const Color(0xFFF1F5F9),
+                                          color: ThemeManager.instance.getContainerColor(),
                                           borderRadius: BorderRadius.circular(10),
                                           border: Border.all(
-                                            color: const Color(0xFF1E56E2),
+                                            color: ThemeManager.instance.getAccentBlue(),
                                             width: 1,
                                           ),
                                         ),
@@ -318,7 +303,7 @@ class ProductStep extends StatelessWidget {
                                                 size: 16,
                                                 color: cartItem.qty == 1
                                                     ? Colors.red
-                                                    : (isDark ? Colors.white : Colors.black),
+                                                    : ThemeManager.instance.getTextPrimary(),
                                               ),
                                             ),
                                             Padding(
@@ -326,7 +311,7 @@ class ProductStep extends StatelessWidget {
                                               child: Text(
                                                 '${cartItem.qty}',
                                                 style: TextStyle(
-                                                  color: isDark ? Colors.white : Colors.black,
+                                                  color: ThemeManager.instance.getTextPrimary(),
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 13,
                                                 ),
@@ -341,10 +326,10 @@ class ProductStep extends StatelessWidget {
                                               onPressed: state.isRefreshingProducts
                                                   ? null
                                                   : () => state.incrementProductQty(product),
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_rounded,
                                                 size: 16,
-                                                color: Color(0xFF1E56E2),
+                                                color: ThemeManager.instance.getAccentBlue(),
                                               ),
                                             ),
                                           ],
@@ -361,7 +346,6 @@ class ProductStep extends StatelessWidget {
                                                   state,
                                                   product,
                                                   cartItem,
-                                                  isDark,
                                                   autofocusFirstInput: true,
                                                 );
                                               },
@@ -374,12 +358,8 @@ class ProductStep extends StatelessWidget {
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: isDark
-                                              ? const Color(0xFF1E56E2).withOpacity(0.2)
-                                              : const Color(0xFF1E56E2).withOpacity(0.1),
-                                          foregroundColor: isDark
-                                              ? const Color(0xFF83ABED)
-                                              : const Color(0xFF1E56E2),
+                                          backgroundColor: ThemeManager.instance.getAccentBlue().withOpacity(ThemeManager.instance.isLightMode ? 0.1 : 0.2),
+                                          foregroundColor: ThemeManager.instance.isLightMode ? const Color(0xFF1E56E2) : const Color(0xFF83ABED),
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 12,
                                             vertical: 6,
@@ -407,7 +387,7 @@ class ProductStep extends StatelessWidget {
           ignoring: state.isRefreshingProducts,
           child: Opacity(
             opacity: state.isRefreshingProducts ? 0.5 : 1.0,
-            child: _buildBottomCartSummary(context, state, isDark),
+            child: _buildBottomCartSummary(context, state),
           ),
         ),
       ],
@@ -420,30 +400,27 @@ class ProductStep extends StatelessWidget {
   Widget _buildBottomCartSummary(
     BuildContext context,
     PlaceOrderState state,
-    bool isDark,
   ) {
     final hasItems = state.cart.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0B1437) : Colors.white,
+        color: ThemeManager.instance.getAppBackgroundColor(),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         border: Border(
           top: BorderSide(
-            color: isDark
-                ? const Color(0xFF1E2D68).withOpacity(0.5)
-                : const Color(0xFFE2E8F0),
+            color: ThemeManager.instance.getBorderColor(),
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.5)
-                : const Color(0xFF003087).withOpacity(0.1),
+            color: ThemeManager.instance.isLightMode
+                ? const Color(0xFF003087).withOpacity(0.1)
+                : Colors.black.withOpacity(0.5),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -456,7 +433,7 @@ class ProductStep extends StatelessWidget {
           children: [
             // Left: Items Count & Grand Total
             GestureDetector(
-              onTap: hasItems ? () => _showCartDetailsModal(context, state, isDark) : null,
+              onTap: hasItems ? () => _showCartDetailsModal(context, state) : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -472,7 +449,7 @@ class ProductStep extends StatelessWidget {
                       Text(
                         '${state.cart.length} ${state.cart.length == 1 ? 'Item' : 'Items'} in Cart',
                         style: TextStyle(
-                          color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                          color: ThemeManager.instance.getTextSecondary(),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -484,7 +461,7 @@ class ProductStep extends StatelessWidget {
                   Text(
                     'Total: Rs ${state.cartGrandTotal.toStringAsFixed(2)}',
                     style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: ThemeManager.instance.getTextPrimary(),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -496,7 +473,7 @@ class ProductStep extends StatelessWidget {
             // Right: Primary Action Button
             ElevatedButton.icon(
               onPressed: hasItems
-                  ? () => _showCartDetailsModal(context, state, isDark)
+                  ? () => _showCartDetailsModal(context, state)
                   : null,
               icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
               label: Text(
@@ -505,9 +482,9 @@ class ProductStep extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E56E2),
-                disabledBackgroundColor: isDark
-                    ? const Color(0xFF1E1E2C)
-                    : const Color(0xFFCBD5E1),
+                disabledBackgroundColor: ThemeManager.instance.isLightMode
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF1E1E2C),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 shape: RoundedRectangleBorder(
@@ -528,7 +505,6 @@ class ProductStep extends StatelessWidget {
   void _showCartDetailsModal(
     BuildContext context,
     PlaceOrderState state,
-    bool isDark,
   ) {
     showModalBottomSheet(
       context: context,
@@ -540,7 +516,7 @@ class ProductStep extends StatelessWidget {
             return Container(
               height: MediaQuery.of(context).size.height * 0.75,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0B1437) : Colors.white,
+                color: ThemeManager.instance.getAppBackgroundColor(),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -554,7 +530,7 @@ class ProductStep extends StatelessWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white30 : Colors.grey.shade300,
+                      color: ThemeManager.instance.getDividerColor(),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -569,7 +545,7 @@ class ProductStep extends StatelessWidget {
                         Text(
                           'Order Summary (${state.cart.length} items)',
                           style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: ThemeManager.instance.getTextPrimary(),
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -578,7 +554,7 @@ class ProductStep extends StatelessWidget {
                           onPressed: () => Navigator.pop(context),
                           icon: Icon(
                             Icons.close_rounded,
-                            color: isDark ? Colors.white70 : Colors.black87,
+                            color: ThemeManager.instance.getTextSecondary(),
                           ),
                         ),
                       ],
@@ -593,7 +569,7 @@ class ProductStep extends StatelessWidget {
                             child: Text(
                               'Cart is empty',
                               style: TextStyle(
-                                color: isDark ? Colors.white54 : Colors.black54,
+                                color: ThemeManager.instance.getTextTertiary(),
                               ),
                             ),
                           )
@@ -606,10 +582,10 @@ class ProductStep extends StatelessWidget {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF121318) : const Color(0xFFF8FAFC),
+                                  color: ThemeManager.instance.getContainerColor(),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
+                                    color: ThemeManager.instance.getBorderColor(),
                                   ),
                                 ),
                                 child: Row(
@@ -621,7 +597,7 @@ class ProductStep extends StatelessWidget {
                                           Text(
                                             item.name,
                                             style: TextStyle(
-                                              color: isDark ? Colors.white : Colors.black,
+                                              color: ThemeManager.instance.getTextPrimary(),
                                               fontWeight: FontWeight.bold,
                                               fontSize: 13,
                                             ),
@@ -630,7 +606,7 @@ class ProductStep extends StatelessWidget {
                                           Text(
                                             'TP: Rs ${item.price} | Qty: ${item.qty}${item.discount > 0 ? ' | Disc: ${item.discount}%' : ''}${item.bonus > 0 ? ' | Bonus: Rs ${item.bonus}' : ''}',
                                             style: TextStyle(
-                                              color: isDark ? Colors.white60 : Colors.black54,
+                                              color: ThemeManager.instance.getTextSecondary(),
                                               fontSize: 11,
                                             ),
                                           ),
@@ -640,7 +616,7 @@ class ProductStep extends StatelessWidget {
                                     Text(
                                       'Rs ${item.getGrandTotal().toStringAsFixed(2)}',
                                       style: TextStyle(
-                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        color: ThemeManager.instance.getTextPrimary(),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
@@ -663,7 +639,7 @@ class ProductStep extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF070C22) : const Color(0xFFF1F5F9),
+                      color: ThemeManager.instance.getSurfaceColor(),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
@@ -677,22 +653,22 @@ class ProductStep extends StatelessWidget {
                           controller: TextEditingController(text: state.remarks)
                             ..selection = TextSelection.collapsed(offset: state.remarks.length),
                           style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black,
+                            color: ThemeManager.instance.getTextPrimary(),
                             fontSize: 12,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Order Remarks (Optional)...',
                             hintStyle: TextStyle(
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                              color: ThemeManager.instance.getTextTertiary(),
                               fontSize: 12,
                             ),
                             prefixIcon: Icon(
                               Icons.note_alt_outlined,
                               size: 16,
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                              color: ThemeManager.instance.getTextTertiary(),
                             ),
                             filled: true,
-                            fillColor: isDark ? const Color(0xFF121318) : Colors.white,
+                            fillColor: ThemeManager.instance.getContainerColor(),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -701,7 +677,7 @@ class ProductStep extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _buildEvidenceImagesSection(context, state, setModalState, isDark),
+                        _buildEvidenceImagesSection(context, state, setModalState),
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
@@ -719,7 +695,11 @@ class ProductStep extends StatelessWidget {
                                         ),
                                       );
                                       Navigator.pop(context); // close bottom sheet
-                                      state.resetOrderAndGoToBricks(); // take user to Bricks step
+                                      if (state.editingInvoiceNumber != null) {
+                                        Navigator.pop(context, true); // close PlaceOrderScreen if editing
+                                      } else {
+                                        state.resetOrderAndGoToBricks(); // take user to Bricks step for new order
+                                      }
                                     }
                                   },
                             icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
@@ -756,8 +736,7 @@ class ProductStep extends StatelessWidget {
     BuildContext context,
     PlaceOrderState state,
     Map<String, dynamic> product,
-    PlaceOrderProduct? existingItem,
-    bool isDark, {
+    PlaceOrderProduct? existingItem, {
     bool autofocusFirstInput = true,
   }) {
     int qty = existingItem?.qty ?? 1;
@@ -781,7 +760,7 @@ class ProductStep extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF121318) : Colors.white,
+                  color: ThemeManager.instance.getContainerColor(),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -798,7 +777,7 @@ class ProductStep extends StatelessWidget {
                           child: Text(
                             product['product_name'] ?? 'Product Pricing & Details',
                             style: TextStyle(
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: ThemeManager.instance.getTextPrimary(),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -809,80 +788,41 @@ class ProductStep extends StatelessWidget {
                           onPressed: () => Navigator.pop(context),
                           icon: Icon(
                             Icons.close_rounded,
-                            color: isDark ? Colors.white70 : Colors.black87,
+                            color: ThemeManager.instance.getTextSecondary(),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Quantity Counter
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Quantity:',
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : const Color(0xFF475569),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                if (qty > 1) {
-                                  setStateModal(() => qty--);
-                                }
-                              },
-                              icon: const Icon(Icons.remove_circle_outline, size: 22),
-                              color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E1E2C) : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '$qty',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => setStateModal(() => qty++),
-                              icon: const Icon(Icons.add_circle_outline, size: 22),
-                              color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
-                            ),
-                          ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
 
                     PlaceOrderComponents.buildDialogInput(
+                      'Quantity',
+                      qty.toString(),
+                      (v) {
+                        setStateModal(() {
+                          final parsed = int.tryParse(v);
+                          if (parsed != null && parsed > 0) {
+                            qty = parsed;
+                          }
+                        });
+                      },
+                      autofocus: autofocusFirstInput,
+                    ),
+                    PlaceOrderComponents.buildDialogInput(
                       'Unit Price (TP)',
                       price.toString(),
                       (v) => setStateModal(() => price = double.tryParse(v) ?? 0.0),
-                      isDark,
-                      autofocus: autofocusFirstInput,
+                      autofocus: false,
                     ),
                     PlaceOrderComponents.buildDialogInput(
                       'Discount Percentage (%)',
                       discount.toString(),
                       (v) => setStateModal(() => discount = double.tryParse(v) ?? 0.0),
-                      isDark,
                     ),
                     PlaceOrderComponents.buildDialogInput(
                       'Bonus Amount (Rs)',
                       bonus.toString(),
                       (v) => setStateModal(() => bonus = double.tryParse(v) ?? 0.0),
-                      isDark,
                     ),
                     const Divider(height: 20),
 
@@ -892,7 +832,7 @@ class ProductStep extends StatelessWidget {
                         Text(
                           'Calculated Subtotal:',
                           style: TextStyle(
-                            color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                            color: ThemeManager.instance.getTextSecondary(),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -900,7 +840,7 @@ class ProductStep extends StatelessWidget {
                         Text(
                           'Rs ${total.toStringAsFixed(2)}',
                           style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: ThemeManager.instance.getTextPrimary(),
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
@@ -969,7 +909,7 @@ class ProductStep extends StatelessWidget {
     );
   }
 
-  Widget _buildEvidenceImagesSection(BuildContext context, PlaceOrderState state, StateSetter setModalState, bool isDark) {
+  Widget _buildEvidenceImagesSection(BuildContext context, PlaceOrderState state, StateSetter setModalState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -979,7 +919,7 @@ class ProductStep extends StatelessWidget {
             Text(
               'Evidence Images (${state.evidenceImages.length}/3)',
               style: TextStyle(
-                color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                color: ThemeManager.instance.getTextSecondary(),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

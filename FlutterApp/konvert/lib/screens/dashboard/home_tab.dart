@@ -19,10 +19,9 @@ import '../notifications/notifications_screen.dart';
 // DASHBOARD GOOGLE MAP (EXTRACTED STATEFUL)
 // ==========================================
 class _DashboardGoogleMap extends StatefulWidget {
-  final bool isDark;
   final Position position;
 
-  const _DashboardGoogleMap({required this.isDark, required this.position});
+  const _DashboardGoogleMap({required this.position});
 
   @override
   State<_DashboardGoogleMap> createState() => _DashboardGoogleMapState();
@@ -47,9 +46,9 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   @override
   void didUpdateWidget(covariant _DashboardGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.isDark != widget.isDark && _mapController != null) {
+    if (_mapController != null) {
       _mapController!.setMapStyle(
-        widget.isDark ? ThemeManager.instance.darkMapStyle : null,
+        ThemeManager.instance.isLightMode ? null : ThemeManager.instance.darkMapStyle,
       );
     }
   }
@@ -83,7 +82,7 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
           mapType: MapType.normal,
           onMapCreated: (controller) {
             _mapController = controller;
-            if (widget.isDark) {
+            if (!ThemeManager.instance.isLightMode) {
               controller.setMapStyle(ThemeManager.instance.darkMapStyle);
             }
           },
@@ -117,14 +116,14 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: widget.isDark
-                      ? const Color(0xFF121318).withValues(alpha: 0.85)
-                      : Colors.white.withValues(alpha: 0.9),
+                  color: ThemeManager.instance.isLightMode
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : const Color(0xFF121318).withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: widget.isDark
-                        ? Colors.white.withValues(alpha: 0.15)
-                        : Colors.black.withValues(alpha: 0.1),
+                    color: ThemeManager.instance.isLightMode
+                        ? Colors.black.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.15),
                     width: 1,
                   ),
                   boxShadow: [
@@ -138,9 +137,9 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
                 child: Icon(
                   Icons.my_location_rounded,
                   size: 18,
-                  color: widget.isDark
-                      ? const Color(0xFF60A5FA)
-                      : const Color(0xFF1E56E2),
+                  color: ThemeManager.instance.isLightMode
+                      ? const Color(0xFF1E56E2)
+                      : const Color(0xFF60A5FA),
                 ),
               ),
             ),
@@ -201,7 +200,6 @@ class HomeTab extends StatelessWidget {
     return ListenableBuilder(
       listenable: ThemeManager.instance,
       builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final currentUser = StorageService.instance.getCurrentUser();
         final targets = StorageService.instance.getTargets();
         final dashboardVM = context.watch<DashboardViewModel>();
@@ -212,7 +210,7 @@ class HomeTab extends StatelessWidget {
             await dashboardVM.loadCatalogCounts();
           },
           color: const Color(0xFF1E56E2),
-          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          backgroundColor: ThemeManager.instance.getContainerColor(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
@@ -225,7 +223,6 @@ class HomeTab extends StatelessWidget {
                 // ==========================================
                 _buildTopSection(
                   context,
-                  isDark,
                   currentUser,
                   targets,
                   dashboardVM,
@@ -250,9 +247,7 @@ class HomeTab extends StatelessWidget {
                             Text(
                               'My Activity',
                               style: TextStyle(
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                                color: ThemeManager.instance.getTextPrimary(),
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: -0.4,
@@ -262,9 +257,7 @@ class HomeTab extends StatelessWidget {
                             Icon(
                               Icons.arrow_forward_rounded,
                               size: 20,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF0F172A),
+                              color: ThemeManager.instance.getTextPrimary(),
                             ),
                           ],
                         ),
@@ -272,10 +265,10 @@ class HomeTab extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       // Activity Items (4 Empty Cards)
-                      _buildActivityCard(isDark: isDark),
-                      _buildActivityCard(isDark: isDark),
-                      _buildActivityCard(isDark: isDark),
-                      _buildActivityCard(isDark: isDark),
+                      _buildActivityCard(),
+                      _buildActivityCard(),
+                      _buildActivityCard(),
+                      _buildActivityCard(),
                     ],
                   ),
                 ),
@@ -292,7 +285,6 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   Widget _buildTopSection(
     BuildContext context,
-    bool isDark,
     dynamic currentUser,
     Map<String, dynamic> targets,
     DashboardViewModel dashboardVM,
@@ -312,9 +304,9 @@ class HomeTab extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.6)
-                        : const Color(0xFF003087).withValues(alpha: 0.25),
+                    color: ThemeManager.instance.isLightMode
+                        ? const Color(0xFF003087).withValues(alpha: 0.25)
+                        : Colors.black.withValues(alpha: 0.6),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
@@ -337,16 +329,16 @@ class HomeTab extends StatelessWidget {
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: isDark
+                              colors: ThemeManager.instance.isLightMode
                                   ? [
-                                      const Color(0xFF0C164F),
-                                      const Color(0xFF050B30),
-                                      const Color(0xFF020414),
-                                    ]
-                                  : [
                                       const Color(0xFF1E56E2),
                                       const Color(0xFF1447C0),
                                       const Color(0xFF0D369B),
+                                    ]
+                                  : [
+                                      const Color(0xFF0C164F),
+                                      const Color(0xFF050B30),
+                                      const Color(0xFF020414),
                                     ],
                             ),
                           ),
@@ -419,13 +411,13 @@ class HomeTab extends StatelessWidget {
                             ignoring: dashboardVM.isRefreshingTargets,
                             child: Opacity(
                               opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
-                              child: _buildTargetCardsRow(targets, isDark),
+                              child: _buildTargetCardsRow(targets),
                             ),
                           ),
                           const SizedBox(height: 4),
 
                           // Google Maps Card
-                          _buildGoogleMapCard(context, isDark),
+                          _buildGoogleMapCard(context),
                         ],
                       ),
                     ),
@@ -444,7 +436,7 @@ class HomeTab extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          child: Center(child: _buildPlaceOrderFAB(context, isDark)),
+          child: Center(child: _buildPlaceOrderFAB(context)),
         ),
       ],
     );
@@ -623,7 +615,7 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // TARGET CARDS (HORIZONTAL ROW)
   // ==========================================
-  Widget _buildTargetCardsRow(Map<String, dynamic> targets, bool isDark) {
+  Widget _buildTargetCardsRow(Map<String, dynamic> targets) {
     ({String number, String unit}) formatValueParts(String raw) {
       final cleaned = raw.replaceAll(',', '').trim();
       final val = double.tryParse(cleaned) ?? 0;
@@ -696,7 +688,6 @@ class HomeTab extends StatelessWidget {
               targets['month_target']?.toString() ?? '0',
             ),
             label: 'Monthly\nTarget',
-            isDark: isDark,
           ),
         ),
         const SizedBox(width: 4),
@@ -706,7 +697,6 @@ class HomeTab extends StatelessWidget {
               targets['total_sales']?.toString() ?? '0',
             ),
             label: 'Total\nSales',
-            isDark: isDark,
           ),
         ),
         const SizedBox(width: 4),
@@ -716,7 +706,6 @@ class HomeTab extends StatelessWidget {
               targets['today_sales']?.toString() ?? '0',
             ),
             label: 'Today\nSales',
-            isDark: isDark,
           ),
         ),
         const SizedBox(width: 4),
@@ -726,7 +715,6 @@ class HomeTab extends StatelessWidget {
               targets['no_of_orders']?.toString() ?? '0',
             ),
             label: 'No. of\nOrders',
-            isDark: isDark,
           ),
         ),
       ],
@@ -736,16 +724,13 @@ class HomeTab extends StatelessWidget {
   Widget _buildTargetCard({
     required ({String number, String unit}) valueParts,
     required String label,
-    required bool isDark,
   }) {
-    final valueColor = ThemeManager.instance.getTargetCardValueColor(
-      isDark: isDark,
-    );
+    final valueColor = ThemeManager.instance.getTargetCardValueColor();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
       decoration: BoxDecoration(
-        gradient: ThemeManager.instance.getTargetCardGradient(isDark: isDark),
+        gradient: ThemeManager.instance.getTargetCardGradient(),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -783,9 +768,7 @@ class HomeTab extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: ThemeManager.instance.getTargetCardLabelColor(
-                isDark: isDark,
-              ),
+              color: ThemeManager.instance.getTargetCardLabelColor(),
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.2,
@@ -800,7 +783,7 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // GOOGLE MAPS CARD
   // ==========================================
-  Widget _buildGoogleMapCard(BuildContext context, bool isDark) {
+  Widget _buildGoogleMapCard(BuildContext context) {
     return Consumer<LocationManager>(
       builder: (context, locManager, child) {
         final pos = locManager.currentPosition;
@@ -809,9 +792,9 @@ class HomeTab extends StatelessWidget {
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF121318).withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.9),
+              color: ThemeManager.instance.isLightMode
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : const Color(0xFF121318).withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -823,9 +806,7 @@ class HomeTab extends StatelessWidget {
                   : Text(
                       'Location not available',
                       style: TextStyle(
-                        color: isDark
-                            ? Colors.white54
-                            : const Color(0xFF64748B),
+                        color: ThemeManager.instance.getTextSecondary(),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -848,7 +829,7 @@ class HomeTab extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: _DashboardGoogleMap(isDark: isDark, position: pos),
+            child: _DashboardGoogleMap(position: pos),
           ),
         );
       },
@@ -858,7 +839,7 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // FLOATING "+" PLACE ORDER BUTTON
   // ==========================================
-  Widget _buildPlaceOrderFAB(BuildContext context, bool isDark) {
+  Widget _buildPlaceOrderFAB(BuildContext context) {
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -870,11 +851,9 @@ class HomeTab extends StatelessWidget {
           height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: ThemeManager.instance.getPlaceOrderGradient(isDark: isDark),
+            gradient: ThemeManager.instance.getPlaceOrderGradient(),
             border: Border.all(
-              color: ThemeManager.instance.getPlaceOrderBorderColor(
-                isDark: isDark,
-              ),
+              color: ThemeManager.instance.getPlaceOrderBorderColor(),
               width: 3,
             ),
           ),
@@ -888,7 +867,6 @@ class HomeTab extends StatelessWidget {
   // ACTIVITY CARD
   // ==========================================
   Widget _buildActivityCard({
-    required bool isDark,
     String? title,
     String? subtitle,
     String? time,
@@ -903,9 +881,9 @@ class HomeTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       height: 60,
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color.fromARGB(20, 164, 219, 255)
-            : const Color.fromARGB(20, 0, 43, 71),
+        color: ThemeManager.instance.isLightMode
+            ? const Color.fromARGB(20, 0, 43, 71)
+            : const Color.fromARGB(20, 164, 219, 255),
         borderRadius: BorderRadius.circular(12),
       ),
       child: isEmpty
@@ -932,9 +910,7 @@ class HomeTab extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF0F172A),
+                          color: ThemeManager.instance.getTextPrimary(),
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -944,9 +920,7 @@ class HomeTab extends StatelessWidget {
                         Text(
                           subtitle,
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.white54
-                                : const Color(0xFF64748B),
+                            color: ThemeManager.instance.getTextSecondary(),
                             fontSize: 11,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -959,7 +933,7 @@ class HomeTab extends StatelessWidget {
                   Text(
                     time,
                     style: TextStyle(
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      color: ThemeManager.instance.getTextTertiary(),
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),

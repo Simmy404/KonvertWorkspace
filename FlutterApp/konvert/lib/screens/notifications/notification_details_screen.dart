@@ -29,29 +29,25 @@ class NotificationDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final String iconPath;
-    final Color cardColor = isDark
-        ? const Color(0xFF1E2436)
-        : const Color(0xFFF8FAFC);
+    final Color cardColor = ThemeManager.instance.getContainerColor();
 
     if (notification.type == NotificationType.request) {
-      iconPath = isDark
-          ? 'assets/extras/notificationRequestDark.png'
-          : 'assets/extras/notificationRequestLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationRequestLight.png'
+          : 'assets/extras/notificationRequestDark.png';
     } else if (notification.type == NotificationType.important) {
-      iconPath = isDark
-          ? 'assets/extras/notificationImportantDark.png'
-          : 'assets/extras/notificationImportantLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationImportantLight.png'
+          : 'assets/extras/notificationImportantDark.png';
     } else {
-      iconPath = isDark
-          ? 'assets/extras/notificationNormalDark.png'
-          : 'assets/extras/notificationNormalLight.png';
+      iconPath = ThemeManager.instance.isLightMode
+          ? 'assets/extras/notificationNormalLight.png'
+          : 'assets/extras/notificationNormalDark.png';
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF020414) : const Color(0xFFF8FAFC),
+      backgroundColor: ThemeManager.instance.getAppBackgroundColor(),
       body: Stack(
         children: [
           Positioned.fill(
@@ -59,7 +55,7 @@ class NotificationDetailsScreen extends StatelessWidget {
               ThemeManager.instance.getMainBG(),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => ColoredBox(
-                color: isDark ? const Color(0xFF020414) : const Color(0xFFF8FAFC),
+                color: ThemeManager.instance.getAppBackgroundColor(),
               ),
             ),
           ),
@@ -106,9 +102,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF2B3245)
-                              : const Color(0xFFE2E8F0),
+                          color: ThemeManager.instance.getBorderColor(),
                           width: 1,
                         ),
                       ),
@@ -122,7 +116,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black,
+                              color: ThemeManager.instance.getTextPrimary(),
                               height: 1.2,
                               letterSpacing: -0.3,
                             ),
@@ -133,9 +127,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B),
+                              color: ThemeManager.instance.getTextTertiary(),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -143,9 +135,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                             notification.body,
                             style: TextStyle(
                               fontSize: 16,
-                              color: isDark
-                                  ? Colors.white70
-                                  : const Color(0xFF475569),
+                              color: ThemeManager.instance.getTextSecondary(),
                               height: 1.5,
                             ),
                           ),
@@ -158,9 +148,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF475569),
+                                color: ThemeManager.instance.getTextSecondary(),
                                 height: 1.4,
                               ),
                             ),
@@ -184,7 +172,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.black,
+                          color: ThemeManager.instance.getTextPrimary(),
                           decoration: TextDecoration.underline,
                         ),
                       ),

@@ -405,4 +405,25 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     await StorageService.instance.setBool('has_selected_theme', true);
     notifyListeners();
   }
+
+  // --- SEMANTIC COLORS ---
+
+  // Backgrounds & Surfaces
+  Color getAppBackgroundColor() => _isLightMode ? const Color(0xFFF8FAFC) : const Color(0xFF020414);
+  Color getSurfaceColor() => _isLightMode ? const Color(0xFFF6F8FD) : const Color(0xFF111526);
+  Color getContainerColor() => _isLightMode ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+  Color getListItemColor() => _isLightMode ? const Color(0xFFF3F4F9) : const Color.fromARGB(80, 41, 51, 73);
+
+  // Text Colors
+  Color getTextPrimary() => _isLightMode ? const Color(0xFF0F172A) : Colors.white;
+  Color getTextSecondary() => _isLightMode ? const Color(0xFF475569) : Colors.white70;
+  Color getTextTertiary() => _isLightMode ? const Color(0xFF94A3B8) : Colors.white38;
+
+  // Borders & Dividers
+  Color getBorderColor() => _isLightMode ? const Color(0xFFD4DDF3) : const Color(0xFF2A324A);
+  Color getDividerColor() => _isLightMode ? Colors.black12 : Colors.white24;
+
+  // Brand & Accents
+  Color getAccentBlue() => _isLightMode ? const Color(0xFF0022FF) : const Color(0xFF1E56E2);
+
 }

@@ -81,11 +81,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Future<void> _deleteInvoice(BuildContext context, int invoice) async {
-    final isDark = !ThemeManager.instance.isLightMode;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+        backgroundColor: ThemeManager.instance.getSurfaceColor(),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Delete Invoice',
@@ -96,14 +95,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
         ),
         content: Text(
           'Are you sure you want to delete invoice #$invoice?',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+          style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+              style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
             ),
           ),
           TextButton(
@@ -133,12 +132,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF161B26) : Colors.white,
+          color: ThemeManager.instance.getSurfaceColor(),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
+            color: ThemeManager.instance.getBorderColor(),
           ),
         ),
         child: Column(
@@ -150,7 +147,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
+                  color: ThemeManager.instance.getDividerColor(),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -228,8 +225,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
     return ListenableBuilder(
       listenable: ThemeManager.instance,
       builder: (context, child) {
-        final isDark = !ThemeManager.instance.isLightMode;
-
         return ChangeNotifierProvider.value(
           value: _viewModel,
           child: Consumer<BookingsViewModel>(
@@ -284,9 +279,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         Text(
                           'Bookings',
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0022FF),
+                            color: ThemeManager.instance.isLightMode
+                                ? const Color(0xFF0022FF)
+                                : Colors.white,
                             fontSize: 34,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.6,
@@ -298,14 +293,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         Container(
                           height: 52,
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF111526)
-                                : const Color(0xFFF6F8FD),
+                            color: ThemeManager.instance.getSurfaceColor(),
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
-                              color: isDark
-                                  ? const Color(0xFF2A324A)
-                                  : const Color(0xFFD4DDF3),
+                              color: ThemeManager.instance.getBorderColor(),
                               width: 1.2,
                             ),
                           ),
@@ -314,9 +305,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             children: [
                               Icon(
                                 Icons.search_rounded,
-                                color: isDark
-                                    ? const Color(0xFF829AB1)
-                                    : const Color(0xFF64748B),
+                                color: ThemeManager.instance.getTextTertiary(),
                                 size: 22,
                               ),
                               const SizedBox(width: 12),
@@ -336,9 +325,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                     hintText:
                                         'Search ${viewModel.groupedBookings.length} Bookings',
                                     hintStyle: TextStyle(
-                                      color: isDark
-                                          ? const Color(0xFF64748B)
-                                          : const Color(0xFF94A3B8),
+                                      color: ThemeManager.instance.getTextSecondary(),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -356,9 +343,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                   },
                                   child: Icon(
                                     Icons.close_rounded,
-                                    color: isDark
-                                        ? const Color(0xFF829AB1)
-                                        : const Color(0xFF64748B),
+                                    color: ThemeManager.instance.getTextTertiary(),
                                     size: 20,
                                   ),
                                 ),
@@ -396,9 +381,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                               Icon(
                                                 Icons.receipt_long_outlined,
                                                 size: 64,
-                                                color: isDark
-                                                    ? Colors.white38
-                                                    : Colors.black26,
+                                                color: ThemeManager.instance.getTextTertiary(),
                                               ),
                                               const SizedBox(height: 16),
                                               Text(
@@ -408,9 +391,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                     ? 'No bookings found'
                                                     : 'No matching bookings found',
                                                 style: TextStyle(
-                                                  color: isDark
-                                                      ? Colors.white54
-                                                      : Colors.black54,
+                                                  color: ThemeManager.instance.getTextSecondary(),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w500,
                                                 ),
@@ -462,14 +443,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                             milliseconds: 250,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: isDark
-                                                ? const Color.fromARGB(
-                                                    80,
-                                                    41,
-                                                    51,
-                                                    73,
-                                                  )
-                                                : const Color(0xFFF3F4F9),
+                                            color: ThemeManager.instance.getListItemColor(),
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
@@ -517,13 +491,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 vertical: 4,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: isDark
-                                                                ? const Color(
-                                                                    0xFF1A2C4D,
-                                                                  )
-                                                                : const Color(
-                                                                    0xFFD4E3FB,
-                                                                  ),
+                                                            color: ThemeManager.instance.isLightMode
+                                                                ? const Color(0xFFD4E3FB)
+                                                                : const Color(0xFF1A2C4D),
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   20,
@@ -532,13 +502,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                           child: Text(
                                                             timeStr,
                                                             style: TextStyle(
-                                                              color: isDark
-                                                                  ? const Color(
-                                                                      0xFF83ABED,
-                                                                    )
-                                                                  : const Color(
-                                                                      0xFF4F73A6,
-                                                                    ),
+                                                              color: ThemeManager.instance.isLightMode
+                                                                  ? const Color(0xFF4F73A6)
+                                                                  : const Color(0xFF83ABED),
                                                               fontSize: 10,
                                                               fontWeight:
                                                                   FontWeight
@@ -560,11 +526,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 customerName,
                                                                 style: TextStyle(
-                                                                  color: isDark
-                                                                      ? Colors
-                                                                            .white
-                                                                      : Colors
-                                                                            .black,
+                                                                  color: ThemeManager.instance.getTextPrimary(),
                                                                   fontSize: 14,
                                                                   fontWeight:
                                                                       FontWeight
@@ -577,13 +539,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 '${items.length} products | Total: ${_formatCurrency(grandTotal)}',
                                                                 style: TextStyle(
-                                                                  color: isDark
-                                                                      ? const Color(
-                                                                          0xFF94A3B8,
-                                                                        )
-                                                                      : const Color(
-                                                                          0xFF64748B,
-                                                                        ),
+                                                                  color: ThemeManager.instance.getTextSecondary(),
                                                                   fontSize: 12,
                                                                   fontWeight:
                                                                       FontWeight
@@ -601,13 +557,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                     .keyboard_arrow_up_rounded
                                                               : Icons
                                                                     .keyboard_arrow_down_rounded,
-                                                          color: isDark
-                                                              ? const Color(
-                                                                  0xFFCCCCCC,
-                                                                )
-                                                              : const Color(
-                                                                  0xFF333333,
-                                                                ),
+                                                          color: ThemeManager.instance.getTextSecondary(),
                                                           size: 26,
                                                         ),
                                                       ],
@@ -644,14 +594,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                             12,
                                                                       ),
                                                                   decoration: BoxDecoration(
-                                                                    color:
-                                                                        isDark
-                                                                        ? const Color(
-                                                                            0xFF19253B,
-                                                                          )
-                                                                        : const Color(
-                                                                            0xFFE2F1FE,
-                                                                          ),
+                                                                    color: ThemeManager.instance.isLightMode
+                                                                        ? const Color(0xFFE2F1FE)
+                                                                        : const Color(0xFF19253B),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
                                                                           12,
@@ -719,14 +664,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                             12,
                                                                       ),
                                                                   decoration: BoxDecoration(
-                                                                    color:
-                                                                        isDark
-                                                                        ? const Color(
-                                                                            0xFF19253B,
-                                                                          )
-                                                                        : const Color(
-                                                                            0xFFE2F1FE,
-                                                                          ),
+                                                                    color: ThemeManager.instance.isLightMode
+                                                                        ? const Color(0xFFE2F1FE)
+                                                                        : const Color(0xFF19253B),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
                                                                           12,
@@ -785,27 +725,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 12,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: isDark
-                                                                ? const Color(
-                                                                    0xFF0F172A,
-                                                                  )
-                                                                : const Color(
-                                                                    0xFFF1F5F9,
-                                                                  ),
+                                                            color: ThemeManager.instance.getSurfaceColor(),
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
                                                                 ),
                                                             border: Border.all(
-                                                              color: isDark
-                                                                  ? Colors.white
-                                                                        .withOpacity(
-                                                                          0.06,
-                                                                        )
-                                                                  : Colors.black
-                                                                        .withOpacity(
-                                                                          0.05,
-                                                                        ),
+                                                              color: ThemeManager.instance.getBorderColor(),
                                                             ),
                                                           ),
                                                           child: Row(
@@ -817,13 +743,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 Icons
                                                                     .note_alt_outlined,
                                                                 size: 16,
-                                                                color: isDark
-                                                                    ? const Color(
-                                                                        0xFF829AB1,
-                                                                      )
-                                                                    : const Color(
-                                                                        0xFF1E56E2,
-                                                                      ),
+                                                                color: ThemeManager.instance.isLightMode
+                                                                    ? const Color(0xFF1E56E2)
+                                                                    : const Color(0xFF829AB1),
                                                               ),
                                                               const SizedBox(
                                                                 width: 8,
@@ -837,14 +759,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                     Text(
                                                                       'Remarks',
                                                                       style: TextStyle(
-                                                                        color:
-                                                                            isDark
-                                                                            ? const Color(
-                                                                                0xFF829AB1,
-                                                                              )
-                                                                            : const Color(
-                                                                                0xFF1E56E2,
-                                                                              ),
+                                                                        color: ThemeManager.instance.isLightMode
+                                                                            ? const Color(0xFF1E56E2)
+                                                                            : const Color(0xFF829AB1),
                                                                         fontSize:
                                                                             11,
                                                                         fontWeight:
@@ -879,7 +796,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                         height: 10,
                                                       ),
                                                       Divider(
-                                                        color: isDark
+                                                        color: !ThemeManager.instance.isLightMode
                                                             ? Colors.white
                                                                   .withOpacity(
                                                                     0.08,
@@ -920,7 +837,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                               Text(
                                                                 'Qty: ${b.bookingQty}  •  ${_formatCurrency(b.bookingGrandTotal)}',
                                                                 style: TextStyle(
-                                                                  color: isDark
+                                                                  color: !ThemeManager.instance.isLightMode
                                                                       ? const Color(
                                                                           0xFF94A3B8,
                                                                         )

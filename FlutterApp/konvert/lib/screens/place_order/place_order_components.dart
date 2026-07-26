@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../managers/location_manager.dart';
 import 'place_order_state.dart';
+import '../../managers/theme_manager.dart';
 
 class PlaceOrderComponents {
-  static Widget buildLocationMapCard(PlaceOrderState state, bool isDark) {
+  static Widget buildLocationMapCard(PlaceOrderState state) {
     return Consumer<LocationManager>(
       builder: (context, locManager, child) {
         final pos = locManager.currentPosition;
@@ -14,15 +15,15 @@ class PlaceOrderComponents {
           margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0B1437) : const Color(0xFFEAF2FF),
+            color: ThemeManager.instance.getContainerColor(),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark ? const Color(0xFF1E2D68) : const Color(0xFFB8D5FF),
+              color: ThemeManager.instance.getBorderColor(),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: isDark ? Colors.black.withOpacity(0.3) : const Color(0xFF003087).withOpacity(0.06),
+                color: ThemeManager.instance.isLightMode ? const Color(0xFF003087).withOpacity(0.06) : Colors.black.withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -34,7 +35,7 @@ class PlaceOrderComponents {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF13235A) : const Color(0xFFD6E6FF),
+                  color: ThemeManager.instance.getSurfaceColor(),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -54,7 +55,7 @@ class PlaceOrderComponents {
                         Text(
                           'User GPS Location',
                           style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: ThemeManager.instance.getTextPrimary(),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -85,7 +86,7 @@ class PlaceOrderComponents {
                           ? 'Lat: ${pos.latitude.toStringAsFixed(5)}°, Long: ${pos.longitude.toStringAsFixed(5)}°'
                           : 'Fetching GPS coordinates...',
                       style: TextStyle(
-                        color: isDark ? Colors.white70 : const Color(0xFF475569),
+                        color: ThemeManager.instance.getTextSecondary(),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -101,7 +102,7 @@ class PlaceOrderComponents {
                 },
                 icon: Icon(
                   Icons.refresh_rounded,
-                  color: isDark ? Colors.white70 : const Color(0xFF1E56E2),
+                  color: ThemeManager.instance.getAccentBlue(),
                   size: 18,
                 ),
                 tooltip: 'Refresh Location',
@@ -113,39 +114,39 @@ class PlaceOrderComponents {
     );
   }
 
-  static InputDecoration buildSearchDecoration(String hint, bool isDark, VoidCallback onClear) {
+  static InputDecoration buildSearchDecoration(String hint, VoidCallback onClear) {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
-        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+        color: ThemeManager.instance.getTextTertiary(),
         fontSize: 12,
       ),
       prefixIcon: Icon(
         Icons.search_rounded,
         size: 16,
-        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+        color: ThemeManager.instance.getTextTertiary(),
       ),
       suffixIcon: IconButton(
         icon: Icon(
           Icons.clear_rounded,
-          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+          color: ThemeManager.instance.getTextTertiary(),
           size: 14,
         ),
         onPressed: onClear,
       ),
       filled: true,
-      fillColor: isDark ? const Color(0xFF121318) : Colors.white,
+      fillColor: ThemeManager.instance.getContainerColor(),
       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
+          color: ThemeManager.instance.getBorderColor(),
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0),
+          color: ThemeManager.instance.getBorderColor(),
         ),
       ),
     );
@@ -155,7 +156,6 @@ class PlaceOrderComponents {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
-    required bool isDark,
     IconData? icon,
   }) {
     return GestureDetector(
@@ -165,13 +165,13 @@ class PlaceOrderComponents {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF1E56E2)
-              : (isDark ? const Color(0xFF121318) : Colors.white),
+              ? ThemeManager.instance.getAccentBlue()
+              : ThemeManager.instance.getContainerColor(),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF1E56E2)
-                : (isDark ? const Color(0xFF22242E) : const Color(0xFFE2E8F0)),
+                ? ThemeManager.instance.getAccentBlue()
+                : ThemeManager.instance.getBorderColor(),
           ),
           boxShadow: isSelected
               ? [
@@ -192,7 +192,7 @@ class PlaceOrderComponents {
                 size: 12,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                    : ThemeManager.instance.getTextSecondary(),
               ),
               const SizedBox(width: 4),
             ],
@@ -201,7 +201,7 @@ class PlaceOrderComponents {
               style: TextStyle(
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                    : ThemeManager.instance.getTextSecondary(),
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
@@ -212,7 +212,7 @@ class PlaceOrderComponents {
     );
   }
 
-  static Widget buildEmptyState(String message, bool isDark) {
+  static Widget buildEmptyState(String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -220,13 +220,13 @@ class PlaceOrderComponents {
           Icon(
             Icons.search_off_rounded,
             size: 40,
-            color: isDark ? Colors.white24 : Colors.grey.shade400,
+            color: ThemeManager.instance.getDividerColor(),
           ),
           const SizedBox(height: 10),
           Text(
             message,
             style: TextStyle(
-              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              color: ThemeManager.instance.getTextSecondary(),
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -239,8 +239,7 @@ class PlaceOrderComponents {
   static Widget buildDialogInput(
     String label,
     String initialValue,
-    Function(String) onChanged,
-    bool isDark, {
+    Function(String) onChanged, {
     bool autofocus = false,
   }) {
     return Padding(
@@ -252,29 +251,29 @@ class PlaceOrderComponents {
           ..selection = TextSelection(baseOffset: 0, extentOffset: initialValue.length),
         onChanged: onChanged,
         style: TextStyle(
-          color: isDark ? Colors.white : Colors.black,
+          color: ThemeManager.instance.getTextPrimary(),
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: isDark ? Colors.white54 : const Color(0xFF64748B),
+            color: ThemeManager.instance.getTextSecondary(),
             fontSize: 11,
           ),
           filled: true,
-          fillColor: isDark ? const Color(0xFF1E1E2C) : const Color(0xFFF8FAFC),
+          fillColor: ThemeManager.instance.getSurfaceColor(),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(
-              color: isDark ? const Color(0xFF2E2E3E) : const Color(0xFFE2E8F0),
+              color: ThemeManager.instance.getBorderColor(),
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(
-              color: isDark ? const Color(0xFF2E2E3E) : const Color(0xFFE2E8F0),
+              color: ThemeManager.instance.getBorderColor(),
             ),
           ),
         ),

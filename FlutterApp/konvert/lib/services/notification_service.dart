@@ -15,7 +15,7 @@ class NotificationService {
 
     try {
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_launcher');
 
       const DarwinInitializationSettings initializationSettingsDarwin =
           DarwinInitializationSettings(
@@ -70,7 +70,7 @@ class NotificationService {
         importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
-        icon: '@mipmap/ic_launcher',
+        icon: 'ic_launcher',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(

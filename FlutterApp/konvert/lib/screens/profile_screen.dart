@@ -64,13 +64,12 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   Future<void> _showProfilePhotoOptions(BuildContext context) async {
-    final isDark = !ThemeManager.instance.isLightMode;
     final bool hasCustomPfp =
         StorageService.instance.getProfilePicture()?.isNotEmpty == true;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      backgroundColor: ThemeManager.instance.getContainerColor(),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -85,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
+                    color: ThemeManager.instance.getDividerColor(),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -95,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: ThemeManager.instance.getTextPrimary(),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -107,7 +106,7 @@ class ProfileScreen extends StatelessWidget {
                   title: Text(
                     'Choose from Gallery',
                     style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: ThemeManager.instance.getTextPrimary(),
                     ),
                   ),
                   onTap: () {
@@ -123,7 +122,7 @@ class ProfileScreen extends StatelessWidget {
                   title: Text(
                     'Take a Photo',
                     style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: ThemeManager.instance.getTextPrimary(),
                     ),
                   ),
                   onTap: () {
@@ -180,23 +179,22 @@ class ProfileScreen extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
-        final isDark = !ThemeManager.instance.isLightMode;
         return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          backgroundColor: ThemeManager.instance.getContainerColor(),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
             'Log Out',
             style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: ThemeManager.instance.getTextPrimary(),
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Are you sure you want to log out of your account?',
             style: TextStyle(
-              color: isDark ? Colors.white70 : const Color(0xFF475569),
+              color: ThemeManager.instance.getTextSecondary(),
             ),
           ),
           actions: [
@@ -205,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
               child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  color: ThemeManager.instance.getTextTertiary(),
                 ),
               ),
             ),
@@ -337,16 +335,10 @@ class ProfileScreen extends StatelessWidget {
       listenable: ThemeManager.instance,
       builder: (context, child) {
         final isLight = ThemeManager.instance.isLightMode;
-        final textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-        final subtextColor = isLight
-            ? const Color(0xFF64748B)
-            : const Color(0xFF94A3B8);
-        final cardBg = isLight
-            ? Colors.white.withValues(alpha: 0.9)
-            : const Color(0xFF1E293B).withValues(alpha: 0.85);
-        final borderColor = isLight
-            ? Colors.black.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.12);
+        final textColor = ThemeManager.instance.getTextPrimary();
+        final subtextColor = ThemeManager.instance.getTextSecondary();
+        final cardBg = ThemeManager.instance.getContainerColor().withValues(alpha: 0.9);
+        final borderColor = ThemeManager.instance.getDividerColor();
 
         return Scaffold(
           backgroundColor: ThemeManager.instance.getContrastColor(),

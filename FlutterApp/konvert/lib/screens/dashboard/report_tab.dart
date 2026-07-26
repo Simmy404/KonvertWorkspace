@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../managers/theme_manager.dart';
 
 class ReportTab extends StatelessWidget {
   const ReportTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       color: Colors.transparent,
       child: SafeArea(
@@ -19,7 +18,7 @@ class ReportTab extends StatelessWidget {
               Text(
                 'Report',
                 style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: ThemeManager.instance.getTextPrimary(),
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
@@ -29,9 +28,7 @@ class ReportTab extends StatelessWidget {
               Text(
                 'Analytics and performance summary',
                 style: TextStyle(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.6)
-                      : const Color(0xFF64748B),
+                  color: ThemeManager.instance.getTextSecondary(),
                   fontSize: 14,
                 ),
               ),

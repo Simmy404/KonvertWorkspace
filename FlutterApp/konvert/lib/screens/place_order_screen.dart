@@ -5,6 +5,7 @@ import 'place_order/place_order_state.dart';
 import 'place_order/brick_step.dart';
 import 'place_order/customer_step.dart';
 import 'place_order/product_step.dart';
+import '../managers/theme_manager.dart';
 
 class PlaceOrderScreen extends StatelessWidget {
   final List<BookingData>? existingInvoiceItems;
@@ -26,41 +27,37 @@ class _PlaceOrderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = context.watch<PlaceOrderState>();
     return PopScope(
 
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
-
         if (didPop) return;
+        
+        // If we are just navigating back to a previous step (and not editing), just go back.
+        if (state.currentStep > 0 && state.editingInvoiceNumber == null) {
+          state.goBack();
+          return;
+        }
+
+        // If we are exiting the screen completely and there are items in the cart, confirm.
         if (state.cart.isNotEmpty) {
           final shouldDiscard = await _showDiscardConfirmationDialog(context);
           if (shouldDiscard && context.mounted) {
             state.cart.clear();
-            if (state.currentStep > 0 && state.editingInvoiceNumber == null) {
-              state.goBack();
-            } else {
-              Navigator.pop(context);
-            }
-          }
-        } else {
-          if (state.currentStep > 0 && state.editingInvoiceNumber == null) {
-            state.goBack();
-          } else {
             Navigator.pop(context);
           }
+        } else {
+          Navigator.pop(context);
         }
       },
       child: Scaffold(
-        backgroundColor: isDark
-            ? const Color(0xFF030305)
-            : const Color(0xFFF4F6F9),
+        backgroundColor: ThemeManager.instance.getAppBackgroundColor(),
         body: SafeArea(
           child: Column(
             children: [
               // Top Compact App Bar & Step Indicator Header
-              _buildHeader(context, state, isDark),
+              _buildHeader(context, state),
 
               // Main Content Area
               Expanded(
@@ -127,26 +124,23 @@ class _PlaceOrderView extends StatelessWidget {
   Widget _buildHeader(
     BuildContext context,
     PlaceOrderState state,
-    bool isDark,
   ) {
     final isEditing = state.editingInvoiceNumber != null;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0B1437) : Colors.white,
+        color: ThemeManager.instance.getContainerColor(),
         border: Border(
           bottom: BorderSide(
-            color: isDark
-                ? const Color(0xFF1E2D68).withOpacity(0.5)
-                : const Color(0xFFE2E8F0),
+            color: ThemeManager.instance.getBorderColor(),
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : const Color(0xFF003087).withOpacity(0.04),
+            color: ThemeManager.instance.isLightMode
+                ? const Color(0xFF003087).withOpacity(0.04)
+                : Colors.black.withOpacity(0.3),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -162,27 +156,26 @@ class _PlaceOrderView extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: () async {
+                  // If we are just navigating back to a previous step (and not editing), just go back.
+                  if (state.currentStep > 0 && !isEditing) {
+                    state.goBack();
+                    return;
+                  }
+
+                  // If we are exiting the screen completely and there are items in the cart, confirm.
                   if (state.cart.isNotEmpty) {
                     final shouldDiscard = await _showDiscardConfirmationDialog(context);
-                    if (shouldDiscard) {
+                    if (shouldDiscard && context.mounted) {
                       state.cart.clear();
-                      if (state.currentStep > 0 && !isEditing) {
-                        state.goBack();
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    }
-                  } else {
-                    if (state.currentStep > 0 && !isEditing) {
-                      state.goBack();
-                    } else {
                       Navigator.pop(context);
                     }
+                  } else {
+                    Navigator.pop(context);
                   }
                 },
                 icon: Icon(
                   Icons.arrow_back_ios_new_rounded,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: ThemeManager.instance.getTextPrimary(),
                   size: 16,
                 ),
               ),
@@ -197,7 +190,7 @@ class _PlaceOrderView extends StatelessWidget {
                           ? 'Edit Order #${state.editingInvoiceNumber}'
                           : 'Place New Order',
                       style: TextStyle(
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: ThemeManager.instance.getTextPrimary(),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         letterSpacing: -0.3,
@@ -230,23 +223,20 @@ class _PlaceOrderView extends StatelessWidget {
                 isActive: state.currentStep == 0,
                 isCompleted: state.currentStep > 0,
                 onTap: () => state.jumpToStep(0),
-                isDark: isDark,
               ),
-              _buildStepDivider(isDark, state.currentStep > 0),
+              _buildStepDivider(state.currentStep > 0),
               _buildStepIcon(
                 iconData: Icons.people_alt_rounded,
                 isActive: state.currentStep == 1,
                 isCompleted: state.currentStep > 1,
                 onTap: () => state.jumpToStep(1),
-                isDark: isDark,
               ),
-              _buildStepDivider(isDark, state.currentStep > 1),
+              _buildStepDivider(state.currentStep > 1),
               _buildStepIcon(
                 iconData: Icons.shopping_bag_rounded,
                 isActive: state.currentStep == 2,
                 isCompleted: false,
                 onTap: () => state.jumpToStep(2),
-                isDark: isDark,
               ),
             ],
           ),
@@ -255,14 +245,14 @@ class _PlaceOrderView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepDivider(bool isDark, bool isCompleted) {
+  Widget _buildStepDivider(bool isCompleted) {
     return Expanded(
       child: Container(
         height: 2,
         margin: const EdgeInsets.symmetric(horizontal: 8),
         color: isCompleted
-            ? const Color(0xFF1E56E2)
-            : (isDark ? const Color(0xFF2A324A) : const Color(0xFFE2E8F0)),
+            ? ThemeManager.instance.getAccentBlue()
+            : ThemeManager.instance.getBorderColor(),
       ),
     );
   }
@@ -272,14 +262,13 @@ class _PlaceOrderView extends StatelessWidget {
     required bool isActive,
     required bool isCompleted,
     required VoidCallback onTap,
-    required bool isDark,
   }) {
     final canTap = isActive || isCompleted;
     final color = isActive
-        ? const Color(0xFF1E56E2)
+        ? ThemeManager.instance.getAccentBlue()
         : isCompleted
-        ? (isDark ? Colors.white70 : const Color(0xFF1E56E2))
-        : (isDark ? Colors.white38 : const Color(0xFF94A3B8));
+        ? (ThemeManager.instance.isLightMode ? ThemeManager.instance.getAccentBlue() : ThemeManager.instance.getTextSecondary())
+        : ThemeManager.instance.getTextTertiary();
 
     return GestureDetector(
       onTap: canTap ? onTap : null,
@@ -289,9 +278,7 @@ class _PlaceOrderView extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isActive
-              ? (isDark
-                    ? const Color(0xFF1E56E2).withOpacity(0.2)
-                    : const Color(0xFF1E56E2).withOpacity(0.1))
+              ? ThemeManager.instance.getAccentBlue().withOpacity(ThemeManager.instance.isLightMode ? 0.1 : 0.2)
               : Colors.transparent,
         ),
         child: Icon(iconData, size: 24, color: color),

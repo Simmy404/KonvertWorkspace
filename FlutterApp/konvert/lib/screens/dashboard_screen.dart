@@ -86,25 +86,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final shouldPop = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF161B26) : Colors.white,
+          backgroundColor: ThemeManager.instance.getAppBackgroundColor(),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
             'Exit Application',
             style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
+              color: ThemeManager.instance.getTextPrimary(),
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Are you sure you want to close the app?',
-            style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+            style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
           ),
           actions: [
             TextButton(
@@ -112,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: ThemeManager.instance.getTextSecondary(),
                 ),
               ),
             ),
@@ -135,8 +134,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: ListenableBuilder(
@@ -160,9 +157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   }
                 },
                 child: Scaffold(
-                  backgroundColor: isDark
-                      ? const Color(0xFF000000)
-                      : const Color(0xFFF8FAFC),
+                  backgroundColor: ThemeManager.instance.getAppBackgroundColor(),
                   body: Stack(
                     children: [
                       // Main Theme Background Image covering the entire dashboard screen
@@ -172,9 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               ColoredBox(
-                                color: isDark
-                                    ? const Color(0xFF000000)
-                                    : const Color(0xFFF8FAFC),
+                                color: ThemeManager.instance.getAppBackgroundColor(),
                               ),
                         ),
                       ),
@@ -207,7 +200,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _buildBottomNavBar(
                                 context,
                                 viewModel,
-                                isDark,
                               ),
                             ),
                           ),
@@ -227,18 +219,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildBottomNavBar(
     BuildContext context,
     DashboardViewModel viewModel,
-    bool isDark,
   ) {
     return Container(
       height: 68,
       decoration: BoxDecoration(
-        gradient: ThemeManager.instance.getNavBarGradient(isDark: isDark),
+        gradient: ThemeManager.instance.getNavBarGradient(),
         borderRadius: BorderRadius.circular(50),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.5)
-                : const Color(0xFF003087).withValues(alpha: 0.2),
+            color: ThemeManager.instance.isLightMode
+                ? const Color(0xFF003087).withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -255,7 +246,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               selectedIcon: Icons.space_dashboard_rounded,
               unselectedIcon: Icons.space_dashboard_outlined,
               label: 'Home',
-              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
@@ -263,7 +253,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               selectedIcon: Icons.shopping_bag_rounded,
               unselectedIcon: Icons.shopping_bag_outlined,
               label: 'Bookings',
-              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
@@ -271,7 +260,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               selectedIcon: Icons.explore_rounded,
               unselectedIcon: Icons.explore_outlined,
               label: 'Tour Plan',
-              isDark: isDark,
             ),
             _buildNavItem(
               viewModel,
@@ -279,7 +267,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               selectedIcon: Icons.analytics_rounded,
               unselectedIcon: Icons.analytics_outlined,
               label: 'Report',
-              isDark: isDark,
             ),
           ],
         ),
@@ -293,21 +280,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required IconData selectedIcon,
     required IconData unselectedIcon,
     required String label,
-    required bool isDark,
   }) {
     final isSelected = viewModel.selectedIndex == index;
 
-    final Color selectedPillBg = isDark
-        ? const Color(0xFF0059FF).withValues(alpha: 0.20)
-        : const Color(0xFF0A192F).withValues(alpha: 0.12);
+    final Color selectedPillBg = ThemeManager.instance.isLightMode
+        ? const Color(0xFF0A192F).withValues(alpha: 0.12)
+        : const Color(0xFF0059FF).withValues(alpha: 0.20);
 
-    final Color selectedContentColor = isDark
-        ? const Color(0xFFE0F2FE)
-        : const Color(0xFF0A192F);
+    final Color selectedContentColor = ThemeManager.instance.isLightMode
+        ? const Color(0xFF0A192F)
+        : const Color(0xFFE0F2FE);
 
-    final Color unselectedContentColor = isDark
-        ? const Color(0xFFE0F2FE).withValues(alpha: 0.35)
-        : const Color(0xFF0A192F).withValues(alpha: 0.35);
+    final Color unselectedContentColor = ThemeManager.instance.isLightMode
+        ? const Color(0xFF0A192F).withValues(alpha: 0.35)
+        : const Color(0xFFE0F2FE).withValues(alpha: 0.35);
 
     return GestureDetector(
       onTap: () => viewModel.setSelectedIndex(index),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'place_order_state.dart';
 import 'place_order_components.dart';
+import '../../managers/theme_manager.dart';
 
 class BrickStep extends StatelessWidget {
   const BrickStep({super.key});
@@ -9,7 +10,6 @@ class BrickStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<PlaceOrderState>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +25,7 @@ class BrickStep extends StatelessWidget {
                 child: Text(
                   'Select Territory / Brick',
                   style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: ThemeManager.instance.getTextPrimary(),
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -39,12 +39,11 @@ class BrickStep extends StatelessWidget {
                   onChanged: state.filterBricks,
                   enabled: !state.isRefreshingBricks,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
+                    color: ThemeManager.instance.getTextPrimary(),
                     fontSize: 13,
                   ),
                   decoration: PlaceOrderComponents.buildSearchDecoration(
                     'Search Bricks by Name...',
-                    isDark,
                     () {
                       state.brickSearchController.clear();
                       state.filterBricks('');
@@ -73,7 +72,6 @@ class BrickStep extends StatelessWidget {
                             height: 250,
                             child: PlaceOrderComponents.buildEmptyState(
                               'No Bricks found',
-                              isDark,
                             ),
                           ),
                         ],
@@ -101,14 +99,10 @@ class BrickStep extends StatelessWidget {
                               duration: const Duration(milliseconds: 250),
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0xFF1B1D22)
-                                    : const Color(0xFFF6F8FD),
+                                color: ThemeManager.instance.getListItemColor(),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.05)
-                                      : Colors.black.withOpacity(0.03),
+                                  color: ThemeManager.instance.getBorderColor(),
                                 ),
                               ),
                               child: InkWell(
@@ -128,12 +122,16 @@ class BrickStep extends StatelessWidget {
                                         height: 36,
                                         decoration: BoxDecoration(
                                           color: isAllBricks
-                                              ? (isDark
-                                                  ? const Color(0xFF1E358A)
-                                                  : const Color(0xFFEAF2FF))
-                                              : (isDark
-                                                  ? const Color(0xFF162544)
-                                                  : const Color(0xFFF1F5F9)),
+                                              ? (ThemeManager
+                                                        .instance
+                                                        .isLightMode
+                                                    ? const Color(0xFFEAF2FF)
+                                                    : const Color(0xFF1E358A))
+                                              : (ThemeManager
+                                                        .instance
+                                                        .isLightMode
+                                                    ? const Color(0xFFF1F5F9)
+                                                    : const Color(0xFF162544)),
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
@@ -144,9 +142,8 @@ class BrickStep extends StatelessWidget {
                                               : Icons.location_city_rounded,
                                           color: isAllBricks
                                               ? const Color(0xFF1E56E2)
-                                              : (isDark
-                                                  ? Colors.white70
-                                                  : const Color(0xFF475569)),
+                                              : ThemeManager.instance
+                                                    .getTextSecondary(),
                                           size: 18,
                                         ),
                                       ),
@@ -159,9 +156,8 @@ class BrickStep extends StatelessWidget {
                                             Text(
                                               brick['brick_name'] ?? '',
                                               style: TextStyle(
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : const Color(0xFF0F172A),
+                                                color: ThemeManager.instance
+                                                    .getTextPrimary(),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13,
                                               ),
@@ -172,19 +168,15 @@ class BrickStep extends StatelessWidget {
                                                 Icon(
                                                   Icons.people_alt_outlined,
                                                   size: 12,
-                                                  color: isDark
-                                                      ? Colors.white54
-                                                      : const Color(0xFF64748B),
+                                                  color: ThemeManager.instance
+                                                      .getTextSecondary(),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   '$customerCount ${customerCount == 1 ? 'Customer' : 'Customers'} Available',
                                                   style: TextStyle(
-                                                    color: isDark
-                                                        ? Colors.white54
-                                                        : const Color(
-                                                            0xFF64748B,
-                                                          ),
+                                                    color: ThemeManager.instance
+                                                        .getTextSecondary(),
                                                     fontSize: 11,
                                                   ),
                                                 ),
@@ -199,13 +191,18 @@ class BrickStep extends StatelessWidget {
                                           vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: isDark
-                                              ? const Color(0xFF1E56E2)
-                                                  .withOpacity(0.2)
-                                              : const Color(0xFF1E56E2)
-                                                  .withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                          color: ThemeManager.instance
+                                              .getAccentBlue()
+                                              .withOpacity(
+                                                ThemeManager
+                                                        .instance
+                                                        .isLightMode
+                                                    ? 0.1
+                                                    : 0.2,
+                                              ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -213,9 +210,12 @@ class BrickStep extends StatelessWidget {
                                             Text(
                                               'Select',
                                               style: TextStyle(
-                                                color: isDark
-                                                    ? const Color(0xFF83ABED)
-                                                    : const Color(0xFF1E56E2),
+                                                color:
+                                                    ThemeManager
+                                                        .instance
+                                                        .isLightMode
+                                                    ? const Color(0xFF1E56E2)
+                                                    : const Color(0xFF83ABED),
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -223,7 +223,10 @@ class BrickStep extends StatelessWidget {
                                             const SizedBox(width: 4),
                                             Icon(
                                               Icons.arrow_forward_rounded,
-                                              color: isDark
+                                              color:
+                                                  !ThemeManager
+                                                      .instance
+                                                      .isLightMode
                                                   ? const Color(0xFF83ABED)
                                                   : const Color(0xFF1E56E2),
                                               size: 14,
