@@ -8,6 +8,7 @@ import 'master_sync_screen.dart';
 import 'bookings_screen.dart';
 
 import 'dashboard/dashboard_view_model.dart';
+import 'dashboard/tour_plan_view_model.dart';
 import 'dashboard/home_tab.dart';
 import 'dashboard/tour_plan_tab.dart';
 import 'dashboard/report_tab.dart';
@@ -23,12 +24,14 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late DashboardViewModel _viewModel;
+  late TourPlanViewModel _tourPlanViewModel;
   late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     _viewModel = DashboardViewModel();
+    _tourPlanViewModel = TourPlanViewModel();
     _pageController = PageController(initialPage: _viewModel.selectedIndex);
     _viewModel.addListener(_onViewModelChanged);
 
@@ -134,8 +137,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _viewModel),
+        ChangeNotifierProvider.value(value: _tourPlanViewModel),
+      ],
       child: ListenableBuilder(
         listenable: ThemeManager.instance,
         builder: (context, child) {

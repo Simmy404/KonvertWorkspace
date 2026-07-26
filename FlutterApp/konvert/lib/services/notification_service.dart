@@ -5,9 +5,11 @@ import '../models/error_struct.dart';
 
 class NotificationService {
   NotificationService._privateConstructor();
-  static final NotificationService instance = NotificationService._privateConstructor();
+  static final NotificationService instance =
+      NotificationService._privateConstructor();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> init() async {
@@ -19,23 +21,25 @@ class NotificationService {
 
       const DarwinInitializationSettings initializationSettingsDarwin =
           DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
+            requestAlertPermission: true,
+            requestBadgePermission: true,
+            requestSoundPermission: true,
+          );
 
-      const InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsDarwin,
-        macOS: initializationSettingsDarwin,
-      );
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsDarwin,
+            macOS: initializationSettingsDarwin,
+          );
 
       await _notificationsPlugin.initialize(initializationSettings);
 
       // Create high-importance notification channel for Android 8.0+
-      final androidImplementation =
-          _notificationsPlugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidImplementation != null) {
         const AndroidNotificationChannel channel = AndroidNotificationChannel(
           'konvert_default_channel',
@@ -72,15 +76,16 @@ class NotificationService {
 
       final AndroidNotificationDetails androidNotificationDetails =
           AndroidNotificationDetails(
-        'konvert_default_channel',
-        'Konvert Notifications',
-        channelDescription: 'Notifications for Konvert App updates and alerts',
-        importance: Importance.max,
-        priority: Priority.high,
-        showWhen: true,
-        icon: '@mipmap/ic_launcher',
-        styleInformation: BigTextStyleInformation(bodyText),
-      );
+            'konvert_default_channel',
+            'Konvert Notifications',
+            channelDescription:
+                'Notifications for Konvert App updates and alerts',
+            importance: Importance.max,
+            priority: Priority.high,
+            showWhen: true,
+            icon: '@mipmap/ic_launcher',
+            styleInformation: BigTextStyleInformation(bodyText),
+          );
 
       final NotificationDetails notificationDetails = NotificationDetails(
         android: androidNotificationDetails,
