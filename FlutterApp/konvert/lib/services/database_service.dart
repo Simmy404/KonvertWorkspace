@@ -21,7 +21,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -89,17 +89,26 @@ class DatabaseService {
         booking_time TIME,
         booking_grand_total DECIMAL(10,3),
         booking_prod_count INTEGER,
-        booking_remarks TEXT
+        booking_remarks TEXT,
+        booking_images TEXT
       )
     ''');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    await db.execute("DROP TABLE IF EXISTS bricks");
-    await db.execute("DROP TABLE IF EXISTS customers");
-    await db.execute("DROP TABLE IF EXISTS products");
-    await db.execute("DROP TABLE IF EXISTS bookings");
-    await _createDB(db, newVersion);
+    if (oldVersion < 4) {
+      await db.execute("DROP TABLE IF EXISTS bricks");
+      await db.execute("DROP TABLE IF EXISTS customers");
+      await db.execute("DROP TABLE IF EXISTS products");
+      await db.execute("DROP TABLE IF EXISTS bookings");
+      await _createDB(db, newVersion);
+    } else if (oldVersion == 4) {
+      try {
+        await db.execute("ALTER TABLE bookings ADD COLUMN booking_images TEXT");
+      } catch (e) {
+        // Ignore if column already exists
+      }
+    }
   }
 
   // --- BATCH INSERTERS FOR SYNC ---
@@ -318,9 +327,10 @@ class DatabaseService {
 
   Future<List<BookingData>> getAllBookings() async {
     final db = await instance.database;
-    final maps = await db.query('bookings', orderBy: 'booking_invoice ASC');
+    final maps = await db.query('bookings', orderBy: 'booking_date DESC, booking_time DESC, booking_invoice DESC');
     return maps.map((json) => BookingData.fromJson(json)).toList();
   }
+
 
   Future<List<BookingData>> getBookingsByInvoice(String invoice) async {
     final db = await instance.database;

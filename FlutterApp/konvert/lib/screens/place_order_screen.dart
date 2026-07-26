@@ -28,39 +28,97 @@ class _PlaceOrderView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = context.watch<PlaceOrderState>();
+    return PopScope(
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF030305)
-          : const Color(0xFFF4F6F9),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Compact App Bar & Step Indicator Header
-            _buildHeader(context, state, isDark),
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
 
-            // Main Content Area
-            Expanded(
-              child: state.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF1E56E2),
-                        strokeWidth: 2.5,
+        if (didPop) return;
+        if (state.cart.isNotEmpty) {
+          final shouldDiscard = await _showDiscardConfirmationDialog(context);
+          if (shouldDiscard && context.mounted) {
+            state.cart.clear();
+            if (state.currentStep > 0 && state.editingInvoiceNumber == null) {
+              state.goBack();
+            } else {
+              Navigator.pop(context);
+            }
+          }
+        } else {
+          if (state.currentStep > 0 && state.editingInvoiceNumber == null) {
+            state.goBack();
+          } else {
+            Navigator.pop(context);
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark
+            ? const Color(0xFF030305)
+            : const Color(0xFFF4F6F9),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Top Compact App Bar & Step Indicator Header
+              _buildHeader(context, state, isDark),
+
+              // Main Content Area
+              Expanded(
+                child: state.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF1E56E2),
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : IndexedStack(
+                        index: state.currentStep,
+                        children: const [
+                          BrickStep(),
+                          CustomerStep(),
+                          ProductStep(),
+                        ],
                       ),
-                    )
-                  : IndexedStack(
-                      index: state.currentStep,
-                      children: const [
-                        BrickStep(),
-                        CustomerStep(),
-                        ProductStep(),
-                      ],
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<bool> _showDiscardConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Discard Order?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              'You have selected products in your order. Going back will discard your order. Are you sure you want to proceed?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Discard'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   // ==========================================
@@ -103,11 +161,23 @@ class _PlaceOrderView extends StatelessWidget {
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () {
-                  if (state.currentStep > 0 && !isEditing) {
-                    state.goBack();
+                onPressed: () async {
+                  if (state.cart.isNotEmpty) {
+                    final shouldDiscard = await _showDiscardConfirmationDialog(context);
+                    if (shouldDiscard) {
+                      state.cart.clear();
+                      if (state.currentStep > 0 && !isEditing) {
+                        state.goBack();
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    }
                   } else {
-                    Navigator.pop(context);
+                    if (state.currentStep > 0 && !isEditing) {
+                      state.goBack();
+                    } else {
+                      Navigator.pop(context);
+                    }
                   }
                 },
                 icon: Icon(
@@ -116,6 +186,7 @@ class _PlaceOrderView extends StatelessWidget {
                   size: 16,
                 ),
               ),
+
               const SizedBox(width: 4),
               Expanded(
                 child: Column(

@@ -5,6 +5,8 @@ import '../models/error_struct.dart'; // Add this import to the top of storage_s
 import 'dart:convert';
 import 'database_service.dart';
 import '../models/user.dart';
+import '../models/notification.dart';
+import 'notification_service.dart';
 
 class StorageService {
   StorageService._internal();
@@ -25,6 +27,68 @@ class StorageService {
           technicalDetails: 'Storage engine failed to mount: $e',
         ),
       );
+    }
+  }
+
+  // ==========================================
+  // NOTIFICATIONS
+  // ==========================================
+
+  static const String _notificationsKey = 'app_notifications';
+
+  List<AppNotification> getNotifications() {
+    try {
+      final List<String>? jsonList = _prefs?.getStringList(_notificationsKey);
+      if (jsonList == null) return [];
+      return jsonList.map((jsonStr) => AppNotification.fromJson(jsonStr)).toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    } catch (e) {
+      _handleSilentError('STR-NOTIF-1', 'Failed to get notifications: $e');
+      return [];
+    }
+  }
+
+  Future<bool> saveNotification(AppNotification notification) async {
+    try {
+      if (_prefs == null) await init();
+      final notifications = getNotifications();
+      notifications.add(notification);
+      final List<String> jsonList = notifications.map((n) => n.toJson()).toList();
+      final success = await _prefs!.setStringList(_notificationsKey, jsonList);
+      if (success) {
+        // Show device status bar notification
+        await NotificationService.instance.showNotification(notification);
+      }
+      return success;
+    } catch (e) {
+      _handleSilentError('STR-NOTIF-2', 'Failed to save notification: $e');
+      return false;
+    }
+  }
+
+  Future<bool> markNotificationAsRead(String id) async {
+    try {
+      if (_prefs == null) await init();
+      final notifications = getNotifications();
+      final index = notifications.indexWhere((n) => n.id == id);
+      if (index != -1) {
+        notifications[index] = notifications[index].copyWith(isRead: true);
+        final List<String> jsonList = notifications.map((n) => n.toJson()).toList();
+        return await _prefs!.setStringList(_notificationsKey, jsonList);
+      }
+      return false;
+    } catch (e) {
+      _handleSilentError('STR-NOTIF-3', 'Failed to mark notification as read: $e');
+      return false;
+    }
+  }
+
+  bool hasUnreadNotifications() {
+    try {
+      final notifications = getNotifications();
+      return notifications.any((n) => !n.isRead);
+    } catch (e) {
+      return false;
     }
   }
 

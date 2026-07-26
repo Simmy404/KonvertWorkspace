@@ -37,6 +37,13 @@ class BookingsViewModel extends ChangeNotifier {
 
     try {
       allBookings = await DatabaseService.instance.getAllBookings();
+      allBookings.sort((a, b) {
+        final dateComp = b.bookingDate.compareTo(a.bookingDate);
+        if (dateComp != 0) return dateComp;
+        final timeComp = b.bookingTime.compareTo(a.bookingTime);
+        if (timeComp != 0) return timeComp;
+        return b.bookingInvoice.compareTo(a.bookingInvoice);
+      });
       final customers = await DatabaseService.instance.getAllCustomers();
       
       customerNames = {};
@@ -58,6 +65,7 @@ class BookingsViewModel extends ChangeNotifier {
         }
         groupedBookings[booking.bookingInvoice]!.add(booking);
       }
+
     } catch (e) {
       debugPrint('Error fetching bookings: $e');
     } finally {

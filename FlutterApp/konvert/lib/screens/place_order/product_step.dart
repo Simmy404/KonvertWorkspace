@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/place_order_product.dart';
 import 'place_order_state.dart';
 import 'place_order_components.dart';
@@ -351,7 +353,18 @@ class ProductStep extends StatelessWidget {
                                     : ElevatedButton.icon(
                                         onPressed: state.isRefreshingProducts
                                             ? null
-                                            : () => state.incrementProductQty(product),
+                                            : () {
+                                                state.incrementProductQty(product);
+                                                final cartItem = state.cart.firstWhere((p) => p.prodID == prodId);
+                                                _showProductPricingBottomSheet(
+                                                  context,
+                                                  state,
+                                                  product,
+                                                  cartItem,
+                                                  isDark,
+                                                  autofocusFirstInput: true,
+                                                );
+                                              },
                                         icon: const Icon(Icons.add_rounded, size: 14),
                                         label: const Text(
                                           'Add',
@@ -688,6 +701,8 @@ class ProductStep extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
+                        _buildEvidenceImagesSection(context, state, setModalState, isDark),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           height: 46,
@@ -704,7 +719,7 @@ class ProductStep extends StatelessWidget {
                                         ),
                                       );
                                       Navigator.pop(context); // close bottom sheet
-                                      Navigator.pop(context, true); // close PlaceOrderScreen
+                                      state.resetOrderAndGoToBricks(); // take user to Bricks step
                                     }
                                   },
                             icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
@@ -742,8 +757,9 @@ class ProductStep extends StatelessWidget {
     PlaceOrderState state,
     Map<String, dynamic> product,
     PlaceOrderProduct? existingItem,
-    bool isDark,
-  ) {
+    bool isDark, {
+    bool autofocusFirstInput = true,
+  }) {
     int qty = existingItem?.qty ?? 1;
     double price = existingItem?.price ?? double.tryParse(product['product_tp'].toString()) ?? 0.0;
     double discount = existingItem?.discount ?? 0.0;
@@ -854,6 +870,7 @@ class ProductStep extends StatelessWidget {
                       price.toString(),
                       (v) => setStateModal(() => price = double.tryParse(v) ?? 0.0),
                       isDark,
+                      autofocus: autofocusFirstInput,
                     ),
                     PlaceOrderComponents.buildDialogInput(
                       'Discount Percentage (%)',
@@ -949,6 +966,125 @@ class ProductStep extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  Widget _buildEvidenceImagesSection(BuildContext context, PlaceOrderState state, StateSetter setModalState, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Evidence Images (${state.evidenceImages.length}/3)',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (state.evidenceImages.length < 3)
+              InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (BuildContext bc) {
+                      return SafeArea(
+                        child: Wrap(
+                          children: <Widget>[
+                            ListTile(
+                                leading: const Icon(Icons.photo_library),
+                                title: const Text('Photo Library'),
+                                onTap: () async {
+                                  Navigator.of(context).pop();
+                                  final picker = ImagePicker();
+                                  final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+                                  if (image != null) {
+                                    await state.addEvidenceImage(image.path);
+                                    setModalState(() {});
+                                  }
+                                }),
+                            ListTile(
+                              leading: const Icon(Icons.photo_camera),
+                              title: const Text('Camera'),
+                              onTap: () async {
+                                Navigator.of(context).pop();
+                                final picker = ImagePicker();
+                                final XFile? image = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+                                if (image != null) {
+                                  await state.addEvidenceImage(image.path);
+                                  setModalState(() {});
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    '+ Add Photo',
+                    style: TextStyle(
+                      color: Color(0xFF1E56E2),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (state.evidenceImages.isNotEmpty) const SizedBox(height: 8),
+        if (state.evidenceImages.isNotEmpty)
+          SizedBox(
+            height: 70,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: state.evidenceImages.length,
+              itemBuilder: (context, index) {
+                final path = state.evidenceImages[index];
+                return Stack(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 12, top: 6, bottom: 6),
+                      width: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                        image: DecorationImage(
+                          image: FileImage(File(path)),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 6,
+                      child: GestureDetector(
+                        onTap: () {
+                          state.removeEvidenceImage(index);
+                          setModalState(() {});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close, size: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

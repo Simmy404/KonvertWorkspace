@@ -1,9 +1,13 @@
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
 import '../../models/booking_data.dart';
 import '../../models/place_order_product.dart';
+import '../../models/notification.dart';
 import '../../managers/location_manager.dart';
 
 class PlaceOrderState extends ChangeNotifier {
@@ -33,6 +37,7 @@ class PlaceOrderState extends ChangeNotifier {
 
   List<PlaceOrderProduct> cart = [];
   String remarks = "";
+  List<String> evidenceImages = [];
 
   bool isLoading = false;
 
@@ -139,6 +144,11 @@ class PlaceOrderState extends ChangeNotifier {
             bonus: item.bookingBonus,
           ),
         );
+      }
+
+      // Populate evidence images
+      if (existingInvoiceItems!.isNotEmpty) {
+        evidenceImages = List.from(existingInvoiceItems!.first.evidenceImages);
       }
 
       // Jump directly to Step 2 (Product Step) for editing
@@ -412,6 +422,19 @@ class PlaceOrderState extends ChangeNotifier {
     }
   }
 
+  void resetOrderAndGoToBricks() {
+    cart.clear();
+    selectedBrick = null;
+    selectedCustomer = null;
+    allCustomers = [];
+    filteredCustomers = [];
+    remarks = '';
+    evidenceImages.clear();
+    editingInvoiceNumber = null;
+    currentStep = 0;
+    _safeNotifyListeners();
+  }
+
   Future<bool> confirmOrder() async {
     if (cart.isEmpty || selectedCustomer == null || selectedBrick == null) {
       return false;
@@ -453,10 +476,46 @@ class PlaceOrderState extends ChangeNotifier {
         bookingTime: timeStr,
         bookingProdCount: cart.length,
         bookingRemarks: remarks,
+        evidenceImages: evidenceImages,
       );
       await DatabaseService.instance.insertBooking(b);
     }
 
+    // --- Mock Notification Trigger ---
+    final mockNotification = AppNotification(
+      id: 'notif_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Booking complete',
+      body: 'You can now move on to the next target',
+      timestamp: DateTime.now(),
+      isRead: false,
+      type: NotificationType.normal,
+    );
+    await StorageService.instance.saveNotification(mockNotification);
+
     return true;
+  }
+
+  Future<void> addEvidenceImage(String tempPath) async {
+    if (evidenceImages.length >= 3) return;
+    try {
+      final docDir = await getApplicationDocumentsDirectory();
+      final fileName = 'evidence_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final newFile = await File(tempPath).copy('${docDir.path}/$fileName');
+      evidenceImages.add(newFile.path);
+      _safeNotifyListeners();
+    } catch (e) {
+      debugPrint('Error saving evidence image: $e');
+    }
+  }
+
+  void removeEvidenceImage(int index) {
+    if (index >= 0 && index < evidenceImages.length) {
+      final path = evidenceImages[index];
+      try {
+        File(path).deleteSync();
+      } catch (_) {}
+      evidenceImages.removeAt(index);
+      _safeNotifyListeners();
+    }
   }
 }

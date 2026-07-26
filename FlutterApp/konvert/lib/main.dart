@@ -8,6 +8,7 @@ import 'managers/legal_manager.dart';
 import 'managers/location_manager.dart';
 import 'managers/theme_manager.dart';
 import 'models/error_struct.dart';
+import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'screens/splash_screen.dart';
 
@@ -54,14 +55,16 @@ void main() async {
   AppManager.instance.appVersion = '0.0.1';
   await AppManager.instance.checkAndResetOnVersionChange();
 
-  // 4. Hydrate dependent managers
+  // 4. Hydrate dependent managers & services
   await ThemeManager.instance.init();
   await LegalManager.instance.init();
   await LocationManager.instance.init();
+  await NotificationService.instance.init();
 
   // 5. Finally, mount the UI
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

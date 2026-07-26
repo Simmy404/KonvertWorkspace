@@ -254,7 +254,11 @@ class ApiService {
     final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/uploadBookings.php');
 
     try {
-      final jsonList = bookings.map((b) => b.toJson()).toList();
+      final jsonList = bookings.map((b) {
+        final jsonMap = b.toJson();
+        jsonMap.remove('booking_images');
+        return jsonMap;
+      }).toList();
       final body = jsonEncode(jsonList);
 
       final response = await http

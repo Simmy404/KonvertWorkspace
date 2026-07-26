@@ -240,14 +240,16 @@ class PlaceOrderComponents {
     String label,
     String initialValue,
     Function(String) onChanged,
-    bool isDark,
-  ) {
+    bool isDark, {
+    bool autofocus = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: TextField(
+        autofocus: autofocus,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         controller: TextEditingController(text: initialValue)
-          ..selection = TextSelection.collapsed(offset: initialValue.length),
+          ..selection = TextSelection(baseOffset: 0, extentOffset: initialValue.length),
         onChanged: onChanged,
         style: TextStyle(
           color: isDark ? Colors.white : Colors.black,
@@ -279,4 +281,5 @@ class PlaceOrderComponents {
       ),
     );
   }
+
 }

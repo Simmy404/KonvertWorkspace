@@ -258,7 +258,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           children: [
                             Image.asset(
                               ThemeManager.instance.getLogoMark(),
-                              height: 32,
+                              height: 24,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   Icon(
@@ -279,7 +279,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
 
                         // Main Title: "Bookings"
                         Text(
@@ -456,7 +455,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
                                       return Padding(
                                         padding: const EdgeInsets.only(
-                                          bottom: 8,
+                                          bottom: 4,
                                         ),
                                         child: AnimatedContainer(
                                           duration: const Duration(
@@ -464,7 +463,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: isDark
-                                                ? const Color(0xFF1B1D22)
+                                                ? const Color.fromARGB(
+                                                    80,
+                                                    41,
+                                                    51,
+                                                    73,
+                                                  )
                                                 : const Color(0xFFF3F4F9),
                                             borderRadius: BorderRadius.circular(
                                               12,

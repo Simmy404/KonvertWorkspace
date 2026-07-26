@@ -13,6 +13,7 @@ import '../place_order_screen.dart';
 import '../login_screen.dart';
 import '../profile_screen.dart';
 import '../../utils/page_transitions.dart';
+import '../notifications/notifications_screen.dart';
 
 // ==========================================
 // DASHBOARD GOOGLE MAP (EXTRACTED STATEFUL)
@@ -365,7 +366,7 @@ class HomeTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Top Action Bar: Logo + Icons
-                          _buildTopActionBar(),
+                          _buildTopActionBar(context),
                           const SizedBox(height: 24),
 
                           // User Greeting with Avatar
@@ -452,7 +453,7 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // TOP ACTION BAR: LOGO + SYNC + NOTIFICATION
   // ==========================================
-  Widget _buildTopActionBar() {
+  Widget _buildTopActionBar(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -480,30 +481,44 @@ class HomeTab extends StatelessWidget {
               ),
               tooltip: 'Master Sync',
             ),
-            Stack(
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  tooltip: 'Notifications',
-                ),
-                Positioned(
-                  right: 12,
-                  top: 12,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFF5252),
-                      shape: BoxShape.circle,
+            StatefulBuilder(
+              builder: (context, setState) {
+                final hasUnread = StorageService.instance.hasUnreadNotifications();
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          PageTransitions.fadeTransition(const NotificationsScreen()),
+                        );
+                        if (context.mounted) {
+                          setState(() {});
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.notifications_none_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      tooltip: 'Notifications',
                     ),
-                  ),
-                ),
-              ],
+                    if (hasUnread)
+                      Positioned(
+                        right: 12,
+                        top: 12,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF5252),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }
             ),
           ],
         ),
