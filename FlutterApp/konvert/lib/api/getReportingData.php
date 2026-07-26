@@ -248,5 +248,78 @@ if ($sqlExpiry) {
     }
 }
 
+// 8. Weekly Performance vs Company Average Threshold
+$sqlCompanyAvg = mysqli_query($con, "
+    SELECT AVG(daily_sales) as company_daily_avg FROM (
+        SELECT dtd, bkby, SUM(total - rtotal) as daily_sales
+        FROM sales
+        WHERE BID='".$rw1['BID']."' AND dtd >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND bkby != ''
+        GROUP BY dtd, bkby
+    ) sub
+");
+$rowCompanyAvg = $sqlCompanyAvg ? mysqli_fetch_assoc($sqlCompanyAvg) : null;
+$company_threshold = (float)($rowCompanyAvg['company_daily_avg'] ?? 0);
+
+if ($company_threshold == 0) {
+    $sqlCompanyAvgBook = mysqli_query($con, "
+        SELECT AVG(daily_sales) as company_daily_avg FROM (
+            SELECT DATE(dtd) as dtd, bkby, SUM(total) as daily_sales
+            FROM bookings
+            WHERE BID='".$rw1['BID']."' AND DATE(dtd) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND bkby != ''
+            GROUP BY DATE(dtd), bkby
+        ) sub
+    ");
+    $rowCompanyAvgBook = $sqlCompanyAvgBook ? mysqli_fetch_assoc($sqlCompanyAvgBook) : null;
+    $company_threshold = (float)($rowCompanyAvgBook['company_daily_avg'] ?? 1500);
+}
+
+$monday = date('Y-m-d', strtotime('monday this week'));
+$weekly_days = array();
+$dayNames = array('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun');
+
+for ($i = 0; $i < 7; $i++) {
+    $curDate = date('Y-m-d', strtotime("$monday +$i days"));
+    $dayName = $dayNames[$i];
+    
+    $sqlDaySales = mysqli_query($con, "
+        SELECT SUM(total - rtotal) as day_sales FROM sales 
+        WHERE BID='".$rw1['BID']."' AND dtd = '".$curDate."' AND bkby='".$rw1['id']."'
+    ");
+    $rowDaySales = $sqlDaySales ? mysqli_fetch_assoc($sqlDaySales) : null;
+    $daySales = (float)($rowDaySales['day_sales'] ?? 0);
+    
+    if ($daySales == 0) {
+        $sqlDayBook = mysqli_query($con, "
+            SELECT SUM(total) as day_sales FROM bookings 
+            WHERE BID='".$rw1['BID']."' AND DATE(dtd) = '".$curDate."' AND bkby='".$rw1['id']."'
+        ");
+        $rowDayBook = $sqlDayBook ? mysqli_fetch_assoc($sqlDayBook) : null;
+        $daySales = (float)($rowDayBook['day_sales'] ?? 0);
+    }
+    
+    $status = 'good';
+    if ($company_threshold > 0) {
+        if ($daySales > (1.15 * $company_threshold)) {
+            $status = 'excellent';
+        } else if ($daySales < (0.85 * $company_threshold)) {
+            $status = 'poor';
+        } else {
+            $status = 'good';
+        }
+    }
+    
+    array_push($weekly_days, array(
+        "day" => $dayName,
+        "date" => $curDate,
+        "sales" => $daySales,
+        "status" => $status
+    ));
+}
+
+$response["weekly_performance"] = array(
+    "threshold" => $company_threshold,
+    "days" => $weekly_days
+);
+
 echo json_encode($response);
 ?>

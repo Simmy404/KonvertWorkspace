@@ -436,7 +436,7 @@ class PlaceOrderState extends ChangeNotifier {
   }
 
   Future<bool> confirmOrder() async {
-    if (cart.isEmpty || selectedCustomer == null || selectedBrick == null) {
+    if (selectedCustomer == null || selectedBrick == null) {
       return false;
     }
 
@@ -459,23 +459,46 @@ class PlaceOrderState extends ChangeNotifier {
     final timeStr =
         "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
 
-    for (var product in cart) {
+    if (cart.isNotEmpty) {
+      for (var product in cart) {
+        final b = BookingData(
+          bookingInvoice: invoiceNo,
+          bookingBrikId: int.tryParse(selectedBrick!['brick_id'].toString()) ?? 0,
+          bookingCustId:
+              int.tryParse(selectedCustomer!['customer_id'].toString()) ?? 0,
+          bookingProdId: int.tryParse(product.prodID) ?? 0,
+          bookingQty: product.qty,
+          bookingBonus: product.bonus,
+          bookingDiscount: product.discount,
+          bookingPrice: product.price,
+          bookingLong: LocationManager.instance.currentPosition?.longitude ?? 0.0,
+          bookingLat: LocationManager.instance.currentPosition?.latitude ?? 0.0,
+          bookingDate: dateStr,
+          bookingTime: timeStr,
+          bookingProdCount: cart.length,
+          bookingRemarks: remarks,
+          evidenceImages: evidenceImages,
+        );
+        await DatabaseService.instance.insertBooking(b);
+      }
+    } else {
+      // Zero-product visit confirmation booking
       final b = BookingData(
         bookingInvoice: invoiceNo,
         bookingBrikId: int.tryParse(selectedBrick!['brick_id'].toString()) ?? 0,
         bookingCustId:
             int.tryParse(selectedCustomer!['customer_id'].toString()) ?? 0,
-        bookingProdId: int.tryParse(product.prodID) ?? 0,
-        bookingQty: product.qty,
-        bookingBonus: product.bonus,
-        bookingDiscount: product.discount,
-        bookingPrice: product.price,
+        bookingProdId: 0,
+        bookingQty: 0,
+        bookingBonus: 0.0,
+        bookingDiscount: 0.0,
+        bookingPrice: 0.0,
         bookingLong: LocationManager.instance.currentPosition?.longitude ?? 0.0,
         bookingLat: LocationManager.instance.currentPosition?.latitude ?? 0.0,
         bookingDate: dateStr,
         bookingTime: timeStr,
-        bookingProdCount: cart.length,
-        bookingRemarks: remarks,
+        bookingProdCount: 0,
+        bookingRemarks: remarks.isEmpty ? 'No order placed (Visit confirmation)' : remarks,
         evidenceImages: evidenceImages,
       );
       await DatabaseService.instance.insertBooking(b);

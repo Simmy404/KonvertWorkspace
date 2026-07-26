@@ -342,6 +342,24 @@ class ApiService {
             )
             .toList();
 
+        const localThreshold = 2000.0;
+        final localWeeklyDays =
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) {
+              final s = totalSales > 0 ? (totalSales / 7) : 1500.0;
+              String st = 'good';
+              if (s > 1.15 * localThreshold) {
+                st = 'excellent';
+              } else if (s < 0.85 * localThreshold) {
+                st = 'poor';
+              }
+              return WeeklyPerformanceDay(
+                day: day,
+                date: day,
+                sales: s,
+                status: st,
+              );
+            }).toList();
+
         return ReportData(
           metrics: ReportMetrics(
             grossSales: totalSales,
@@ -354,7 +372,7 @@ class ApiService {
             target: 50,
           ),
           financials: Financials(
-            totalOutstanding: 0.0, 
+            totalOutstanding: 0.0,
             totalDiscounts: 0.0,
             totalCollections: totalSales * 0.8,
           ),
@@ -363,6 +381,10 @@ class ApiService {
           topCustomers: topCustomers.take(5).toList(),
           areaPerformance: [],
           expiryAlerts: [],
+          weeklyPerformance: WeeklyPerformanceData(
+            threshold: localThreshold,
+            days: localWeeklyDays,
+          ),
         );
       }
     } catch (e) {
@@ -383,6 +405,52 @@ class ApiService {
       );
     });
 
+    const demoThreshold = 2000.0;
+    final demoWeeklyDays = [
+      WeeklyPerformanceDay(
+        day: 'Mon',
+        date: 'Mon',
+        sales: 1250.0,
+        status: 'poor',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Tue',
+        date: 'Tue',
+        sales: 1950.0,
+        status: 'good',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Wed',
+        date: 'Wed',
+        sales: 2800.0,
+        status: 'excellent',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Thu',
+        date: 'Thu',
+        sales: 1420.0,
+        status: 'poor',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Fri',
+        date: 'Fri',
+        sales: 2100.0,
+        status: 'good',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Sat',
+        date: 'Sat',
+        sales: 3100.0,
+        status: 'excellent',
+      ),
+      WeeklyPerformanceDay(
+        day: 'Sun',
+        date: 'Sun',
+        sales: 800.0,
+        status: 'poor',
+      ),
+    ];
+
     return ReportData(
       metrics: ReportMetrics(
         grossSales: 15862.0,
@@ -395,29 +463,11 @@ class ApiService {
         target: 50,
       ),
       financials: Financials(
-        totalOutstanding: 45000.0, 
+        totalOutstanding: 45000.0,
         totalDiscounts: 850.0,
         totalCollections: 12500.0,
       ),
       trend: demoTrend,
-      expiryAlerts: [
-        ExpiryAlert(
-          productName: 'Augmentin 625mg',
-          batchNo: 'B2931',
-          expiryDate: '2026-08-15',
-          qty: 50,
-          value: 1250.0,
-          customerName: 'City Hospital Pharmacy',
-        ),
-        ExpiryAlert(
-          productName: 'Panadol Extra',
-          batchNo: 'PE492',
-          expiryDate: '2026-09-02',
-          qty: 120,
-          value: 480.0,
-          customerName: 'Green Medicos',
-        ),
-      ],
       topProducts: [
         TopEntity(
           id: '1',
@@ -520,6 +570,28 @@ class ApiService {
           returnedTotal: 242.0,
         ),
       ],
+      expiryAlerts: [
+        ExpiryAlert(
+          productName: 'Augmentin 625mg',
+          batchNo: 'B2931',
+          expiryDate: '2026-08-15',
+          qty: 50,
+          value: 1250.0,
+          customerName: 'City Hospital Pharmacy',
+        ),
+        ExpiryAlert(
+          productName: 'Panadol Extra',
+          batchNo: 'PE492',
+          expiryDate: '2026-09-02',
+          qty: 120,
+          value: 480.0,
+          customerName: 'Green Medicos',
+        ),
+      ],
+      weeklyPerformance: WeeklyPerformanceData(
+        threshold: demoThreshold,
+        days: demoWeeklyDays,
+      ),
     );
   }
 

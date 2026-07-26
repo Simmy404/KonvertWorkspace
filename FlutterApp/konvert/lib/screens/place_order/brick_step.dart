@@ -10,56 +10,28 @@ class BrickStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<PlaceOrderState>();
+    final theme = ThemeManager.instance;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header & Search
+        // Search Input Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  'Select Territory / Brick',
-                  style: TextStyle(
-                    color: ThemeManager.instance.getTextPrimary(),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              SizedBox(
-                height: 38,
-                child: TextField(
-                  controller: state.brickSearchController,
-                  onChanged: state.filterBricks,
-                  enabled: !state.isRefreshingBricks,
-                  style: TextStyle(
-                    color: ThemeManager.instance.getTextPrimary(),
-                    fontSize: 13,
-                  ),
-                  decoration: PlaceOrderComponents.buildSearchDecoration(
-                    'Search Bricks by Name...',
-                    () {
-                      state.brickSearchController.clear();
-                      state.filterBricks('');
-                    },
-                  ),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          child: PlaceOrderComponents.buildSearchBar(
+            controller: state.brickSearchController,
+            onChanged: state.filterBricks,
+            hint: 'Search ${state.allBricks.length} Bricks',
+            onClear: () => state.filterBricks(''),
+            enabled: !state.isRefreshingBricks,
           ),
         ),
 
-        // List of Bricks (Disabled during refresh)
+        // List of Bricks
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => state.refreshBricks(),
-            color: const Color(0xFF1E56E2),
+            color: theme.getAccentBlue(),
             child: IgnorePointer(
               ignoring: state.isRefreshingBricks,
               child: Opacity(
@@ -81,7 +53,7 @@ class BrickStep extends StatelessWidget {
                           parent: BouncingScrollPhysics(),
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
+                          horizontal: 20,
                           vertical: 4,
                         ),
                         itemCount: state.filteredBricks.length,
@@ -96,13 +68,14 @@ class BrickStep extends StatelessWidget {
                           return Material(
                             color: Colors.transparent,
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
+                              duration: const Duration(milliseconds: 200),
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
-                                color: ThemeManager.instance.getListItemColor(),
-                                borderRadius: BorderRadius.circular(16),
+                                color: theme.getListItemColor(),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: ThemeManager.instance.getBorderColor(),
+                                  color: theme.getBorderColor(),
+                                  width: 1.2,
                                 ),
                               ),
                               child: InkWell(
@@ -111,10 +84,7 @@ class BrickStep extends StatelessWidget {
                                     ? null
                                     : () => state.selectBrick(brick),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
+                                  padding: const EdgeInsets.all(16),
                                   child: Row(
                                     children: [
                                       Container(
@@ -122,29 +92,18 @@ class BrickStep extends StatelessWidget {
                                         height: 36,
                                         decoration: BoxDecoration(
                                           color: isAllBricks
-                                              ? (ThemeManager
-                                                        .instance
-                                                        .isLightMode
-                                                    ? const Color(0xFFEAF2FF)
-                                                    : const Color(0xFF1E358A))
-                                              : (ThemeManager
-                                                        .instance
-                                                        .isLightMode
-                                                    ? const Color(0xFFF1F5F9)
-                                                    : const Color(0xFF162544)),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                              ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.1 : 0.2)
+                                              : theme.getSurfaceColor(),
+                                          borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: Icon(
                                           isAllBricks
                                               ? Icons.apps_rounded
                                               : Icons.location_city_rounded,
                                           color: isAllBricks
-                                              ? const Color(0xFF1E56E2)
-                                              : ThemeManager.instance
-                                                    .getTextSecondary(),
-                                          size: 18,
+                                              ? theme.getAccentBlue()
+                                              : theme.getTextSecondary(),
+                                          size: 20,
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -156,28 +115,25 @@ class BrickStep extends StatelessWidget {
                                             Text(
                                               brick['brick_name'] ?? '',
                                               style: TextStyle(
-                                                color: ThemeManager.instance
-                                                    .getTextPrimary(),
+                                                color: theme.getTextPrimary(),
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 13,
+                                                fontSize: 15,
                                               ),
                                             ),
-                                            const SizedBox(height: 2),
+                                            const SizedBox(height: 3),
                                             Row(
                                               children: [
                                                 Icon(
                                                   Icons.people_alt_outlined,
-                                                  size: 12,
-                                                  color: ThemeManager.instance
-                                                      .getTextSecondary(),
+                                                  size: 14,
+                                                  color: theme.getTextSecondary(),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
-                                                  '$customerCount ${customerCount == 1 ? 'Customer' : 'Customers'} Available',
+                                                  '$customerCount ${customerCount == 1 ? 'Customer' : 'Customers'}',
                                                   style: TextStyle(
-                                                    color: ThemeManager.instance
-                                                        .getTextSecondary(),
-                                                    fontSize: 11,
+                                                    color: theme.getTextSecondary(),
+                                                    fontSize: 13,
                                                   ),
                                                 ),
                                               ],
@@ -186,52 +142,19 @@ class BrickStep extends StatelessWidget {
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 6,
-                                        ),
+                                        padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: ThemeManager.instance
-                                              .getAccentBlue()
-                                              .withOpacity(
-                                                ThemeManager
-                                                        .instance
-                                                        .isLightMode
-                                                    ? 0.1
-                                                    : 0.2,
-                                              ),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
+                                          color: theme.getAccentBlue().withOpacity(
+                                            theme.isLightMode ? 0.08 : 0.2,
                                           ),
+                                          shape: BoxShape.circle,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              'Select',
-                                              style: TextStyle(
-                                                color:
-                                                    ThemeManager
-                                                        .instance
-                                                        .isLightMode
-                                                    ? const Color(0xFF1E56E2)
-                                                    : const Color(0xFF83ABED),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              Icons.arrow_forward_rounded,
-                                              color:
-                                                  !ThemeManager
-                                                      .instance
-                                                      .isLightMode
-                                                  ? const Color(0xFF83ABED)
-                                                  : const Color(0xFF1E56E2),
-                                              size: 14,
-                                            ),
-                                          ],
+                                        child: Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: theme.isLightMode
+                                              ? theme.getAccentBlue()
+                                              : const Color(0xFF83ABED),
+                                          size: 16,
                                         ),
                                       ),
                                     ],

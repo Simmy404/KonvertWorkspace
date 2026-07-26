@@ -136,6 +136,47 @@ class ExpiryAlert {
   }
 }
 
+class WeeklyPerformanceDay {
+  final String day;
+  final String date;
+  final double sales;
+  final String status; // 'poor', 'good', 'excellent'
+
+  WeeklyPerformanceDay({
+    required this.day,
+    required this.date,
+    required this.sales,
+    required this.status,
+  });
+
+  factory WeeklyPerformanceDay.fromJson(Map<String, dynamic> json) {
+    return WeeklyPerformanceDay(
+      day: json['day'] ?? '',
+      date: json['date'] ?? '',
+      sales: (json['sales'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] ?? 'good',
+    );
+  }
+}
+
+class WeeklyPerformanceData {
+  final double threshold;
+  final List<WeeklyPerformanceDay> days;
+
+  WeeklyPerformanceData({
+    required this.threshold,
+    required this.days,
+  });
+
+  factory WeeklyPerformanceData.fromJson(Map<String, dynamic> json) {
+    final daysList = (json['days'] as List<dynamic>?) ?? [];
+    return WeeklyPerformanceData(
+      threshold: (json['threshold'] as num?)?.toDouble() ?? 0.0,
+      days: daysList.map((e) => WeeklyPerformanceDay.fromJson(e)).toList(),
+    );
+  }
+}
+
 class ReportData {
   final ReportMetrics metrics;
   final Financials financials;
@@ -144,6 +185,7 @@ class ReportData {
   final List<TopEntity> topCustomers;
   final List<TopEntity> areaPerformance;
   final List<ExpiryAlert> expiryAlerts;
+  final WeeklyPerformanceData weeklyPerformance;
 
   ReportData({
     required this.metrics,
@@ -153,6 +195,7 @@ class ReportData {
     required this.topCustomers,
     required this.areaPerformance,
     required this.expiryAlerts,
+    required this.weeklyPerformance,
   });
 
   factory ReportData.fromJson(Map<String, dynamic> json) {
@@ -178,6 +221,9 @@ class ReportData {
     final alertsList = (json['expiry_alerts'] as List<dynamic>?) ?? [];
     final expiryAlerts = alertsList.map((e) => ExpiryAlert.fromJson(e)).toList();
 
+    final weeklyJson = json['weekly_performance'] as Map<String, dynamic>? ?? {};
+    final weeklyPerformance = WeeklyPerformanceData.fromJson(weeklyJson);
+
     return ReportData(
       metrics: ReportMetrics.fromJson(metricsJson),
       financials: Financials.fromJson(financialsJson),
@@ -186,6 +232,7 @@ class ReportData {
       topCustomers: topCustomers,
       areaPerformance: areaPerformance,
       expiryAlerts: expiryAlerts,
+      weeklyPerformance: weeklyPerformance,
     );
   }
 }

@@ -10,41 +10,35 @@ class PlaceOrderComponents {
       builder: (context, locManager, child) {
         final pos = locManager.currentPosition;
         final hasLocation = pos != null;
+        final theme = ThemeManager.instance;
 
         return Container(
-          margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.fromLTRB(20, 6, 20, 8),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: ThemeManager.instance.getContainerColor(),
+            color: theme.getListItemColor(),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: ThemeManager.instance.getBorderColor(),
+              color: theme.getBorderColor(),
               width: 1.2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: ThemeManager.instance.isLightMode ? const Color(0xFF003087).withOpacity(0.06) : Colors.black.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
           ),
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: ThemeManager.instance.getSurfaceColor(),
-                  shape: BoxShape.circle,
+                  color: theme.getSurfaceColor(),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.my_location_rounded,
-                  color: Color(0xFF1E56E2),
+                  color: theme.getAccentBlue(),
                   size: 18,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,17 +47,17 @@ class PlaceOrderComponents {
                     Row(
                       children: [
                         Text(
-                          'User GPS Location',
+                          'GPS Location',
                           style: TextStyle(
-                            color: ThemeManager.instance.getTextPrimary(),
+                            color: theme.getTextPrimary(),
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Container(
-                          width: 6,
-                          height: 6,
+                          width: 7,
+                          height: 7,
                           decoration: BoxDecoration(
                             color: hasLocation ? const Color(0xFF16A34A) : const Color(0xFFEAB308),
                             shape: BoxShape.circle,
@@ -71,10 +65,10 @@ class PlaceOrderComponents {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          hasLocation ? 'Active GPS' : 'Locating...',
+                          hasLocation ? 'Active' : 'Locating...',
                           style: TextStyle(
                             color: hasLocation ? const Color(0xFF16A34A) : const Color(0xFFD97706),
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -86,24 +80,24 @@ class PlaceOrderComponents {
                           ? 'Lat: ${pos.latitude.toStringAsFixed(5)}°, Long: ${pos.longitude.toStringAsFixed(5)}°'
                           : 'Fetching GPS coordinates...',
                       style: TextStyle(
-                        color: ThemeManager.instance.getTextSecondary(),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        color: theme.getTextSecondary(),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
                 onPressed: () {
                   LocationManager.instance.fetchCurrentLocation(forceUpdate: true);
                 },
                 icon: Icon(
                   Icons.refresh_rounded,
-                  color: ThemeManager.instance.getAccentBlue(),
-                  size: 18,
+                  color: theme.getAccentBlue(),
+                  size: 20,
                 ),
                 tooltip: 'Refresh Location',
               ),
@@ -114,39 +108,120 @@ class PlaceOrderComponents {
     );
   }
 
+  /// Builds a pill-rounded search bar matching BookingsScreen & NotificationsScreen.
+  static Widget buildSearchBar({
+    required TextEditingController controller,
+    required Function(String) onChanged,
+    required String hint,
+    required VoidCallback onClear,
+    bool enabled = true,
+  }) {
+    final theme = ThemeManager.instance;
+
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: theme.getSurfaceColor(),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: theme.getBorderColor(),
+          width: 1.2,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search_rounded,
+            color: theme.getTextTertiary(),
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              enabled: enabled,
+              style: TextStyle(
+                color: theme.getTextPrimary(),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  color: theme.getTextSecondary(),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          if (controller.text.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                controller.clear();
+                onClear();
+              },
+              child: Icon(
+                Icons.close_rounded,
+                color: theme.getTextTertiary(),
+                size: 20,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Legacy search decoration for backward compat
   static InputDecoration buildSearchDecoration(String hint, VoidCallback onClear) {
+    final theme = ThemeManager.instance;
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
-        color: ThemeManager.instance.getTextTertiary(),
-        fontSize: 12,
+        color: theme.getTextSecondary(),
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
       ),
       prefixIcon: Icon(
         Icons.search_rounded,
-        size: 16,
-        color: ThemeManager.instance.getTextTertiary(),
+        size: 22,
+        color: theme.getTextTertiary(),
       ),
       suffixIcon: IconButton(
         icon: Icon(
           Icons.clear_rounded,
-          color: ThemeManager.instance.getTextTertiary(),
-          size: 14,
+          color: theme.getTextTertiary(),
+          size: 20,
         ),
         onPressed: onClear,
       ),
       filled: true,
-      fillColor: ThemeManager.instance.getContainerColor(),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      fillColor: theme.getSurfaceColor(),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(28),
         borderSide: BorderSide(
-          color: ThemeManager.instance.getBorderColor(),
+          color: theme.getBorderColor(),
+          width: 1.2,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(28),
         borderSide: BorderSide(
-          color: ThemeManager.instance.getBorderColor(),
+          color: theme.getBorderColor(),
+          width: 1.2,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: BorderSide(
+          color: theme.getAccentBlue(),
+          width: 1.5,
         ),
       ),
     );
@@ -158,20 +233,21 @@ class PlaceOrderComponents {
     required VoidCallback onTap,
     IconData? icon,
   }) {
+    final theme = ThemeManager.instance;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? ThemeManager.instance.getAccentBlue()
-              : ThemeManager.instance.getContainerColor(),
+              ? theme.getAccentBlue()
+              : theme.getContainerColor(),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? ThemeManager.instance.getAccentBlue()
-                : ThemeManager.instance.getBorderColor(),
+                ? theme.getAccentBlue()
+                : theme.getBorderColor(),
           ),
           boxShadow: isSelected
               ? [
@@ -189,20 +265,20 @@ class PlaceOrderComponents {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 12,
+                size: 14,
                 color: isSelected
                     ? Colors.white
-                    : ThemeManager.instance.getTextSecondary(),
+                    : theme.getTextSecondary(),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
             ],
             Text(
               label,
               style: TextStyle(
                 color: isSelected
                     ? Colors.white
-                    : ThemeManager.instance.getTextSecondary(),
-                fontSize: 11,
+                    : theme.getTextSecondary(),
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
@@ -213,21 +289,22 @@ class PlaceOrderComponents {
   }
 
   static Widget buildEmptyState(String message) {
+    final theme = ThemeManager.instance;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.search_off_rounded,
-            size: 40,
-            color: ThemeManager.instance.getDividerColor(),
+            size: 56,
+            color: theme.getTextTertiary(),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
-              color: ThemeManager.instance.getTextSecondary(),
-              fontSize: 13,
+              color: theme.getTextSecondary(),
+              fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -242,8 +319,9 @@ class PlaceOrderComponents {
     Function(String) onChanged, {
     bool autofocus = false,
   }) {
+    final theme = ThemeManager.instance;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 10.0),
       child: TextField(
         autofocus: autofocus,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -251,34 +329,42 @@ class PlaceOrderComponents {
           ..selection = TextSelection(baseOffset: 0, extentOffset: initialValue.length),
         onChanged: onChanged,
         style: TextStyle(
-          color: ThemeManager.instance.getTextPrimary(),
-          fontSize: 13,
+          color: theme.getTextPrimary(),
+          fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: ThemeManager.instance.getTextSecondary(),
-            fontSize: 11,
+            color: theme.getTextSecondary(),
+            fontSize: 13,
           ),
           filled: true,
-          fillColor: ThemeManager.instance.getSurfaceColor(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          fillColor: theme.getSurfaceColor(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: ThemeManager.instance.getBorderColor(),
+              color: theme.getBorderColor(),
+              width: 1.2,
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: ThemeManager.instance.getBorderColor(),
+              color: theme.getBorderColor(),
+              width: 1.2,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+              color: theme.getAccentBlue(),
+              width: 1.5,
             ),
           ),
         ),
       ),
     );
   }
-
 }

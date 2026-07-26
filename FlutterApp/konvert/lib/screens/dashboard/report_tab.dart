@@ -42,10 +42,10 @@ class ReportTab extends StatelessWidget {
                               Text(
                                 'Report',
                                 style: TextStyle(
-                                  color: theme.getTextPrimary(),
-                                  fontSize: 28,
+                                  color: theme.isLightMode ? const Color(0xFF0022FF) : Colors.white,
+                                  fontSize: 34,
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
+                                  letterSpacing: -0.6,
                                 ),
                               ),
                               _buildFilterDropdown(viewModel, theme, isDark),
@@ -109,8 +109,8 @@ class ReportTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(12),
+        color: theme.getSurfaceColor(),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
@@ -133,9 +133,9 @@ class ReportTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected 
-              ? (isDark ? const Color(0xFF334155) : Colors.white)
+              ? (isDark ? theme.getListItemColor() : Colors.white)
               : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected && !isDark ? [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -167,17 +167,17 @@ class ReportTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: theme.getListItemColor(),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: theme.getBorderColor(),
         ),
       ),
       child: DropdownButton<String>(
         value: viewModel.selectedFilter,
         underline: const SizedBox(),
         icon: Icon(Icons.keyboard_arrow_down, color: theme.getTextSecondary()),
-        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        dropdownColor: theme.getListItemColor(),
         style: TextStyle(
           color: theme.getTextPrimary(),
           fontWeight: FontWeight.w500,
@@ -262,6 +262,8 @@ class ReportTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 32),
+        _buildWeeklyPerformanceChart(data.weeklyPerformance, theme, isDark),
+        const SizedBox(height: 32),
         Text(
           'Gross vs Net Sales Trend',
           style: TextStyle(
@@ -272,6 +274,224 @@ class ReportTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildTrendChart(data.trend, theme, isDark),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyPerformanceChart(
+    WeeklyPerformanceData weekly,
+    ThemeManager theme,
+    bool isDark,
+  ) {
+    final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final threshold = weekly.threshold;
+
+    if (weekly.days.isEmpty) {
+      return const SizedBox();
+    }
+
+    final maxSales = weekly.days.fold<double>(
+      0,
+      (m, e) => max(m, e.sales),
+    );
+    final maxY = max(maxSales, threshold * 1.3);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Weekly Performance vs Company Benchmark',
+              style: TextStyle(
+                color: theme.getTextPrimary(),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Daily performance benchmarked against company average',
+              style: TextStyle(
+                color: theme.getTextSecondary(),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 260,
+          padding: const EdgeInsets.only(right: 20, top: 24, bottom: 12, left: 12),
+          decoration: BoxDecoration(
+            color: theme.getListItemColor(),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.getBorderColor(),
+            ),
+          ),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY > 0 ? maxY : 1000,
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY > 0 ? (maxY / 4) : 1,
+                getDrawingHorizontalLine: (value) {
+                  return FlLine(
+                    color: theme.getBorderColor(),
+                    strokeWidth: 1,
+                    dashArray: [5, 5],
+                  );
+                },
+              ),
+              extraLinesData: ExtraLinesData(
+                horizontalLines: [
+                  if (threshold > 0)
+                    HorizontalLine(
+                      y: threshold,
+                      color: theme.getAccentBlue(),
+                      strokeWidth: 2,
+                      dashArray: [6, 6],
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.topRight,
+                        padding: const EdgeInsets.only(right: 8, bottom: 4),
+                        style: TextStyle(
+                          color: theme.getAccentBlue(),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        labelResolver: (line) =>
+                            'Company Avg: ${currencyFormat.format(line.y)}',
+                      ),
+                    ),
+                ],
+              ),
+              titlesData: FlTitlesData(
+                show: true,
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index >= 0 && index < weekly.days.length) {
+                        final day = weekly.days[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            day.day,
+                            style: TextStyle(
+                              color: theme.getTextSecondary(),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox();
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: maxY > 0 ? (maxY / 4) : 1,
+                    reservedSize: 42,
+                    getTitlesWidget: (value, meta) {
+                      return Text(
+                        NumberFormat.compact().format(value),
+                        style: TextStyle(
+                          color: theme.getTextSecondary(),
+                          fontSize: 10,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              barGroups: weekly.days.asMap().entries.map((entry) {
+                final index = entry.key;
+                final day = entry.value;
+
+                Color barColor;
+                if (day.status == 'excellent') {
+                  barColor = const Color(0xFF86EFAC); // Pastel light green
+                } else if (day.status == 'poor') {
+                  barColor = const Color(0xFFFCA5A5); // Pastel light red
+                } else {
+                  barColor = const Color(0xFFCBD5E1); // Light gray
+                }
+
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: day.sales,
+                      color: barColor,
+                      width: 18,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(6)),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Legend Badges Row
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.getListItemColor(),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.getBorderColor()),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildLegendPill('Poor (< Avg)', const Color(0xFFFCA5A5), theme),
+              _buildLegendPill('Good (Near Avg)', const Color(0xFFCBD5E1), theme),
+              _buildLegendPill('Excellent (> Avg)', const Color(0xFF86EFAC), theme),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendPill(String label, Color color, ThemeManager theme) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.getTextSecondary(),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -407,19 +627,11 @@ class ReportTab extends StatelessWidget {
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            color: theme.getListItemColor(),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              color: theme.getBorderColor(),
             ),
-            boxShadow: [
-              if (!isDark)
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-            ],
           ),
           child: ListView.separated(
             shrinkWrap: true,
@@ -427,7 +639,7 @@ class ReportTab extends StatelessWidget {
             itemCount: data.expiryAlerts.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              color: theme.getBorderColor(),
             ),
             itemBuilder: (context, index) {
               final alert = data.expiryAlerts[index];
@@ -507,14 +719,7 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
+
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,14 +793,7 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
+
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -642,10 +840,10 @@ class ReportTab extends StatelessWidget {
       return Container(
         height: 250,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: theme.getListItemColor(),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: theme.getBorderColor(),
           ),
         ),
         child: Center(
@@ -670,14 +868,7 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
+
       ),
       child: LineChart(
         LineChartData(
@@ -687,9 +878,7 @@ class ReportTab extends StatelessWidget {
             horizontalInterval: maxY > 0 ? (maxY / 4) : 1,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
+                color: theme.getBorderColor(),
                 strokeWidth: 1,
                 dashArray: [5, 5],
               );
@@ -804,14 +993,7 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
+
       ),
       child: ListView.separated(
         shrinkWrap: true,
@@ -819,7 +1001,7 @@ class ReportTab extends StatelessWidget {
         itemCount: items.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: theme.getBorderColor(),
         ),
         itemBuilder: (context, index) {
           final item = items[index];

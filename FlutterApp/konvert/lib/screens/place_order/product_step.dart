@@ -14,80 +14,43 @@ class ProductStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<PlaceOrderState>();
 
+    final theme = ThemeManager.instance;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header, Search Box & Category Filters
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Select Products',
-                    style: TextStyle(
-                      color: ThemeManager.instance.getTextPrimary(),
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (state.selectedCustomer != null)
-                    Expanded(
-                      child: Text(
-                        '${state.selectedCustomer!['customer_name']}',
-                        style: const TextStyle(
-                          color: Color(0xFF1E56E2),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.right,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
+              PlaceOrderComponents.buildSearchBar(
+                controller: state.productSearchController,
+                onChanged: state.filterProducts,
+                hint: 'Search ${state.allProducts.length} Products',
+                onClear: () => state.filterProducts(''),
+                enabled: !state.isRefreshingProducts,
               ),
-              const SizedBox(height: 2),
-              SizedBox(
-                height: 38,
-                child: TextField(
-                  controller: state.productSearchController,
-                  onChanged: state.filterProducts,
-                  enabled: !state.isRefreshingProducts,
-                  style: TextStyle(
-                    color: ThemeManager.instance.getTextPrimary(),
-                    fontSize: 13,
-                  ),
-                  decoration: PlaceOrderComponents.buildSearchDecoration(
-                    'Search Products by Name...',
-                    () {
-                      state.productSearchController.clear();
-                      state.filterProducts('');
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               // Category Filter Chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
                     PlaceOrderComponents.buildFilterChip(
-                      label: 'All Products (${state.allProducts.length})',
+                      label: 'All (${state.allProducts.length})',
                       isSelected: state.selectedProductCategoryFilter == 'all',
                       onTap: () => state.filterProductsByCategory('all'),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     PlaceOrderComponents.buildFilterChip(
                       label: 'Rx (Prescription)',
                       icon: Icons.medication_outlined,
                       isSelected: state.selectedProductCategoryFilter == 'rx',
                       onTap: () => state.filterProductsByCategory('rx'),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     PlaceOrderComponents.buildFilterChip(
                       label: 'OTC',
                       icon: Icons.local_pharmacy_outlined,
@@ -105,7 +68,7 @@ class ProductStep extends StatelessWidget {
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => state.refreshProducts(),
-            color: const Color(0xFF1E56E2),
+            color: theme.getAccentBlue(),
             child: IgnorePointer(
               ignoring: state.isRefreshingProducts,
               child: Opacity(
@@ -127,7 +90,7 @@ class ProductStep extends StatelessWidget {
                           parent: BouncingScrollPhysics(),
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
+                          horizontal: 20,
                           vertical: 4,
                         ),
                         itemCount: state.filteredProducts.length,
@@ -143,25 +106,22 @@ class ProductStep extends StatelessWidget {
                             product['product_is_otc'].toString().trim().isNotEmpty;
 
                         return AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: cartItem != null
+                                ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.05 : 0.1)
+                                : theme.getListItemColor(),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
                               color: cartItem != null
-                                  ? (ThemeManager.instance.isLightMode ? const Color(0xFF1E56E2).withOpacity(0.05) : const Color(0xFF1E56E2).withOpacity(0.1))
-                                  : ThemeManager.instance.getListItemColor(),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: cartItem != null
-                                    ? const Color(0xFF1E56E2).withOpacity(0.5)
-                                    : ThemeManager.instance.getBorderColor(),
-                                width: cartItem != null ? 1.2 : 1.0,
-                              ),
+                                  ? theme.getAccentBlue().withOpacity(0.4)
+                                  : theme.getBorderColor(),
+                              width: 1.2,
                             ),
+                          ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
                                 // Product Icon
@@ -175,33 +135,20 @@ class ProductStep extends StatelessWidget {
                                             cartItem,
                                           ),
                                   child: Container(
-                                    width: 44,
-                                    height: 44,
+                                    width: 36,
+                                    height: 36,
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: cartItem != null 
-                                          ? [const Color(0xFF1E56E2), const Color(0xFF3B82F6)]
-                                          : (ThemeManager.instance.isLightMode
-                                              ? [const Color(0xFFF0F9FF), const Color(0xFFE0F2FE)]
-                                              : [const Color(0xFF0F1E3D), const Color(0xFF1E3A8A)]),
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: cartItem != null ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF1E56E2).withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 4),
-                                        )
-                                      ] : null,
+                                      color: cartItem != null
+                                          ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.12 : 0.25)
+                                          : theme.getSurfaceColor(),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
                                       Icons.medication_outlined,
-                                      color: cartItem != null 
-                                          ? Colors.white 
-                                          : const Color(0xFF0284C7),
-                                      size: 22,
+                                      color: cartItem != null
+                                          ? theme.getAccentBlue()
+                                          : theme.getTextSecondary(),
+                                      size: 20,
                                     ),
                                   ),
                                 ),
@@ -228,9 +175,9 @@ class ProductStep extends StatelessWidget {
                                               child: Text(
                                                 product['product_name'] ?? '',
                                                 style: TextStyle(
-                                                  color: ThemeManager.instance.getTextPrimary(),
+                                                  color: theme.getTextPrimary(),
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
+                                                  fontSize: 15,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -265,9 +212,9 @@ class ProductStep extends StatelessWidget {
                                             Text(
                                               'TP: Rs ${product['product_tp'] ?? '0'}',
                                               style: TextStyle(
-                                                color: ThemeManager.instance.getTextSecondary(),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
+                                                color: theme.getTextSecondary(),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                             if (cartItem != null && (cartItem.discount > 0 || cartItem.bonus > 0)) ...[
@@ -292,19 +239,12 @@ class ProductStep extends StatelessWidget {
                                 cartItem != null
                                     ? Container(
                                         decoration: BoxDecoration(
-                                          color: ThemeManager.instance.isLightMode ? Colors.white : const Color(0xFF0F172A),
+                                          color: theme.getSurfaceColor(),
                                           borderRadius: BorderRadius.circular(20),
                                           boxShadow: [
-                                            if (ThemeManager.instance.isLightMode)
-                                              BoxShadow(
-                                                color: const Color(0xFF1E56E2).withOpacity(0.08),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              )
                                           ],
                                           border: Border.all(
-                                            color: const Color(0xFF1E56E2).withOpacity(0.2),
-                                            width: 1.5,
+                                            color: theme.getBorderColor(),
                                           ),
                                         ),
                                         child: Row(
@@ -325,8 +265,8 @@ class ProductStep extends StatelessWidget {
                                                     : Icons.remove_rounded,
                                                 size: 16,
                                                 color: cartItem.qty == 1
-                                                    ? Colors.red
-                                                    : ThemeManager.instance.getTextPrimary(),
+                                                    ? const Color(0xFFEF4444)
+                                                    : theme.getTextPrimary(),
                                               ),
                                             ),
                                             Padding(
@@ -334,7 +274,7 @@ class ProductStep extends StatelessWidget {
                                               child: Text(
                                                 '${cartItem.qty}',
                                                 style: TextStyle(
-                                                  color: ThemeManager.instance.getTextPrimary(),
+                                                  color: theme.getTextPrimary(),
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 13,
                                                 ),
@@ -352,7 +292,7 @@ class ProductStep extends StatelessWidget {
                                               icon: Icon(
                                                 Icons.add_rounded,
                                                 size: 16,
-                                                color: ThemeManager.instance.getAccentBlue(),
+                                                color: theme.getAccentBlue(),
                                               ),
                                             ),
                                           ],
@@ -373,22 +313,21 @@ class ProductStep extends StatelessWidget {
                                                 );
                                               },
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: ThemeManager.instance.isLightMode ? Colors.white : const Color(0xFF1E293B),
-                                          foregroundColor: const Color(0xFF1E56E2),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 0,
-                                          ),
-                                          minimumSize: const Size(0, 32),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            side: BorderSide(
-                                              color: const Color(0xFF1E56E2).withOpacity(0.3),
-                                              width: 1.5,
-                                            )
-                                          ),
-                                          elevation: 0,
-                                        ),
+                                           backgroundColor: theme.getSurfaceColor(),
+                                           foregroundColor: theme.getAccentBlue(),
+                                           padding: const EdgeInsets.symmetric(
+                                             horizontal: 16,
+                                             vertical: 0,
+                                           ),
+                                           minimumSize: const Size(0, 34),
+                                           shape: RoundedRectangleBorder(
+                                             borderRadius: BorderRadius.circular(20),
+                                             side: BorderSide(
+                                               color: theme.getBorderColor(),
+                                             )
+                                           ),
+                                           elevation: 0,
+                                         ),
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -435,29 +374,21 @@ class ProductStep extends StatelessWidget {
     PlaceOrderState state,
   ) {
     final hasItems = state.cart.isNotEmpty;
+    final theme = ThemeManager.instance;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
-        color: ThemeManager.instance.getAppBackgroundColor(),
+        color: theme.getContainerColor(),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         border: Border(
           top: BorderSide(
-            color: ThemeManager.instance.getBorderColor(),
+            color: theme.getBorderColor(),
           ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: ThemeManager.instance.isLightMode
-                ? const Color(0xFF003087).withOpacity(0.1)
-                : Colors.black.withOpacity(0.5),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
@@ -466,7 +397,7 @@ class ProductStep extends StatelessWidget {
           children: [
             // Left: Items Count & Grand Total
             GestureDetector(
-              onTap: hasItems ? () => _showCartDetailsModal(context, state) : null,
+              onTap: () => _showCartDetailsModal(context, state),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -475,26 +406,26 @@ class ProductStep extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.shopping_bag_outlined,
-                        color: hasItems ? const Color(0xFF1E56E2) : Colors.grey,
+                        color: theme.getAccentBlue(),
                         size: 18,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '${state.cart.length} ${state.cart.length == 1 ? 'Item' : 'Items'} in Cart',
                         style: TextStyle(
-                          color: ThemeManager.instance.getTextSecondary(),
+                          color: theme.getTextSecondary(),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (hasItems) const Icon(Icons.keyboard_arrow_up_rounded, size: 16, color: Color(0xFF1E56E2)),
+                      Icon(Icons.keyboard_arrow_up_rounded, size: 16, color: theme.getAccentBlue()),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Total: Rs ${state.cartGrandTotal.toStringAsFixed(2)}',
                     style: TextStyle(
-                      color: ThemeManager.instance.getTextPrimary(),
+                      color: theme.getTextPrimary(),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -504,41 +435,24 @@ class ProductStep extends StatelessWidget {
             ),
 
             // Right: Primary Action Button
-            Container(
-              decoration: BoxDecoration(
-                gradient: hasItems ? const LinearGradient(
-                  colors: [Color(0xFF1E56E2), Color(0xFF3B82F6)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ) : null,
-                color: hasItems ? null : (ThemeManager.instance.isLightMode ? const Color(0xFFCBD5E1) : const Color(0xFF1E1E2C)),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: hasItems ? [
-                  BoxShadow(
-                    color: const Color(0xFF1E56E2).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  )
-                ] : null,
+            ElevatedButton.icon(
+              onPressed: () => _showCartDetailsModal(context, state),
+              icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
+              label: Text(
+                state.editingInvoiceNumber != null ? 'Update Order' : 'Review & Save',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
-              child: ElevatedButton.icon(
-                onPressed: hasItems
-                    ? () => _showCartDetailsModal(context, state)
-                    : null,
-                icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
-                label: Text(
-                  state.editingInvoiceNumber != null ? 'Update Order' : 'Review & Save',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.getAccentBlue(),
+                disabledBackgroundColor: theme.isLightMode
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF1E293B),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                elevation: 0,
               ),
             ),
           ],
@@ -614,11 +528,32 @@ class ProductStep extends StatelessWidget {
                   Expanded(
                     child: state.cart.isEmpty
                         ? Center(
-                            child: Text(
-                              'Cart is empty',
-                              style: TextStyle(
-                                color: ThemeManager.instance.getTextTertiary(),
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.assignment_turned_in_outlined,
+                                  size: 48,
+                                  color: ThemeManager.instance.getAccentBlue(),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Zero Order Visit Confirmation',
+                                  style: TextStyle(
+                                    color: ThemeManager.instance.getTextPrimary(),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'No products added. Tap confirm below to record visit.',
+                                  style: TextStyle(
+                                    color: ThemeManager.instance.getTextSecondary(),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : ListView.builder(
@@ -731,28 +666,32 @@ class ProductStep extends StatelessWidget {
                           width: double.infinity,
                           height: 46,
                           child: ElevatedButton.icon(
-                            onPressed: state.cart.isEmpty
-                                ? null
-                                : () async {
-                                    final success = await state.confirmOrder();
-                                    if (success && context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Order Saved Successfully!'),
-                                          backgroundColor: Color(0xFF16A34A),
-                                        ),
-                                      );
-                                      Navigator.pop(context); // close bottom sheet
-                                      if (state.editingInvoiceNumber != null) {
-                                        Navigator.pop(context, true); // close PlaceOrderScreen if editing
-                                      } else {
-                                        state.resetOrderAndGoToBricks(); // take user to Bricks step for new order
-                                      }
-                                    }
-                                  },
+                            onPressed: () async {
+                              final success = await state.confirmOrder();
+                              if (success && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      state.cart.isEmpty
+                                          ? 'Visit Confirmed Successfully!'
+                                          : 'Order Saved Successfully!',
+                                    ),
+                                    backgroundColor: const Color(0xFF16A34A),
+                                  ),
+                                );
+                                Navigator.pop(context); // close bottom sheet
+                                if (state.editingInvoiceNumber != null) {
+                                  Navigator.pop(context, true); // close PlaceOrderScreen if editing
+                                } else {
+                                  state.resetOrderAndGoToBricks(); // take user to Bricks step for new order
+                                }
+                              }
+                            },
                             icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
                             label: Text(
-                              state.editingInvoiceNumber != null ? 'Save Changes' : 'Confirm & Save Order',
+                              state.cart.isEmpty
+                                  ? 'Confirm Visit (No Order)'
+                                  : (state.editingInvoiceNumber != null ? 'Save Changes' : 'Confirm & Save Order'),
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
