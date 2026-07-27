@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/error_struct.dart';
@@ -16,11 +17,69 @@ class LocationManager extends ChangeNotifier {
   bool _isFetching = false;
   bool get isFetching => _isFetching;
 
+  StreamSubscription<Position>? _positionStreamSub;
+
   String get precision => StorageService.instance.getLocationPrecision();
+  double get geofenceRadius => StorageService.instance.getGeofenceRadius();
 
   Future<void> setPrecision(String value) async {
     await StorageService.instance.setLocationPrecision(value);
     notifyListeners();
+  }
+
+  Future<void> setGeofenceRadius(double meters) async {
+    await StorageService.instance.setGeofenceRadius(meters);
+    notifyListeners();
+  }
+
+  void startLocationUpdates() async {
+    if (_positionStreamSub != null) return;
+    final hasPermission = await checkPermissions();
+    if (!hasPermission) return;
+
+    final accuracy = precision == 'high' ? LocationAccuracy.high : LocationAccuracy.medium;
+    _positionStreamSub = Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: accuracy,
+        distanceFilter: 3, // update every 3 meters
+      ),
+    ).listen(
+      (Position pos) {
+        _currentPosition = pos;
+        notifyListeners();
+      },
+      onError: (e) {
+        debugPrint('Location stream error: $e');
+      },
+    );
+  }
+
+  void stopLocationUpdates() {
+    _positionStreamSub?.cancel();
+    _positionStreamSub = null;
+  }
+
+  /// Calculates distance in meters to target coordinates
+  double? getDistanceTo(double? targetLat, double? targetLng) {
+    if (_currentPosition == null || targetLat == null || targetLng == null) return null;
+    if (targetLat == 0.0 && targetLng == 0.0) return null;
+    return Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      targetLat,
+      targetLng,
+    );
+  }
+
+  /// Checks if coordinates are within the configured geofence radius.
+  /// If lat/long are not defined or invalid (0.0), enables customer by default.
+  bool isLocationInGeofence(double? targetLat, double? targetLng) {
+    if (targetLat == null || targetLng == null) return true;
+    if (targetLat == 0.0 && targetLng == 0.0) return true;
+
+    final distance = getDistanceTo(targetLat, targetLng);
+    if (distance == null) return true; // Fallback to enabled if location not fetched yet
+    return distance <= geofenceRadius;
   }
 
   Future<void> init() async {

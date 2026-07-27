@@ -420,11 +420,31 @@ class StorageService {
   // GLOBAL LIFECYCLE HOOKS
   // ==========================================
 
+  Future<bool> setDouble(String key, double value) async {
+    try {
+      if (_prefs == null) await init();
+      return await _prefs!.setDouble(key, value);
+    } catch (e) {
+      _handleSilentError('STR-007', e.toString());
+      return false;
+    }
+  }
+
+  double? getDouble(String key) {
+    try {
+      return _prefs?.getDouble(key);
+    } catch (e) {
+      _handleSilentError('STR-008', e.toString());
+      return null;
+    }
+  }
+
   // ==========================================
   // LOCATION PREFERENCE STORAGE
   // ==========================================
 
   static const String _locationPrecisionKey = 'selected_location_precision';
+  static const String _geofenceRadiusKey = 'geofence_radius_meters';
 
   String getLocationPrecision() {
     return getString(_locationPrecisionKey) ?? 'normal';
@@ -432,6 +452,14 @@ class StorageService {
 
   Future<bool> setLocationPrecision(String precision) async {
     return await setString(_locationPrecisionKey, precision);
+  }
+
+  double getGeofenceRadius() {
+    return getDouble(_geofenceRadiusKey) ?? 100.0;
+  }
+
+  Future<bool> setGeofenceRadius(double radius) async {
+    return await setDouble(_geofenceRadiusKey, radius);
   }
 
   /// Safely wipes the entire local cache.

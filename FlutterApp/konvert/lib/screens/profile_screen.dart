@@ -690,6 +690,18 @@ class ProfileScreen extends StatelessWidget {
                               isLight: isLight,
                             ),
 
+                            const SizedBox(height: 12),
+
+                            // 3. Geofence Radius Option Tile (10m - 1000m)
+                            _buildGeofenceRadiusTile(
+                              context: context,
+                              textColor: textColor,
+                              subtextColor: subtextColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              isLight: isLight,
+                            ),
+
                             const SizedBox(height: 28),
 
                             // Log Out Button
@@ -1100,6 +1112,136 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildGeofenceRadiusTile({
+    required BuildContext context,
+    required Color textColor,
+    required Color subtextColor,
+    required Color cardBg,
+    required Color borderColor,
+    required bool isLight,
+  }) {
+    return ListenableBuilder(
+      listenable: LocationManager.instance,
+      builder: (context, _) {
+        final currentRadius = LocationManager.instance.geofenceRadius;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B35).withValues(alpha: isLight ? 0.12 : 0.25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.radar_rounded, color: Color(0xFFFF6B35), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Geofence Radius',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Active map & customer selection range (10m - 1000m)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: subtextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B35).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${currentRadius.round()}m',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFF6B35),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Slider from 10m to 1000m
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: const Color(0xFFFF6B35),
+                  inactiveTrackColor: subtextColor.withValues(alpha: 0.2),
+                  thumbColor: const Color(0xFFFF6B35),
+                  overlayColor: const Color(0xFFFF6B35).withValues(alpha: 0.15),
+                  trackHeight: 4,
+                ),
+                child: Slider(
+                  value: currentRadius.clamp(10.0, 1000.0),
+                  min: 10.0,
+                  max: 1000.0,
+                  divisions: 99,
+                  label: '${currentRadius.round()}m',
+                  onChanged: (val) {
+                    LocationManager.instance.setGeofenceRadius(val.roundToDouble());
+                  },
+                ),
+              ),
+
+              // Preset Quick Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [50, 100, 250, 500, 1000].map((preset) {
+                    final isSelected = currentRadius.round() == preset;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text('${preset}m'),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFFFF6B35),
+                        backgroundColor: isLight ? Colors.grey.shade200 : const Color(0xFF1E2538),
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : textColor,
+                        ),
+                        onSelected: (_) {
+                          LocationManager.instance.setGeofenceRadius(preset.toDouble());
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -48,104 +48,112 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
     super.didUpdateWidget(oldWidget);
     if (_mapController != null) {
       _mapController!.setMapStyle(
-        ThemeManager.instance.isLightMode ? null : ThemeManager.instance.darkMapStyle,
+        ThemeManager.instance.isLightMode
+            ? null
+            : ThemeManager.instance.darkMapStyle,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final centerLatLng = LatLng(
-      widget.position.latitude,
-      widget.position.longitude,
-    );
+    return ListenableBuilder(
+      listenable: LocationManager.instance,
+      builder: (context, _) {
+        final centerLatLng = LatLng(
+          widget.position.latitude,
+          widget.position.longitude,
+        );
+        final radius = LocationManager.instance.geofenceRadius;
 
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: centerLatLng,
-            zoom: 16.5,
-          ),
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-          scrollGesturesEnabled: true,
-          zoomGesturesEnabled: true,
-          tiltGesturesEnabled: true,
-          rotateGesturesEnabled: true,
-          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-            Factory<OneSequenceGestureRecognizer>(
-              () => EagerGestureRecognizer(),
-            ),
-          },
-          mapType: MapType.normal,
-          onMapCreated: (controller) {
-            _mapController = controller;
-            if (!ThemeManager.instance.isLightMode) {
-              controller.setMapStyle(ThemeManager.instance.darkMapStyle);
-            }
-          },
-          markers: {
-            Marker(
-              markerId: const MarkerId('current_location'),
-              position: centerLatLng,
-            ),
-          },
-          circles: {
-            Circle(
-              circleId: const CircleId('current_location_50m_range'),
-              center: centerLatLng,
-              radius: 100.0,
-              fillColor: const Color(0xFF1E56E2).withValues(alpha: 0.18),
-              strokeColor: const Color(0xFF1E56E2),
-              strokeWidth: 2,
-            ),
-          },
-        ),
-
-        // Reset Camera / Re-center Position Button
-        Positioned(
-          top: 10,
-          right: 10,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: _resetCamera,
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: ThemeManager.instance.isLightMode
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : const Color(0xFF121318).withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: ThemeManager.instance.isLightMode
-                        ? Colors.black.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+        return Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: centerLatLng,
+                zoom: 16.5,
+              ),
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+              tiltGesturesEnabled: true,
+              rotateGesturesEnabled: true,
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
                 ),
-                child: Icon(
-                  Icons.my_location_rounded,
-                  size: 18,
-                  color: ThemeManager.instance.isLightMode
-                      ? const Color(0xFF1E56E2)
-                      : const Color(0xFF60A5FA),
+              },
+              mapType: MapType.normal,
+              onMapCreated: (controller) {
+                _mapController = controller;
+                if (!ThemeManager.instance.isLightMode) {
+                  controller.setMapStyle(ThemeManager.instance.darkMapStyle);
+                }
+              },
+              markers: {
+                Marker(
+                  markerId: const MarkerId('current_location'),
+                  position: centerLatLng,
+                ),
+              },
+              circles: {
+                Circle(
+                  circleId: const CircleId('current_location_geofence_range'),
+                  center: centerLatLng,
+                  radius: radius,
+                  fillColor: const Color(0xFF1E56E2).withValues(alpha: 0.18),
+                  strokeColor: const Color(0xFF1E56E2),
+                  strokeWidth: 2,
+                ),
+              },
+            ),
+
+            // Reset Camera / Re-center Position Button
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _resetCamera,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: ThemeManager.instance.isLightMode
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : const Color(0xFF121318).withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: ThemeManager.instance.isLightMode
+                            ? Colors.black.withValues(alpha: 0.1)
+                            : Colors.white.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.my_location_rounded,
+                      size: 18,
+                      color: ThemeManager.instance.isLightMode
+                          ? const Color(0xFF1E56E2)
+                          : const Color(0xFF60A5FA),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -221,12 +229,7 @@ class HomeTab extends StatelessWidget {
                 // ==========================================
                 // TOP SECTION: BACKGROUND IMAGE AREA
                 // ==========================================
-                _buildTopSection(
-                  context,
-                  currentUser,
-                  targets,
-                  dashboardVM,
-                ),
+                _buildTopSection(context, currentUser, targets, dashboardVM),
 
                 // ==========================================
                 // BOTTOM SECTION: MY ACTIVITY & LOGOUT
@@ -398,7 +401,9 @@ class HomeTab extends StatelessWidget {
                                     child: Icon(
                                       Icons.refresh_rounded,
                                       size: 16,
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -410,7 +415,9 @@ class HomeTab extends StatelessWidget {
                           IgnorePointer(
                             ignoring: dashboardVM.isRefreshingTargets,
                             child: Opacity(
-                              opacity: dashboardVM.isRefreshingTargets ? 0.5 : 1.0,
+                              opacity: dashboardVM.isRefreshingTargets
+                                  ? 0.5
+                                  : 1.0,
                               child: _buildTargetCardsRow(targets),
                             ),
                           ),
@@ -475,14 +482,17 @@ class HomeTab extends StatelessWidget {
             ),
             StatefulBuilder(
               builder: (context, setState) {
-                final hasUnread = StorageService.instance.hasUnreadNotifications();
+                final hasUnread = StorageService.instance
+                    .hasUnreadNotifications();
                 return Stack(
                   children: [
                     IconButton(
                       onPressed: () async {
                         await Navigator.push(
                           context,
-                          PageTransitions.fadeTransition(const NotificationsScreen()),
+                          PageTransitions.fadeTransition(
+                            const NotificationsScreen(),
+                          ),
                         );
                         if (context.mounted) {
                           setState(() {});
@@ -510,7 +520,7 @@ class HomeTab extends StatelessWidget {
                       ),
                   ],
                 );
-              }
+              },
             ),
           ],
         ),
