@@ -28,9 +28,8 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
   void initState() {
     super.initState();
     final viewModel = context.read<TourPlanViewModel>();
-    final plan = viewModel.currentPlan;
-    if (plan != null && plan.weeks.isNotEmpty && widget.dayIndex < plan.weeks[0].days.length) {
-      final day = plan.weeks[0].days[widget.dayIndex];
+    final day = viewModel.getDayByIndex(widget.dayIndex);
+    if (day != null) {
       _selectedType = day.type;
       _selectedBrickId = day.brickId;
       _selectedCustomerIds = Set<String>.from(day.customerIds);
@@ -56,24 +55,71 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<TourPlanViewModel>();
     final theme = ThemeManager.instance;
+    final isLight = theme.isLightMode;
+    final titleColor = isLight ? const Color(0xFF0022FF) : Colors.white;
+    final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
+    final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
+    final searchBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF0E1426);
+    final searchBorder = isLight ? const Color(0xFFD6E4FF) : const Color(0xFF1E253A);
 
-    if (viewModel.currentPlan == null || viewModel.currentPlan!.weeks.isEmpty) {
+    final day = viewModel.getDayByIndex(widget.dayIndex);
+    if (day == null) {
       return Scaffold(
-        backgroundColor: theme.getAppBackgroundColor(),
-        appBar: AppBar(title: const Text('Edit Tour Plan')),
-        body: Center(child: CircularProgressIndicator(color: theme.getAccentBlue())),
+        backgroundColor: theme.getContrastColor(),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: titleColor),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Text(
+                      'Edit Tour Plan',
+                      style: TextStyle(color: titleColor, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'No tour plan day found for index ${widget.dayIndex}.',
+                    style: TextStyle(color: theme.getTextSecondary()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    final day = viewModel.currentPlan!.weeks[0].days[widget.dayIndex];
-    final dateString = DateFormat('EEEE, MMM d, yyyy').format(day.date);
+    final dateString = DateFormat('EEE, MMM d').format(day.date);
+
+    // Filter unique bricks to prevent DropdownButton duplicate value assertion crash
+    final Set<String> seenBrickIds = {};
+    final List<Map<String, dynamic>> uniqueBricks = [];
+    for (var b in viewModel.allBricks) {
+      final id = b['brick_id']?.toString() ?? '';
+      if (id.isNotEmpty && !seenBrickIds.contains(id)) {
+        seenBrickIds.add(id);
+        uniqueBricks.add(b);
+      }
+    }
+
+    if (_selectedBrickId != null && !seenBrickIds.contains(_selectedBrickId)) {
+      _selectedBrickId = uniqueBricks.isNotEmpty ? uniqueBricks.first['brick_id']?.toString() : null;
+    }
 
     // Available doctors based on selected brick or all
     List<Map<String, dynamic>> availableDoctors = [];
     if (_selectedType == DailyTourPlanType.field && _selectedBrickId != null) {
       availableDoctors = viewModel.customersByBrick[_selectedBrickId] ?? [];
     } else if (_selectedType == DailyTourPlanType.remote) {
-      // Flatten all doctors across bricks for remote work
       viewModel.customersByBrick.values.forEach((list) {
         availableDoctors.addAll(list);
       });
@@ -90,361 +136,483 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
     }
 
     return Scaffold(
-      backgroundColor: theme.getAppBackgroundColor(),
-      appBar: AppBar(
-        backgroundColor: theme.getSurfaceColor(),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.getTextPrimary(), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Edit Tour Plan',
-              style: TextStyle(
-                color: theme.getTextPrimary(),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+      backgroundColor: theme.getContrastColor(),
+      body: Stack(
+        children: [
+          // Dynamic Background Image Layer (mainBG)
+          Positioned.fill(
+            child: Image.asset(
+              theme.getMainBG(),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  const ColoredBox(color: Colors.black),
             ),
-            Text(
-              dateString,
-              style: TextStyle(
-                color: theme.getTextSecondary(),
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Divider(height: 1, color: theme.getBorderColor()),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section 1: Work Type Selection
-                    Text(
-                      'Work Type',
-                      style: TextStyle(
-                        color: theme.getTextPrimary(),
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _buildTypeCard(
-                          type: DailyTourPlanType.field,
-                          label: 'Field Work',
-                          subtitle: 'Territory Visit',
-                          icon: Icons.map_rounded,
-                          accentColor: const Color(0xFF16A34A),
-                          theme: theme,
-                        ),
-                        const SizedBox(width: 10),
-                        _buildTypeCard(
-                          type: DailyTourPlanType.remote,
-                          label: 'Remote',
-                          subtitle: 'Calls / Admin',
-                          icon: Icons.laptop_chromebook,
-                          accentColor: theme.getAccentBlue(),
-                          theme: theme,
-                        ),
-                        const SizedBox(width: 10),
-                        _buildTypeCard(
-                          type: DailyTourPlanType.off,
-                          label: 'Off',
-                          subtitle: 'Rest Day',
-                          icon: Icons.bedtime_outlined,
-                          accentColor: theme.getTextSecondary(),
-                          theme: theme,
-                        ),
-                      ],
-                    ),
+          ),
 
-                    const SizedBox(height: 24),
-
-                    // Section 2: Brick / Territory Selection (Field Work only)
-                    if (_selectedType == DailyTourPlanType.field) ...[
-                      Text(
-                        'Select Territory (Brick)',
-                        style: TextStyle(
-                          color: theme.getTextPrimary(),
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+          // Foreground Content
+          SafeArea(
+            child: Column(
+              children: [
+                // Modern Header Bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: isLight ? const Color(0xFFEFF4FD) : const Color(0xFF161B29),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cardBorder),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: titleColor,
+                            size: 18,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Edit Tour Plan',
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              'Configure daily schedule & targets',
+                              style: TextStyle(
+                                color: theme.getTextSecondary(),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Date Chip Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: theme.getListItemColor(),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: theme.getBorderColor()),
+                          color: isLight ? const Color(0xFFD6E4FF) : const Color(0xFF1D263B),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedBrickId,
-                            isExpanded: true,
-                            dropdownColor: theme.getSurfaceColor(),
-                            hint: Text('Choose a Brick', style: TextStyle(color: theme.getTextSecondary())),
-                            items: viewModel.allBricks.map((b) {
-                              final id = b['brick_id'].toString();
-                              final name = b['brick_name'] ?? id;
-                              final count = (viewModel.customersByBrick[id] ?? []).length;
-                              return DropdownMenuItem<String>(
-                                value: id,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      name,
-                                      style: TextStyle(
-                                        color: theme.getTextPrimary(),
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                        child: Text(
+                          dateString,
+                          style: TextStyle(
+                            color: isLight ? const Color(0xFF1E3A8A) : const Color(0xFF90B3FB),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Section 1: Work Type Selection
+                        Text(
+                          'WORK TYPE',
+                          style: TextStyle(
+                            color: theme.getTextSecondary(),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _buildTypeCard(
+                              type: DailyTourPlanType.field,
+                              label: 'Field Work',
+                              subtitle: 'Territory Visit',
+                              icon: Icons.map_rounded,
+                              accentColor: const Color(0xFF10B981),
+                              theme: theme,
+                            ),
+                            const SizedBox(width: 10),
+                            _buildTypeCard(
+                              type: DailyTourPlanType.remote,
+                              label: 'Remote',
+                              subtitle: 'Calls / Admin',
+                              icon: Icons.laptop_chromebook_rounded,
+                              accentColor: const Color(0xFF3B82F6),
+                              theme: theme,
+                            ),
+                            const SizedBox(width: 10),
+                            _buildTypeCard(
+                              type: DailyTourPlanType.off,
+                              label: 'Off',
+                              subtitle: 'Rest Day',
+                              icon: Icons.bedtime_rounded,
+                              accentColor: const Color(0xFF6B7280),
+                              theme: theme,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Section 2: Territory Selection (Field Work only)
+                        if (_selectedType == DailyTourPlanType.field) ...[
+                          Text(
+                            'SELECT TERRITORY (BRICK)',
+                            style: TextStyle(
+                              color: theme.getTextSecondary(),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: cardBorder, width: 1.0),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF1E56E2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.explore_rounded,
+                                    color: Colors.white,
+                                    size: 17,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedBrickId,
+                                      isExpanded: true,
+                                      dropdownColor: isLight ? Colors.white : const Color(0xFF161B29),
+                                      hint: Text(
+                                        'Choose a Territory',
+                                        style: TextStyle(color: theme.getTextSecondary()),
                                       ),
+                                      items: uniqueBricks.map((b) {
+                                        final id = b['brick_id'].toString();
+                                        final name = b['brick_name'] ?? id;
+                                        final count = (viewModel.customersByBrick[id] ?? []).length;
+                                        return DropdownMenuItem<String>(
+                                          value: id,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                name,
+                                                style: TextStyle(
+                                                  color: theme.getTextPrimary(),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: isLight ? const Color(0xFFEFF4FD) : const Color(0xFF22293A),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  '$count Doctors',
+                                                  style: TextStyle(
+                                                    color: theme.getTextSecondary(),
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _selectedBrickId = val;
+                                          _selectedCustomerIds.clear();
+                                        });
+                                      },
                                     ),
-                                    Text(
-                                      '$count Doctors',
-                                      style: TextStyle(
-                                        color: theme.getTextTertiary(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Section 3: Target Doctors List
+                        if (_selectedType != DailyTourPlanType.off) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'TARGET DOCTORS (${_selectedCustomerIds.length})',
+                                style: TextStyle(
+                                  color: theme.getTextSecondary(),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              if (availableDoctors.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (_selectedCustomerIds.length == availableDoctors.length) {
+                                        _selectedCustomerIds.clear();
+                                      } else {
+                                        _selectedCustomerIds = availableDoctors
+                                            .map((d) => d['customer_id'].toString())
+                                            .toSet();
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: isLight ? const Color(0xFFEFF4FD) : const Color(0xFF1E253A),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _selectedCustomerIds.length == availableDoctors.length
+                                          ? 'Deselect All'
+                                          : 'Select All',
+                                      style: const TextStyle(
+                                        color: Color(0xFF1E56E2),
+                                        fontWeight: FontWeight.bold,
                                         fontSize: 12,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedBrickId = val;
-                                _selectedCustomerIds.clear(); // reset customers on brick change
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Section 3: Target Doctors List
-                    if (_selectedType != DailyTourPlanType.off) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Target Doctors (${_selectedCustomerIds.length} Selected)',
-                            style: TextStyle(
-                              color: theme.getTextPrimary(),
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (availableDoctors.isNotEmpty)
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  if (_selectedCustomerIds.length == availableDoctors.length) {
-                                    _selectedCustomerIds.clear();
-                                  } else {
-                                    _selectedCustomerIds = availableDoctors
-                                        .map((d) => d['customer_id'].toString())
-                                        .toSet();
-                                  }
-                                });
-                              },
-                              child: Text(
-                                _selectedCustomerIds.length == availableDoctors.length
-                                    ? 'Deselect All'
-                                    : 'Select All',
-                                style: TextStyle(
-                                  color: theme.getAccentBlue(),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Doctor Search Bar
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: theme.getListItemColor(),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.getBorderColor()),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          style: TextStyle(color: theme.getTextPrimary(), fontSize: 13),
-                          decoration: InputDecoration(
-                            icon: Icon(Icons.search_rounded, color: theme.getTextTertiary(), size: 20),
-                            hintText: 'Search doctor name or code...',
-                            hintStyle: TextStyle(color: theme.getTextTertiary(), fontSize: 13),
-                            border: InputBorder.none,
-                          ),
-                          onChanged: (val) {
-                            setState(() {
-                              _searchQuery = val;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      if (availableDoctors.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.getListItemColor(),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: theme.getBorderColor()),
-                          ),
-                          child: Center(
-                            child: Text(
-                              _selectedType == DailyTourPlanType.field && _selectedBrickId == null
-                                  ? 'Please select a territory above'
-                                  : 'No doctors found',
-                              style: TextStyle(color: theme.getTextSecondary(), fontSize: 13),
-                            ),
-                          ),
-                        )
-                      else
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: availableDoctors.length,
-                          separatorBuilder: (ctx, i) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final doc = availableDoctors[index];
-                            final docId = doc['customer_id'].toString();
-                            final docName = doc['customer_name'] ?? 'Doctor #$docId';
-                            final isChecked = _selectedCustomerIds.contains(docId);
-
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isChecked) {
-                                    _selectedCustomerIds.remove(docId);
-                                  } else {
-                                    _selectedCustomerIds.add(docId);
-                                  }
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(14),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isChecked
-                                      ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.08 : 0.2)
-                                      : theme.getListItemColor(),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: isChecked
-                                        ? theme.getAccentBlue()
-                                        : theme.getBorderColor(),
-                                    width: isChecked ? 1.5 : 1.0,
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isChecked ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                      color: isChecked ? theme.getAccentBlue() : theme.getTextTertiary(),
-                                      size: 22,
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Styled Pill Search Bar
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: searchBg,
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: searchBorder, width: 1.0),
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: theme.getTextPrimary(), fontSize: 14),
+                              decoration: InputDecoration(
+                                icon: const Icon(Icons.search_rounded, color: Color(0xFF1E56E2), size: 20),
+                                hintText: 'Search doctor by name or code...',
+                                hintStyle: TextStyle(color: theme.getTextTertiary(), fontSize: 13),
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (val) {
+                                setState(() {
+                                  _searchQuery = val;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          if (availableDoctors.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(28),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: cardBorder),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.person_search_rounded,
+                                    size: 36,
+                                    color: theme.getTextTertiary(),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _selectedType == DailyTourPlanType.field && _selectedBrickId == null
+                                        ? 'Please select a territory above'
+                                        : 'No doctors found',
+                                    style: TextStyle(
+                                      color: theme.getTextSecondary(),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: availableDoctors.length,
+                              separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final doc = availableDoctors[index];
+                                final docId = doc['customer_id'].toString();
+                                final docName = doc['customer_name'] ?? 'Doctor #$docId';
+                                final isChecked = _selectedCustomerIds.contains(docId);
+
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        if (isChecked) {
+                                          _selectedCustomerIds.remove(docId);
+                                        } else {
+                                          _selectedCustomerIds.add(docId);
+                                        }
+                                      });
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 150),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: isChecked
+                                            ? const Color(0xFF1E56E2).withOpacity(isLight ? 0.08 : 0.2)
+                                            : cardBg,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: isChecked ? const Color(0xFF1E56E2) : cardBorder,
+                                          width: isChecked ? 1.5 : 1.0,
+                                        ),
+                                      ),
+                                      child: Row(
                                         children: [
-                                          Text(
-                                            docName,
-                                            style: TextStyle(
-                                              color: theme.getTextPrimary(),
-                                              fontWeight: isChecked ? FontWeight.bold : FontWeight.w500,
-                                              fontSize: 14,
+                                          // Solid Blue Circle Badge
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: isChecked ? const Color(0xFF1E56E2) : Colors.grey.shade400,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.medical_services_outlined,
+                                              color: Colors.white,
+                                              size: 17,
                                             ),
                                           ),
-                                          if (doc['customer_code'] != null)
-                                            Text(
-                                              'Code: ${doc['customer_code']}',
-                                              style: TextStyle(
-                                                color: theme.getTextSecondary(),
-                                                fontSize: 11,
-                                              ),
+                                          const SizedBox(width: 14),
+
+                                          // Doctor Details
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  docName,
+                                                  style: TextStyle(
+                                                    color: theme.getTextPrimary(),
+                                                    fontWeight: isChecked ? FontWeight.bold : FontWeight.w600,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                if (doc['customer_code'] != null) ...[
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    'Code: ${doc['customer_code']}',
+                                                    style: TextStyle(
+                                                      color: theme.getTextSecondary(),
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
+                                          ),
+
+                                          // Checkmark Icon
+                                          Icon(
+                                            isChecked
+                                                ? Icons.check_circle_rounded
+                                                : Icons.radio_button_unchecked_rounded,
+                                            color: isChecked ? const Color(0xFF1E56E2) : theme.getTextTertiary(),
+                                            size: 22,
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            // Footer Save Button
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.getSurfaceColor(),
-                border: Border(top: BorderSide(color: theme.getBorderColor())),
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.getAccentBlue(),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    viewModel.updateDailyPlan(
-                      widget.dayIndex,
-                      _selectedType,
-                      _selectedBrickId,
-                      _selectedCustomerIds.toList(),
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    'Save Tour Plan',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
-              ),
+
+                // Sticky Footer Save Button
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E56E2),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 4,
+                        shadowColor: const Color(0xFF1E56E2).withOpacity(0.4),
+                      ),
+                      onPressed: () {
+                        viewModel.updateDailyPlan(
+                          widget.dayIndex,
+                          _selectedType,
+                          _selectedBrickId,
+                          _selectedCustomerIds.toList(),
+                        );
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Save Daily Tour Plan',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -458,6 +626,7 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
     required ThemeManager theme,
   }) {
     final isSelected = _selectedType == type;
+    final isLight = theme.isLightMode;
 
     return Expanded(
       child: GestureDetector(
@@ -471,22 +640,29 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? accentColor.withOpacity(theme.isLightMode ? 0.12 : 0.25)
-                : theme.getListItemColor(),
+                ? accentColor.withOpacity(isLight ? 0.12 : 0.25)
+                : (isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624)),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? accentColor : theme.getBorderColor(),
+              color: isSelected ? accentColor : (isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A)),
               width: isSelected ? 2.0 : 1.0,
             ),
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? accentColor : theme.getTextTertiary(),
-                size: 22,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isSelected ? accentColor.withOpacity(0.2) : theme.getContrastColor().withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected ? accentColor : theme.getTextTertiary(),
+                  size: 20,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
@@ -501,6 +677,7 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
                 style: TextStyle(
                   color: isSelected ? accentColor.withOpacity(0.8) : theme.getTextTertiary(),
                   fontSize: 10,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../managers/theme_manager.dart';
 import '../../../models/tour_plan.dart';
 import '../tour_plan_view_model.dart';
+import 'edit_daily_tour_plan_screen.dart';
 
 class TourPlanPreview extends StatefulWidget {
   const TourPlanPreview({super.key});
@@ -242,13 +243,24 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
               ],
             ),
           ),
-          children: week.days.map((day) => _buildDayRow(day, viewModel, theme)).toList(),
+          children: week.days.asMap().entries.map((entry) {
+            final dIdx = entry.key;
+            final day = entry.value;
+            final globalDayIndex = (weekNumber - 1) * 7 + dIdx;
+            return _buildDayRow(day, globalDayIndex, viewModel, theme, context);
+          }).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildDayRow(DailyTourPlan day, TourPlanViewModel viewModel, ThemeManager theme) {
+  Widget _buildDayRow(
+    DailyTourPlan day,
+    int globalDayIndex,
+    TourPlanViewModel viewModel,
+    ThemeManager theme,
+    BuildContext context,
+  ) {
     final dayName = DateFormat('EEE, MMM d').format(day.date);
     IconData typeIcon;
     Color iconColor;
@@ -286,65 +298,95 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
       brickName = b['brick_name'];
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BorderDecoration.bottomBorder(theme.getBorderColor()),
-      child: Row(
-        children: [
-          // Icon Container
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(typeIcon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      dayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: theme.getTextPrimary(),
-                      ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: viewModel.currentPlan?.status == TourPlanStatus.draft
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => ChangeNotifierProvider.value(
+                      value: viewModel,
+                      child: EditDailyTourPlanScreen(dayIndex: globalDayIndex),
                     ),
+                  ),
+                );
+              }
+            : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: theme.getBorderColor()),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Icon Container
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(typeIcon, color: iconColor, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          dayName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: theme.getTextPrimary(),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              typeLabel,
+                              style: TextStyle(
+                                color: iconColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (viewModel.currentPlan?.status == TourPlanStatus.draft) ...[
+                              const SizedBox(width: 4),
+                              Icon(Icons.chevron_right_rounded, size: 16, color: theme.getTextTertiary()),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
                     Text(
-                      typeLabel,
+                      day.type == DailyTourPlanType.field
+                          ? (brickName != null
+                              ? '$brickName • ${day.customerIds.length} Doctors'
+                              : 'Unassigned Area')
+                          : (day.type == DailyTourPlanType.remote
+                              ? '${day.customerIds.length} Remote Doctor Calls'
+                              : 'Rest Day'),
                       style: TextStyle(
-                        color: iconColor,
+                        color: theme.getTextSecondary(),
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  day.type == DailyTourPlanType.field
-                      ? (brickName != null
-                          ? '$brickName • ${day.customerIds.length} Doctors'
-                          : 'Unassigned Area')
-                      : (day.type == DailyTourPlanType.remote
-                          ? '${day.customerIds.length} Remote Doctor Calls'
-                          : 'Rest Day'),
-                  style: TextStyle(
-                    color: theme.getTextSecondary(),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

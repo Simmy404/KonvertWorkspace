@@ -281,12 +281,12 @@ class TourPlanWizard extends StatelessWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.edit_outlined, color: Color(0xFFFF7A59), size: 14),
+                        Icon(Icons.edit_outlined, color: Color(0xFF1E56E2), size: 14),
                         SizedBox(width: 6),
                         Text(
                           'Edit',
                           style: TextStyle(
-                            color: Color(0xFFFF7A59),
+                            color: Color(0xFF1E56E2),
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -341,14 +341,14 @@ class TourPlanWizard extends StatelessWidget {
     return GestureDetector(
       onTap: () => _navigateToEditDay(context, dayIndex),
       child: DashedBorderContainer(
-        color: const Color(0xFFFF7A59),
+        color: const Color(0xFF1E56E2),
         borderRadius: 14,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         child: const Center(
           child: Text(
             'Select Work',
             style: TextStyle(
-              color: Color(0xFFFF7A59),
+              color: Color(0xFF1E56E2),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),

@@ -52,7 +52,7 @@ void main() async {
   await StorageService.instance.init();
 
   // 3. Reset storage and cache if app version has changed
-  AppManager.instance.appVersion = '0.0.1';
+  AppManager.instance.appVersion = '0.1.0';
   await AppManager.instance.checkAndResetOnVersionChange();
 
   // 4. Hydrate dependent managers & services
@@ -64,7 +64,6 @@ void main() async {
   // 5. Finally, mount the UI
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

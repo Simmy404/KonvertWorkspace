@@ -33,7 +33,13 @@ class _DashboardGoogleMap extends StatefulWidget {
 
 class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   GoogleMapController? _mapController;
-  double? _lastRadius;
+  late double _lastRadius;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastRadius = LocationManager.instance.geofenceRadius;
+  }
 
   double _calculateZoomForRadius(double radiusInMeters) {
     final zoom = 16.5 - (math.log(radiusInMeters / 100.0) / math.ln2);
@@ -55,7 +61,7 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   }
 
   void _fitMapToCircle(double radius) {
-    if (_mapController != null) {
+    if (_mapController != null && mounted) {
       final center = LatLng(widget.position.latitude, widget.position.longitude);
       try {
         final bounds = _boundsFromRadius(center, radius);
@@ -133,7 +139,12 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
                 if (!ThemeManager.instance.isLightMode) {
                   controller.setMapStyle(ThemeManager.instance.darkMapStyle);
                 }
-                _fitMapToCircle(radius);
+                // Delay initial camera bounds fit to allow native map texture surface to finish creation
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (mounted && _mapController != null) {
+                    _fitMapToCircle(radius);
+                  }
+                });
               },
               markers: {
                 Marker(

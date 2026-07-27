@@ -94,34 +94,60 @@ class TourPlanViewModel extends ChangeNotifier {
     );
   }
 
+  DailyTourPlan? getDayByIndex(int dayIndex) {
+    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return null;
+    final wIdx = dayIndex ~/ 7;
+    final dIdx = dayIndex % 7;
+    if (wIdx < _currentPlan!.weeks.length && dIdx < _currentPlan!.weeks[wIdx].days.length) {
+      return _currentPlan!.weeks[wIdx].days[dIdx];
+    }
+    if (dIdx < _currentPlan!.weeks[0].days.length) {
+      return _currentPlan!.weeks[0].days[dIdx];
+    }
+    return null;
+  }
+
+  bool _setDayByIndex(int dayIndex, DailyTourPlan updatedDay) {
+    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return false;
+    final wIdx = dayIndex ~/ 7;
+    final dIdx = dayIndex % 7;
+    if (wIdx < _currentPlan!.weeks.length && dIdx < _currentPlan!.weeks[wIdx].days.length) {
+      _currentPlan!.weeks[wIdx].days[dIdx] = updatedDay;
+      return true;
+    }
+    if (dIdx < _currentPlan!.weeks[0].days.length) {
+      _currentPlan!.weeks[0].days[dIdx] = updatedDay;
+      return true;
+    }
+    return false;
+  }
+
   void updateDayType(int dayIndex, DailyTourPlanType type) {
-    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
-    
-    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
+    final currentDay = getDayByIndex(dayIndex);
+    if (currentDay == null) return;
+
     DailyTourPlan updatedDay = currentDay.copyWith(
       type: type,
       isConfigured: true,
     );
 
-    // If changing away from field, clear selections
     if (type != DailyTourPlanType.field) {
       updatedDay = updatedDay.copyWith(brickId: null, customerIds: []);
     }
 
-    // If remote, pseudo randomize some doctors (for now)
     if (type == DailyTourPlanType.remote) {
       updatedDay = updatedDay.copyWith(customerIds: _generatePseudoRandomDoctors());
     }
 
-    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _setDayByIndex(dayIndex, updatedDay);
     _safeNotifyListeners();
     StorageService.instance.saveTourPlan(_currentPlan!);
   }
 
   void updateFieldWorkSelection(int dayIndex, String brickId, List<String> customerIds) {
-    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
+    final currentDay = getDayByIndex(dayIndex);
+    if (currentDay == null) return;
 
-    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
     final updatedDay = currentDay.copyWith(
       type: DailyTourPlanType.field,
       brickId: brickId,
@@ -129,15 +155,15 @@ class TourPlanViewModel extends ChangeNotifier {
       isConfigured: true,
     );
 
-    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _setDayByIndex(dayIndex, updatedDay);
     _safeNotifyListeners();
     StorageService.instance.saveTourPlan(_currentPlan!);
   }
 
   void updateDailyPlan(int dayIndex, DailyTourPlanType type, String? brickId, List<String> customerIds) {
-    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
+    final currentDay = getDayByIndex(dayIndex);
+    if (currentDay == null) return;
 
-    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
     final updatedDay = currentDay.copyWith(
       type: type,
       brickId: type == DailyTourPlanType.field ? brickId : null,
@@ -147,7 +173,7 @@ class TourPlanViewModel extends ChangeNotifier {
       isConfigured: true,
     );
 
-    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _setDayByIndex(dayIndex, updatedDay);
     _safeNotifyListeners();
     StorageService.instance.saveTourPlan(_currentPlan!);
 
@@ -164,9 +190,9 @@ class TourPlanViewModel extends ChangeNotifier {
   }
 
   void clearDayConfig(int dayIndex) {
-    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
+    final currentDay = getDayByIndex(dayIndex);
+    if (currentDay == null) return;
 
-    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
     final updatedDay = currentDay.copyWith(
       type: DailyTourPlanType.off,
       brickId: null,
@@ -174,7 +200,7 @@ class TourPlanViewModel extends ChangeNotifier {
       isConfigured: false,
     );
 
-    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _setDayByIndex(dayIndex, updatedDay);
     _safeNotifyListeners();
     StorageService.instance.saveTourPlan(_currentPlan!);
   }
