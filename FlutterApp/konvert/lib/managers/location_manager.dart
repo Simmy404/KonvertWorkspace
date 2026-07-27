@@ -59,6 +59,31 @@ class LocationManager extends ChangeNotifier {
     _positionStreamSub = null;
   }
 
+  /// Helper to safely parse and resolve customer coordinates, handling inverted lat/lng if needed.
+  Map<String, double?> parseCustomerCoordinates(Map<String, dynamic> customer) {
+    final val1 = double.tryParse(customer['customer_lat']?.toString() ?? customer['cust_lat']?.toString() ?? '');
+    final val2 = double.tryParse(customer['customer_long']?.toString() ?? customer['customer_lng']?.toString() ?? customer['cust_long']?.toString() ?? '');
+
+    if (val1 == null && val2 == null) {
+      return {'lat': null, 'lng': null};
+    }
+
+    if ((val1 == 0.0 && val2 == 0.0) || val1 == null || val2 == null) {
+      return {
+        'lat': (val1 == 0.0) ? null : val1,
+        'lng': (val2 == 0.0) ? null : val2,
+      };
+    }
+
+    // Invert swap protection: if val1 > val2 in magnitude (e.g., val1=73.08, val2=33.68),
+    // val1 is longitude and val2 is latitude.
+    if (val1.abs() > val2.abs() && val1.abs() > 45.0 && val2.abs() < 45.0) {
+      return {'lat': val2, 'lng': val1};
+    }
+
+    return {'lat': val1, 'lng': val2};
+  }
+
   /// Calculates distance in meters to target coordinates
   double? getDistanceTo(double? targetLat, double? targetLng) {
     if (_currentPosition == null || targetLat == null || targetLng == null) return null;

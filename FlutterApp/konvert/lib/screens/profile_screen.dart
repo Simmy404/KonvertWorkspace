@@ -195,9 +195,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           content: Text(
             'Are you sure you want to log out of your account?',
-            style: TextStyle(
-              color: ThemeManager.instance.getTextSecondary(),
-            ),
+            style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
           ),
           actions: [
             TextButton(
@@ -339,7 +337,9 @@ class ProfileScreen extends StatelessWidget {
         final isLight = ThemeManager.instance.isLightMode;
         final textColor = ThemeManager.instance.getTextPrimary();
         final subtextColor = ThemeManager.instance.getTextSecondary();
-        final cardBg = ThemeManager.instance.getContainerColor().withValues(alpha: 0.9);
+        final cardBg = ThemeManager.instance.getContainerColor().withValues(
+          alpha: 0.9,
+        );
         final borderColor = ThemeManager.instance.getDividerColor();
 
         return Scaffold(
@@ -640,7 +640,7 @@ class ProfileScreen extends StatelessWidget {
                               cardBg: cardBg,
                               borderColor: borderColor,
                             ),
-                             _buildInfoTile(
+                            _buildInfoTile(
                               icon: Icons.sensors_rounded,
                               label: 'Connection Status',
                               value: (user?.isOnline == true)
@@ -658,7 +658,10 @@ class ProfileScreen extends StatelessWidget {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Padding(
-                                padding: const EdgeInsets.only(left: 4, bottom: 12),
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                  bottom: 12,
+                                ),
                                 child: Text(
                                   'App Preferences & Settings',
                                   style: TextStyle(
@@ -839,7 +842,11 @@ class ProfileScreen extends StatelessWidget {
                   color: const Color(0xFF1E56E2).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.palette_outlined, color: Color(0xFF1E56E2), size: 22),
+                child: const Icon(
+                  Icons.palette_outlined,
+                  color: Color(0xFF1E56E2),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -857,10 +864,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Select visual theme style',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: subtextColor,
-                      ),
+                      style: TextStyle(fontSize: 12, color: subtextColor),
                     ),
                   ],
                 ),
@@ -930,7 +934,9 @@ class ProfileScreen extends StatelessWidget {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? activeColor : subtextColor.withValues(alpha: 0.3),
+              color: isSelected
+                  ? activeColor
+                  : subtextColor.withValues(alpha: 0.3),
               width: isSelected ? 1.8 : 1.0,
             ),
           ),
@@ -989,7 +995,11 @@ class ProfileScreen extends StatelessWidget {
                       color: const Color(0xFF10B981).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.gps_fixed_rounded, color: Color(0xFF10B981), size: 22),
+                    child: const Icon(
+                      Icons.gps_fixed_rounded,
+                      color: Color(0xFF10B981),
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -1007,10 +1017,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'GPS accuracy for Dashboard Map & Place Order',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: subtextColor,
-                          ),
+                          style: TextStyle(fontSize: 12, color: subtextColor),
                         ),
                       ],
                     ),
@@ -1025,7 +1032,8 @@ class ProfileScreen extends StatelessWidget {
                     subtitle: 'Balanced GPS',
                     icon: Icons.location_on_outlined,
                     isSelected: currentPrecision == 'normal',
-                    onTap: () => LocationManager.instance.setPrecision('normal'),
+                    onTap: () =>
+                        LocationManager.instance.setPrecision('normal'),
                     textColor: textColor,
                     subtextColor: subtextColor,
                     isLight: isLight,
@@ -1075,7 +1083,9 @@ class ProfileScreen extends StatelessWidget {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? activeColor : subtextColor.withValues(alpha: 0.3),
+              color: isSelected
+                  ? activeColor
+                  : subtextColor.withValues(alpha: 0.3),
               width: isSelected ? 1.8 : 1.0,
             ),
           ),
@@ -1094,7 +1104,9 @@ class ProfileScreen extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
                       color: isSelected ? activeColor : textColor,
                     ),
                   ),
@@ -1105,7 +1117,9 @@ class ProfileScreen extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSelected ? activeColor.withValues(alpha: 0.85) : subtextColor,
+                  color: isSelected
+                      ? activeColor.withValues(alpha: 0.85)
+                      : subtextColor,
                 ),
               ),
             ],
@@ -1143,10 +1157,16 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B35).withValues(alpha: isLight ? 0.12 : 0.25),
+                      color: const Color(
+                        0xFFFF6B35,
+                      ).withValues(alpha: isLight ? 0.12 : 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.radar_rounded, color: Color(0xFFFF6B35), size: 22),
+                    child: const Icon(
+                      Icons.radar_rounded,
+                      color: Color(0xFFFF6B35),
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -1164,16 +1184,16 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'Active map & customer selection range (10m - 1000m)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: subtextColor,
-                          ),
+                          style: TextStyle(fontSize: 12, color: subtextColor),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF6B35).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
@@ -1207,7 +1227,9 @@ class ProfileScreen extends StatelessWidget {
                   divisions: 99,
                   label: '${currentRadius.round()}m',
                   onChanged: (val) {
-                    LocationManager.instance.setGeofenceRadius(val.roundToDouble());
+                    LocationManager.instance.setGeofenceRadius(
+                      val.roundToDouble(),
+                    );
                   },
                 ),
               ),
@@ -1224,14 +1246,18 @@ class ProfileScreen extends StatelessWidget {
                         label: Text('${preset}m'),
                         selected: isSelected,
                         selectedColor: const Color(0xFFFF6B35),
-                        backgroundColor: isLight ? Colors.grey.shade200 : const Color(0xFF1E2538),
+                        backgroundColor: isLight
+                            ? Colors.grey.shade200
+                            : const Color(0xFF1E2538),
                         labelStyle: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: isSelected ? Colors.white : textColor,
                         ),
                         onSelected: (_) {
-                          LocationManager.instance.setGeofenceRadius(preset.toDouble());
+                          LocationManager.instance.setGeofenceRadius(
+                            preset.toDouble(),
+                          );
                         },
                       ),
                     );

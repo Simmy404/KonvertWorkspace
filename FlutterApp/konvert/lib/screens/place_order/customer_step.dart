@@ -72,7 +72,7 @@ class _CustomerStepState extends State<CustomerStep> {
           ),
         ),
 
-        // Customer List
+        // Customer List (Listens to LocationManager for dynamic sorting & geofence distance updates)
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => state.refreshCustomers(),
@@ -93,38 +93,67 @@ class _CustomerStepState extends State<CustomerStep> {
                           ),
                         ],
                       )
-                    : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(
-                          parent: BouncingScrollPhysics(),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 4,
-                        ),
-                        itemCount: state.filteredCustomers.length,
-                        itemBuilder: (context, index) {
-                          final customer = state.filteredCustomers[index];
-                          final type = customer['customer_type']?.toString() ?? '';
-                          final isDoctor =
-                              type.toLowerCase().contains('doctor') || type == '2';
+                    : ListenableBuilder(
+                        listenable: LocationManager.instance,
+                        builder: (context, _) {
+                          // Sort customers: Enabled customers on top (sorted by name), Disabled customers below (sorted by name)
+                          final displayCustomers = List<Map<String, dynamic>>.from(state.filteredCustomers);
 
-                          final isLight = theme.isLightMode;
-                          final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
-                          final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
-                          final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
+                          displayCustomers.sort((a, b) {
+                            final coordsA = LocationManager.instance.parseCustomerCoordinates(a);
+                            final coordsB = LocationManager.instance.parseCustomerCoordinates(b);
 
-                          return ListenableBuilder(
-                            listenable: LocationManager.instance,
-                            builder: (context, _) {
-                              // Parse Lat & Lng coordinates
-                              final latStr = customer['customer_lat']?.toString() ?? customer['cust_lat']?.toString() ?? '';
-                              final lngStr = customer['customer_long']?.toString() ?? customer['customer_lng']?.toString() ?? customer['cust_long']?.toString() ?? '';
-                              final custLat = double.tryParse(latStr);
-                              final custLong = double.tryParse(lngStr);
+                            final isEnabledA = LocationManager.instance.isLocationInGeofence(coordsA['lat'], coordsA['lng']);
+                            final isEnabledB = LocationManager.instance.isLocationInGeofence(coordsB['lat'], coordsB['lng']);
+
+                            if (isEnabledA && !isEnabledB) return -1;
+                            if (!isEnabledA && isEnabledB) return 1;
+
+                            final nameA = (a['customer_name'] ?? '').toString().toLowerCase();
+                            final nameB = (b['customer_name'] ?? '').toString().toLowerCase();
+                            return nameA.compareTo(nameB);
+                          });
+
+                          return ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics(),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 4,
+                            ),
+                            itemCount: displayCustomers.length,
+                            itemBuilder: (context, index) {
+                              final customer = displayCustomers[index];
+                              final type = customer['customer_type']?.toString() ?? '';
+                              final isDoctor =
+                                  type.toLowerCase().contains('doctor') || type == '2';
+
+                              final isLight = theme.isLightMode;
+                              final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
+                              final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
+                              final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
+
+                              // Parse & Swap Inverted Lat & Lng coordinates automatically
+                              final coords = LocationManager.instance.parseCustomerCoordinates(customer);
+                              final custLat = coords['lat'];
+                              final custLong = coords['lng'];
 
                               // Geofence Validation: enabled by default if coordinates missing or invalid (0.0)
                               final isGeofencedEnabled = LocationManager.instance.isLocationInGeofence(custLat, custLong);
                               final distanceMeters = LocationManager.instance.getDistanceTo(custLat, custLong);
+
+                              // Format distance display (in km if >= 1000m, else m)
+                              String formatDist(double? m) {
+                                if (m == null) return '';
+                                if (m >= 1000) {
+                                  final km = m / 1000.0;
+                                  return '${km < 10 ? km.toStringAsFixed(1) : km.round()}km';
+                                }
+                                return '${m.round()}m';
+                              }
+
+                              final formattedDistance = formatDist(distanceMeters);
 
                               return Opacity(
                                 opacity: isGeofencedEnabled ? 1.0 : 0.55,
@@ -147,8 +176,9 @@ class _CustomerStepState extends State<CustomerStep> {
                                           ? null
                                           : () {
                                               if (!isGeofencedEnabled) {
-                                                final radiusMeters = LocationManager.instance.geofenceRadius.round();
-                                                final distText = distanceMeters != null ? '${distanceMeters.round()}m away' : 'out of range';
+                                                final radiusMeters = LocationManager.instance.geofenceRadius;
+                                                final radiusText = formatDist(radiusMeters);
+                                                final distText = formattedDistance.isNotEmpty ? '$formattedDistance away' : 'out of range';
                                                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                                 ScaffoldMessenger.of(context).showSnackBar(
                                                   SnackBar(
@@ -158,7 +188,7 @@ class _CustomerStepState extends State<CustomerStep> {
                                                         const SizedBox(width: 8),
                                                         Expanded(
                                                           child: Text(
-                                                            '${customer['customer_name']} is $distText (Limit: ${radiusMeters}m).',
+                                                            '${customer['customer_name']} is $distText (Limit: $radiusText).',
                                                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                                           ),
                                                         ),
@@ -225,7 +255,7 @@ class _CustomerStepState extends State<CustomerStep> {
                                                             borderRadius: BorderRadius.circular(6),
                                                           ),
                                                           child: Text(
-                                                            isGeofencedEnabled ? '${distanceMeters.round()}m' : 'Out of range (${distanceMeters.round()}m)',
+                                                            isGeofencedEnabled ? formattedDistance : 'Out of range ($formattedDistance)',
                                                             style: TextStyle(
                                                               fontSize: 10,
                                                               fontWeight: FontWeight.bold,

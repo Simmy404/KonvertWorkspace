@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -29,18 +30,49 @@ class _DashboardGoogleMap extends StatefulWidget {
 
 class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
   GoogleMapController? _mapController;
+  double? _lastRadius;
+
+  double _calculateZoomForRadius(double radiusInMeters) {
+    final zoom = 16.5 - (math.log(radiusInMeters / 100.0) / math.ln2);
+    return zoom.clamp(11.5, 18.5);
+  }
+
+  LatLngBounds _boundsFromRadius(LatLng center, double radiusInMeters) {
+    final paddedRadius = radiusInMeters * 1.35;
+    final lat = center.latitude;
+    final lng = center.longitude;
+
+    final latDelta = paddedRadius / 111320.0;
+    final lngDelta = paddedRadius / (111320.0 * math.cos(lat * math.pi / 180.0));
+
+    return LatLngBounds(
+      southwest: LatLng(lat - latDelta, lng - lngDelta),
+      northeast: LatLng(lat + latDelta, lng + lngDelta),
+    );
+  }
+
+  void _fitMapToCircle(double radius) {
+    if (_mapController != null) {
+      final center = LatLng(widget.position.latitude, widget.position.longitude);
+      try {
+        final bounds = _boundsFromRadius(center, radius);
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngBounds(bounds, 20.0),
+        );
+      } catch (_) {
+        final zoom = _calculateZoomForRadius(radius);
+        _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: center, zoom: zoom),
+          ),
+        );
+      }
+    }
+  }
 
   void _resetCamera() {
-    if (_mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(widget.position.latitude, widget.position.longitude),
-            zoom: 16.5,
-          ),
-        ),
-      );
-    }
+    final radius = LocationManager.instance.geofenceRadius;
+    _fitMapToCircle(radius);
   }
 
   @override
@@ -66,12 +98,19 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
         );
         final radius = LocationManager.instance.geofenceRadius;
 
+        if (_lastRadius != radius) {
+          _lastRadius = radius;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _fitMapToCircle(radius);
+          });
+        }
+
         return Stack(
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: centerLatLng,
-                zoom: 16.5,
+                zoom: _calculateZoomForRadius(radius),
               ),
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
@@ -91,6 +130,7 @@ class _DashboardGoogleMapState extends State<_DashboardGoogleMap> {
                 if (!ThemeManager.instance.isLightMode) {
                   controller.setMapStyle(ThemeManager.instance.darkMapStyle);
                 }
+                _fitMapToCircle(radius);
               },
               markers: {
                 Marker(
