@@ -462,6 +462,32 @@ class StorageService {
     return await setDouble(_geofenceRadiusKey, radius);
   }
 
+  // ==========================================
+  // USER ACTIVITIES STORAGE
+  // ==========================================
+
+  static const String _userActivitiesKey = 'user_activities_history';
+
+  List<dynamic> getUserActivities() {
+    try {
+      final jsonStr = getString(_userActivitiesKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        return json.decode(jsonStr) as List<dynamic>;
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<bool> setUserActivities(List<dynamic> activities) async {
+    try {
+      final jsonStr = json.encode(activities);
+      return await setString(_userActivitiesKey, jsonStr);
+    } catch (e) {
+      _handleSilentError('STR-009', e.toString());
+      return false;
+    }
+  }
+
   /// Safely wipes the entire local cache.
   Future<bool> clearAllData() async {
     try {

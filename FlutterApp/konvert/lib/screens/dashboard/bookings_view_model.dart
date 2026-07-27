@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/database_service.dart';
 import '../../models/booking_data.dart';
 import '../../services/api_service.dart';
+import '../../managers/activity_manager.dart';
 
 import 'dashboard_view_model.dart';
 
@@ -101,13 +102,24 @@ class BookingsViewModel extends ChangeNotifier {
 
   Future<void> deleteInvoice(int invoice) async {
     await DatabaseService.instance.deleteBookingByInvoice(invoice.toString());
+    await ActivityManager.instance.logActivity(
+      type: 'booking_deleted',
+      title: 'Deleted Order #$invoice',
+      subtitle: 'Order removed from local cache',
+    );
     await fetchBookings();
   }
 
   Future<bool> uploadBookings({DashboardViewModel? dashboardViewModel}) async {
     if (allBookings.isEmpty) return false;
+    final count = allBookings.length;
     final success = await ApiService.instance.uploadBookings(allBookings);
     if (success) {
+      await ActivityManager.instance.logActivity(
+        type: 'booking_uploaded',
+        title: 'Uploaded Bookings',
+        subtitle: 'Synced $count ${count == 1 ? 'order' : 'orders'} to server',
+      );
       await DatabaseService.instance.deleteAllBookings();
       if (dashboardViewModel != null) {
         await dashboardViewModel.refreshTargets();

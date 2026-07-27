@@ -9,6 +9,7 @@ import '../../models/booking_data.dart';
 import '../../models/place_order_product.dart';
 import '../../models/notification.dart';
 import '../../managers/location_manager.dart';
+import '../../managers/activity_manager.dart';
 
 class PlaceOrderState extends ChangeNotifier {
   bool _isDisposed = false;
@@ -503,6 +504,17 @@ class PlaceOrderState extends ChangeNotifier {
       );
       await DatabaseService.instance.insertBooking(b);
     }
+
+    // --- Log Activity ---
+    final isEditing = editingInvoiceNumber != null;
+    final custName = selectedCustomer?['customer_name'] ?? 'Customer';
+    final prodCount = cart.length;
+
+    await ActivityManager.instance.logActivity(
+      type: isEditing ? 'booking_edited' : 'booking_created',
+      title: isEditing ? 'Edited Order #$invoiceNo' : 'Placed Order #$invoiceNo',
+      subtitle: '$custName • $prodCount ${prodCount == 1 ? 'Product' : 'Products'}',
+    );
 
     // --- Mock Notification Trigger ---
     final mockNotification = AppNotification(

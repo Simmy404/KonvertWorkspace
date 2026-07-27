@@ -15,6 +15,9 @@ import '../login_screen.dart';
 import '../profile_screen.dart';
 import '../../utils/page_transitions.dart';
 import '../notifications/notifications_screen.dart';
+import '../../managers/activity_manager.dart';
+import '../../models/user_activity.dart';
+import '../activity_history_screen.dart';
 
 // ==========================================
 // DASHBOARD GOOGLE MAP (EXTRACTED STATEFUL)
@@ -280,9 +283,16 @@ class HomeTab extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section Header
+                      // Section Header (Clicking opens full Activity History Page)
                       InkWell(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageTransitions.fadeTransition(
+                              const ActivityHistoryScreen(),
+                            ),
+                          );
+                        },
                         borderRadius: BorderRadius.circular(8),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -307,11 +317,51 @@ class HomeTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // Activity Items (4 Empty Cards)
-                      _buildActivityCard(),
-                      _buildActivityCard(),
-                      _buildActivityCard(),
-                      _buildActivityCard(),
+                      // Dynamic Recent Activity Items (Latest 5)
+                      ListenableBuilder(
+                        listenable: ActivityManager.instance,
+                        builder: (context, _) {
+                          final recentActivities = ActivityManager.instance.getRecentActivities(limit: 5);
+
+                          if (recentActivities.isEmpty) {
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: ThemeManager.instance.isLightMode
+                                    ? const Color.fromARGB(15, 0, 43, 71)
+                                    : const Color.fromARGB(15, 164, 219, 255),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.history_toggle_off_rounded,
+                                    size: 20,
+                                    color: ThemeManager.instance.getTextTertiary(),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'No recent activity logged',
+                                    style: TextStyle(
+                                      color: ThemeManager.instance.getTextSecondary(),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return Column(
+                            children: recentActivities
+                                .map((act) => _buildActivityCardFromModel(act))
+                                .toList(),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -916,80 +966,99 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // ACTIVITY CARD
   // ==========================================
-  Widget _buildActivityCard({
-    String? title,
-    String? subtitle,
-    String? time,
-    IconData? icon,
-    Color? iconColor,
-  }) {
-    final bool isEmpty = title == null || title.isEmpty;
+  Widget _buildActivityCardFromModel(UserActivity activity) {
+    final theme = ThemeManager.instance;
+    final isLight = theme.isLightMode;
+
+    IconData icon;
+    Color iconColor;
+
+    switch (activity.type) {
+      case 'booking_created':
+        icon = Icons.shopping_bag_rounded;
+        iconColor = isLight ? const Color(0xFF2563EB) : const Color(0xFF60A5FA);
+        break;
+      case 'booking_edited':
+        icon = Icons.edit_rounded;
+        iconColor = const Color(0xFFF59E0B);
+        break;
+      case 'booking_deleted':
+        icon = Icons.delete_outline_rounded;
+        iconColor = const Color(0xFFEF4444);
+        break;
+      case 'booking_uploaded':
+        icon = Icons.cloud_upload_rounded;
+        iconColor = const Color(0xFF10B981);
+        break;
+      case 'tour_plan_created':
+      case 'tour_plan_edited':
+        icon = Icons.calendar_month_rounded;
+        iconColor = const Color(0xFF8B5CF6);
+        break;
+      default:
+        icon = Icons.local_activity_rounded;
+        iconColor = theme.getAccentBlue();
+    }
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      height: 60,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: ThemeManager.instance.isLightMode
+        color: isLight
             ? const Color.fromARGB(20, 0, 43, 71)
             : const Color.fromARGB(20, 164, 219, 255),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: isEmpty
-          ? const SizedBox.shrink()
-          : Row(
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(isLight ? 0.12 : 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null && iconColor != null) ...[
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, size: 20, color: iconColor),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: ThemeManager.instance.getTextPrimary(),
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (subtitle != null && subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            color: ThemeManager.instance.getTextSecondary(),
-                            fontSize: 11,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
+                Text(
+                  activity.title,
+                  style: TextStyle(
+                    color: theme.getTextPrimary(),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (time != null && time.isNotEmpty)
+                if (activity.subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    time,
+                    activity.subtitle,
                     style: TextStyle(
-                      color: ThemeManager.instance.getTextTertiary(),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      color: theme.getTextSecondary(),
+                      fontSize: 11,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ],
               ],
             ),
+          ),
+          Text(
+            activity.timeAgo,
+            style: TextStyle(
+              color: theme.getTextTertiary(),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

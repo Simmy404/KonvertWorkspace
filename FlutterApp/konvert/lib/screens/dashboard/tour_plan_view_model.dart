@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/tour_plan.dart';
 import '../../services/storage_service.dart';
 import '../../services/database_service.dart';
+import '../../managers/activity_manager.dart';
 import 'dart:math';
 
 class TourPlanViewModel extends ChangeNotifier {
@@ -149,6 +150,17 @@ class TourPlanViewModel extends ChangeNotifier {
     _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
     _safeNotifyListeners();
     StorageService.instance.saveTourPlan(_currentPlan!);
+
+    // Log Activity
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final dayName = dayNames[dayIndex % 7];
+    final dateStr = '${currentDay.date.day}/${currentDay.date.month}';
+    final typeStr = type.name.toUpperCase();
+    ActivityManager.instance.logActivity(
+      type: 'tour_plan_edited',
+      title: 'Updated Tour Plan',
+      subtitle: '$dayName ($dateStr) • $typeStr Work',
+    );
   }
 
   void clearDayConfig(int dayIndex) {
@@ -230,6 +242,12 @@ class TourPlanViewModel extends ChangeNotifier {
     
     StorageService.instance.saveTourPlan(_currentPlan!);
     _safeNotifyListeners();
+
+    ActivityManager.instance.logActivity(
+      type: 'tour_plan_created',
+      title: 'Submitted Tour Plan',
+      subtitle: 'Monthly Tour Plan sent to manager',
+    );
   }
 
   void resetToDraft() {

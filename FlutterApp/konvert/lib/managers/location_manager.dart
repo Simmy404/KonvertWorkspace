@@ -37,21 +37,24 @@ class LocationManager extends ChangeNotifier {
     final hasPermission = await checkPermissions();
     if (!hasPermission) return;
 
-    final accuracy = precision == 'high' ? LocationAccuracy.high : LocationAccuracy.medium;
-    _positionStreamSub = Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: accuracy,
-        distanceFilter: 3, // update every 3 meters
-      ),
-    ).listen(
-      (Position pos) {
-        _currentPosition = pos;
-        notifyListeners();
-      },
-      onError: (e) {
-        debugPrint('Location stream error: $e');
-      },
-    );
+    final accuracy = precision == 'high'
+        ? LocationAccuracy.high
+        : LocationAccuracy.medium;
+    _positionStreamSub =
+        Geolocator.getPositionStream(
+          locationSettings: LocationSettings(
+            accuracy: accuracy,
+            distanceFilter: 3, // update every 3 meters
+          ),
+        ).listen(
+          (Position pos) {
+            _currentPosition = pos;
+            notifyListeners();
+          },
+          onError: (e) {
+            debugPrint('Location stream error: $e');
+          },
+        );
   }
 
   void stopLocationUpdates() {
@@ -61,8 +64,17 @@ class LocationManager extends ChangeNotifier {
 
   /// Helper to safely parse and resolve customer coordinates, handling inverted lat/lng if needed.
   Map<String, double?> parseCustomerCoordinates(Map<String, dynamic> customer) {
-    final val1 = double.tryParse(customer['customer_lat']?.toString() ?? customer['cust_lat']?.toString() ?? '');
-    final val2 = double.tryParse(customer['customer_long']?.toString() ?? customer['customer_lng']?.toString() ?? customer['cust_long']?.toString() ?? '');
+    final val1 = double.tryParse(
+      customer['customer_lat']?.toString() ??
+          customer['cust_lat']?.toString() ??
+          '',
+    );
+    final val2 = double.tryParse(
+      customer['customer_long']?.toString() ??
+          customer['customer_lng']?.toString() ??
+          customer['cust_long']?.toString() ??
+          '',
+    );
 
     if (val1 == null && val2 == null) {
       return {'lat': null, 'lng': null};
@@ -86,7 +98,8 @@ class LocationManager extends ChangeNotifier {
 
   /// Calculates distance in meters to target coordinates
   double? getDistanceTo(double? targetLat, double? targetLng) {
-    if (_currentPosition == null || targetLat == null || targetLng == null) return null;
+    if (_currentPosition == null || targetLat == null || targetLng == null)
+      return null;
     if (targetLat == 0.0 && targetLng == 0.0) return null;
     return Geolocator.distanceBetween(
       _currentPosition!.latitude,
@@ -103,7 +116,8 @@ class LocationManager extends ChangeNotifier {
     if (targetLat == 0.0 && targetLng == 0.0) return true;
 
     final distance = getDistanceTo(targetLat, targetLng);
-    if (distance == null) return true; // Fallback to enabled if location not fetched yet
+    if (distance == null)
+      return true; // Fallback to enabled if location not fetched yet
     return distance <= geofenceRadius;
   }
 
