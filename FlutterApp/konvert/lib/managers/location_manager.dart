@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/error_struct.dart';
+import '../services/storage_service.dart';
 import 'error_manager.dart';
 
 class LocationManager extends ChangeNotifier {
@@ -14,6 +15,13 @@ class LocationManager extends ChangeNotifier {
 
   bool _isFetching = false;
   bool get isFetching => _isFetching;
+
+  String get precision => StorageService.instance.getLocationPrecision();
+
+  Future<void> setPrecision(String value) async {
+    await StorageService.instance.setLocationPrecision(value);
+    notifyListeners();
+  }
 
   Future<void> init() async {
     // Optionally fetch location immediately on startup
@@ -84,8 +92,12 @@ class LocationManager extends ChangeNotifier {
         return null;
       }
 
+      final accuracy = precision == 'high'
+          ? LocationAccuracy.high
+          : LocationAccuracy.medium;
+
       _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+        desiredAccuracy: accuracy,
       );
     } catch (e, stack) {
       ErrorManager.instance.logErrorToConsole(

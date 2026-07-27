@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../managers/theme_manager.dart';
+import '../managers/location_manager.dart';
+import '../models/enums.dart';
 import '../services/storage_service.dart';
 import '../models/user.dart';
 import '../utils/page_transitions.dart';
@@ -638,7 +640,7 @@ class ProfileScreen extends StatelessWidget {
                               cardBg: cardBg,
                               borderColor: borderColor,
                             ),
-                            _buildInfoTile(
+                             _buildInfoTile(
                               icon: Icons.sensors_rounded,
                               label: 'Connection Status',
                               value: (user?.isOnline == true)
@@ -648,6 +650,44 @@ class ProfileScreen extends StatelessWidget {
                               subtextColor: subtextColor,
                               cardBg: cardBg,
                               borderColor: borderColor,
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Preferences & Settings Section Header
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 4, bottom: 12),
+                                child: Text(
+                                  'App Preferences & Settings',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // 1. App Theme Option Tile
+                            _buildThemePreferenceTile(
+                              context: context,
+                              textColor: textColor,
+                              subtextColor: subtextColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              isLight: isLight,
+                            ),
+
+                            // 2. Location Precision Option Tile
+                            _buildLocationPrecisionTile(
+                              context: context,
+                              textColor: textColor,
+                              subtextColor: subtextColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              isLight: isLight,
                             ),
 
                             const SizedBox(height: 28),
@@ -754,6 +794,311 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemePreferenceTile({
+    required BuildContext context,
+    required Color textColor,
+    required Color subtextColor,
+    required Color cardBg,
+    required Color borderColor,
+    required bool isLight,
+  }) {
+    final currentTheme = ThemeManager.instance.currentTheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E56E2).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.palette_outlined, color: Color(0xFF1E56E2), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'App Theme',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Select visual theme style',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: subtextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildThemeOptionChip(
+                label: 'Accent',
+                icon: Icons.light_mode_rounded,
+                isSelected: currentTheme == Themes.accent,
+                onTap: () => ThemeManager.instance.setThemeStyle(Themes.accent),
+                textColor: textColor,
+                subtextColor: subtextColor,
+                isLight: isLight,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOptionChip(
+                label: 'Neon',
+                icon: Icons.dark_mode_rounded,
+                isSelected: currentTheme == Themes.neon,
+                onTap: () => ThemeManager.instance.setThemeStyle(Themes.neon),
+                textColor: textColor,
+                subtextColor: subtextColor,
+                isLight: isLight,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOptionChip(
+                label: 'Default',
+                icon: Icons.brightness_auto_rounded,
+                isSelected: currentTheme == Themes.system,
+                onTap: () => ThemeManager.instance.setThemeStyle(Themes.system),
+                textColor: textColor,
+                subtextColor: subtextColor,
+                isLight: isLight,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOptionChip({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color textColor,
+    required Color subtextColor,
+    required bool isLight,
+  }) {
+    final activeColor = const Color(0xFF1E56E2);
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? activeColor.withValues(alpha: isLight ? 0.12 : 0.25)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? activeColor : subtextColor.withValues(alpha: 0.3),
+              width: isSelected ? 1.8 : 1.0,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? activeColor : subtextColor,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? activeColor : textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationPrecisionTile({
+    required BuildContext context,
+    required Color textColor,
+    required Color subtextColor,
+    required Color cardBg,
+    required Color borderColor,
+    required bool isLight,
+  }) {
+    return ListenableBuilder(
+      listenable: LocationManager.instance,
+      builder: (context, child) {
+        final currentPrecision = LocationManager.instance.precision;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.gps_fixed_rounded, color: Color(0xFF10B981), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Location Precision',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'GPS accuracy for Dashboard Map & Place Order',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: subtextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _buildPrecisionOptionChip(
+                    label: 'Normal',
+                    subtitle: 'Balanced GPS',
+                    icon: Icons.location_on_outlined,
+                    isSelected: currentPrecision == 'normal',
+                    onTap: () => LocationManager.instance.setPrecision('normal'),
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    isLight: isLight,
+                  ),
+                  const SizedBox(width: 10),
+                  _buildPrecisionOptionChip(
+                    label: 'High',
+                    subtitle: 'High Precision GPS',
+                    icon: Icons.my_location_rounded,
+                    isSelected: currentPrecision == 'high',
+                    onTap: () => LocationManager.instance.setPrecision('high'),
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    isLight: isLight,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPrecisionOptionChip({
+    required String label,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color textColor,
+    required Color subtextColor,
+    required bool isLight,
+  }) {
+    final activeColor = const Color(0xFF10B981);
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? activeColor.withValues(alpha: isLight ? 0.12 : 0.25)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? activeColor : subtextColor.withValues(alpha: 0.3),
+              width: isSelected ? 1.8 : 1.0,
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isSelected ? activeColor : subtextColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      color: isSelected ? activeColor : textColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSelected ? activeColor.withValues(alpha: 0.85) : subtextColor,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

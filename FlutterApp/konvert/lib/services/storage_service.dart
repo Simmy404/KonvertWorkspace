@@ -420,6 +420,20 @@ class StorageService {
   // GLOBAL LIFECYCLE HOOKS
   // ==========================================
 
+  // ==========================================
+  // LOCATION PREFERENCE STORAGE
+  // ==========================================
+
+  static const String _locationPrecisionKey = 'selected_location_precision';
+
+  String getLocationPrecision() {
+    return getString(_locationPrecisionKey) ?? 'normal';
+  }
+
+  Future<bool> setLocationPrecision(String precision) async {
+    return await setString(_locationPrecisionKey, precision);
+  }
+
   /// Safely wipes the entire local cache.
   Future<bool> clearAllData() async {
     try {
