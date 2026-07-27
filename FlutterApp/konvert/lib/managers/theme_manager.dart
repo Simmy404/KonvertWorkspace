@@ -44,6 +44,12 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   final String dashboardMainDark = 'assets/extras/dashboardMainDark.png';
   final String dashboardMainLight = 'assets/extras/dashboardMainLight.png';
 
+  // Explore Features Panel Images (theme-independent JPEGs)
+  final String featureImage1 = 'assets/extras/feature1.jpeg';
+  final String featureImage2 = 'assets/extras/feature2.jpeg';
+  final String featureImage3 = 'assets/extras/feature3.jpeg';
+  final String featureImage4 = 'assets/extras/feature4.jpeg';
+
   final Color contrastColorDark = const Color.fromARGB(255, 0, 0, 0);
   final Color contrastColorLight = const Color.fromARGB(255, 255, 255, 255);
 
@@ -286,6 +292,17 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
   String getDashboardMain() =>
       _isLightMode ? dashboardMainLight : dashboardMainDark;
 
+  /// Returns the explore feature panel image path by 1-based index (1–4).
+  String getFeatureImage(int index) {
+    switch (index) {
+      case 1: return featureImage1;
+      case 2: return featureImage2;
+      case 3: return featureImage3;
+      case 4: return featureImage4;
+      default: return featureImage1;
+    }
+  }
+
   Color getContrastColor() =>
       _isLightMode ? contrastColorLight : contrastColorDark;
   Color getMatchColor() => _isLightMode ? matchColorLight : matchColorDark;
@@ -392,6 +409,11 @@ class ThemeManager extends ChangeNotifier with WidgetsBindingObserver {
     AssetImage(getLoginMain()),
     AssetImage(getLockMain()),
     AssetImage(getDashboardMain()),
+    // Explore feature panel images
+    AssetImage(featureImage1),
+    AssetImage(featureImage2),
+    AssetImage(featureImage3),
+    AssetImage(featureImage4),
   ];
 
   bool get hasSelectedTheme {

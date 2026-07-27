@@ -52,7 +52,7 @@ void main() async {
   await StorageService.instance.init();
 
   // 3. Reset storage and cache if app version has changed
-  AppManager.instance.appVersion = '0.1.0';
+  AppManager.instance.appVersion = '0.1.1';
   await AppManager.instance.checkAndResetOnVersionChange();
 
   // 4. Hydrate dependent managers & services

@@ -24,54 +24,55 @@ class ExploreFeaturesSheet extends StatefulWidget {
 class _ExploreFeaturesSheetState extends State<ExploreFeaturesSheet> {
   late final PageController _pageController;
   int _currentPage = 0;
-
-  final List<FeatureItem> _features = const [
-    FeatureItem(
-      title: 'Better reports\nusing AI',
-      imagePath: 'assets/extras/feature1.jpeg',
-      gradientColors: [
-        Color(0x00000000),
-        Color(0x00000000),
-        Color(0xCC1F1A18),
-        Color(0xF00A0908),
-      ],
-    ),
-    FeatureItem(
-      title: 'Real-time\nSales Tracking',
-      imagePath: 'assets/extras/feature2.jpeg',
-      gradientColors: [
-        Color(0x00000000),
-        Color(0x00000000),
-        Color(0xCC241038),
-        Color(0xF00D0418),
-      ],
-    ),
-    FeatureItem(
-      title: 'Automated\nTeam Management',
-      imagePath: 'assets/extras/feature3.jpeg',
-      gradientColors: [
-        Color(0x00000000),
-        Color(0x00000000),
-        Color(0xCC381019),
-        Color(0xF0140307),
-      ],
-    ),
-    FeatureItem(
-      title: 'Instant\nOffline Syncing',
-      imagePath: 'assets/extras/feature4.jpeg',
-      gradientColors: [
-        Color(0x00000000),
-        Color(0x00000000),
-        Color(0xCC113624),
-        Color(0xF004140D),
-      ],
-    ),
-  ];
+  late final List<FeatureItem> _features;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(viewportFraction: 0.84);
+    final theme = ThemeManager.instance;
+    _features = [
+      FeatureItem(
+        title: 'Better reports\nusing AI',
+        imagePath: theme.getFeatureImage(1),
+        gradientColors: const [
+          Color(0x00000000),
+          Color(0x00000000),
+          Color(0xCC1F1A18),
+          Color(0xF00A0908),
+        ],
+      ),
+      FeatureItem(
+        title: 'Real-time\nSales Tracking',
+        imagePath: theme.getFeatureImage(2),
+        gradientColors: const [
+          Color(0x00000000),
+          Color(0x00000000),
+          Color(0xCC241038),
+          Color(0xF00D0418),
+        ],
+      ),
+      FeatureItem(
+        title: 'Automated\nTeam Management',
+        imagePath: theme.getFeatureImage(3),
+        gradientColors: const [
+          Color(0x00000000),
+          Color(0x00000000),
+          Color(0xCC381019),
+          Color(0xF0140307),
+        ],
+      ),
+      FeatureItem(
+        title: 'Instant\nOffline Syncing',
+        imagePath: theme.getFeatureImage(4),
+        gradientColors: const [
+          Color(0x00000000),
+          Color(0x00000000),
+          Color(0xCC113624),
+          Color(0xF004140D),
+        ],
+      ),
+    ];
   }
 
   @override
