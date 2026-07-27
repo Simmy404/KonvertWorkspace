@@ -150,21 +150,16 @@ class _PlaceOrderView extends StatelessWidget {
   ) {
     final isEditing = state.editingInvoiceNumber != null;
     final theme = ThemeManager.instance;
+    final titleColor = theme.isLightMode ? const Color(0xFF0022FF) : Colors.white;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-      decoration: BoxDecoration(
-        color: theme.getContainerColor(),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.getBorderColor(),
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      color: Colors.transparent,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title Bar
+          // Top Title Bar matching mockup
           Row(
             children: [
               GestureDetector(
@@ -183,156 +178,137 @@ class _PlaceOrderView extends StatelessWidget {
                     Navigator.pop(context);
                   }
                 },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: theme.getSurfaceColor(),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12),
                   child: Icon(
                     Icons.arrow_back_ios_new_rounded,
-                    color: theme.getTextPrimary(),
-                    size: 16,
+                    color: titleColor,
+                    size: 24,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isEditing
-                          ? 'Edit Order #${state.editingInvoiceNumber}'
-                          : 'Place New Order',
-                      style: TextStyle(
-                        color: theme.getTextPrimary(),
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    if (state.selectedBrick != null ||
-                        state.selectedCustomer != null)
-                      Text(
-                        '${state.selectedBrick != null ? state.selectedBrick!['brick_name'] : ''}${state.selectedCustomer != null ? ' › ${state.selectedCustomer!['customer_name']}' : ''}',
-                        style: TextStyle(
-                          color: theme.getAccentBlue(),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
+                child: Text(
+                  isEditing
+                      ? 'Edit Order #${state.editingInvoiceNumber}'
+                      : 'Place Order',
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
-          // Interactive 3-Step Icon Bar with Labels
-          Row(
-            children: [
-              _buildStepNode(
-                icon: Icons.location_city_rounded,
-                label: 'Area',
-                isActive: state.currentStep == 0,
-                isCompleted: state.currentStep > 0,
-                onTap: () => state.jumpToStep(0),
-              ),
-              _buildStepDivider(state.currentStep > 0),
-              _buildStepNode(
-                icon: Icons.people_alt_rounded,
-                label: 'Customer',
-                isActive: state.currentStep == 1,
-                isCompleted: state.currentStep > 1,
-                onTap: () => state.jumpToStep(1),
-              ),
-              _buildStepDivider(state.currentStep > 1),
-              _buildStepNode(
-                icon: Icons.shopping_bag_rounded,
-                label: 'Products',
-                isActive: state.currentStep == 2,
-                isCompleted: false,
-                onTap: () => state.jumpToStep(2),
-              ),
-            ],
+          // 3-Step Circle Node Bar with Dots & Icons inside Circles
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildStepCircleNode(
+                  icon: Icons.location_city_rounded,
+                  stepIndex: 0,
+                  currentStep: state.currentStep,
+                  onTap: () => state.jumpToStep(0),
+                  theme: theme,
+                ),
+                _buildStepDotsDivider(isCompleted: state.currentStep > 0, theme: theme),
+                _buildStepCircleNode(
+                  icon: Icons.person_rounded,
+                  stepIndex: 1,
+                  currentStep: state.currentStep,
+                  onTap: () => state.jumpToStep(1),
+                  theme: theme,
+                ),
+                _buildStepDotsDivider(isCompleted: state.currentStep > 1, theme: theme),
+                _buildStepCircleNode(
+                  icon: Icons.shopping_bag_rounded,
+                  stepIndex: 2,
+                  currentStep: state.currentStep,
+                  onTap: () => state.jumpToStep(2),
+                  theme: theme,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStepDivider(bool isCompleted) {
+  Widget _buildStepDotsDivider({required bool isCompleted, required ThemeManager theme}) {
+    final activeDotColor = const Color(0xFFFF9D54);
+    final inactiveDotColor = theme.isLightMode
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF3B4254);
+    final dotColor = isCompleted ? activeDotColor : inactiveDotColor;
+
     return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: isCompleted
-              ? ThemeManager.instance.getAccentBlue()
-              : ThemeManager.instance.getBorderColor(),
-          borderRadius: BorderRadius.circular(1),
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(4, (i) {
+          return Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildStepNode({
+  Widget _buildStepCircleNode({
     required IconData icon,
-    required String label,
-    required bool isActive,
-    required bool isCompleted,
+    required int stepIndex,
+    required int currentStep,
     required VoidCallback onTap,
+    required ThemeManager theme,
   }) {
+    final isActive = currentStep == stepIndex;
+    final isCompleted = currentStep > stepIndex;
     final canTap = isActive || isCompleted;
-    final theme = ThemeManager.instance;
-    final color = isActive
-        ? theme.getAccentBlue()
-        : isCompleted
-            ? theme.getAccentBlue()
-            : theme.getTextTertiary();
+
+    // Node Colors matching mockup images
+    final activeBgColor = const Color(0xFFFF9D54); // Vibrant orange/amber
+    final inactiveBgColor = theme.isLightMode
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF3B4254);
+
+    final bgColor = (isActive || isCompleted) ? activeBgColor : inactiveBgColor;
+    final iconColor = (isActive || isCompleted) ? Colors.white : Colors.white70;
 
     return GestureDetector(
       onTap: canTap ? onTap : null,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isActive
-                  ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.12 : 0.25)
-                  : isCompleted
-                      ? theme.getAccentBlue().withOpacity(0.08)
-                      : Colors.transparent,
-              border: Border.all(
-                color: isActive || isCompleted
-                    ? theme.getAccentBlue().withOpacity(0.4)
-                    : theme.getBorderColor(),
-                width: isActive ? 2 : 1,
-              ),
-            ),
-            child: Icon(
-              isCompleted && !isActive ? Icons.check_rounded : icon,
-              size: 20,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? theme.getAccentBlue() : theme.getTextTertiary(),
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            ),
-          ),
-        ],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: bgColor,
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: activeBgColor.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: iconColor,
+        ),
       ),
     );
   }

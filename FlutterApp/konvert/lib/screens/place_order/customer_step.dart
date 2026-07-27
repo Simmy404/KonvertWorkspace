@@ -111,110 +111,88 @@ class CustomerStep extends StatelessWidget {
                               ? const Color(0xFF16A34A) // Soft pastel emerald
                               : const Color(0xFF22C55E);
 
+                          final isLight = theme.isLightMode;
+                          final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
+                          final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
+                          final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
+
                           return Material(
                             color: Colors.transparent,
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.only(bottom: 8),
+                              margin: const EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
-                                color: theme.getListItemColor(),
-                                borderRadius: BorderRadius.circular(12),
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: theme.getBorderColor(),
-                                  width: 1.2,
+                                  color: cardBorder,
+                                  width: 1.0,
                                 ),
                               ),
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 onTap: state.isRefreshingCustomers
                                     ? null
                                     : () => state.selectCustomer(customer),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   child: Row(
                                     children: [
+                                      // Solid Blue Circle Badge with Icon Inside
                                       Container(
-                                        width: 36,
-                                        height: 36,
+                                        width: 32,
+                                        height: 32,
                                         decoration: BoxDecoration(
-                                          color: isDoctor ? doctorBg : chemistBg,
-                                          borderRadius: BorderRadius.circular(10),
+                                          color: circleBadgeBg,
+                                          shape: BoxShape.circle,
                                         ),
                                         child: Icon(
                                           isDoctor
                                               ? Icons.medical_services_outlined
                                               : Icons.storefront_outlined,
-                                          color: isDoctor ? doctorIconColor : chemistIconColor,
-                                          size: 18,
+                                          color: Colors.white,
+                                          size: 17,
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 14),
+
+                                      // Middle Details
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    customer['customer_name'] ?? '',
-                                                    style: TextStyle(
-                                                      color: theme.getTextPrimary(),
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 15,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 3,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: isDoctor ? doctorBg : chemistBg,
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                  child: Text(
-                                                    isDoctor ? 'Doctor' : 'Chemist',
-                                                    style: TextStyle(
-                                                      color: isDoctor ? doctorIconColor : chemistIconColor,
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                            Text(
+                                              customer['customer_name'] ?? '',
+                                              style: TextStyle(
+                                                color: theme.getTextPrimary(),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 4),
+                                            const SizedBox(height: 2),
                                             Text(
                                               customer['customer_address'] != null &&
                                                       customer['customer_address'].toString().isNotEmpty
                                                   ? customer['customer_address'].toString()
-                                                  : 'No address provided',
+                                                  : (isDoctor ? 'Doctor' : 'Chemist'),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 color: theme.getTextSecondary(),
-                                                fontSize: 13,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.08 : 0.2),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.arrow_forward_rounded,
-                                          color: theme.isLightMode ? theme.getAccentBlue() : const Color(0xFF83ABED),
-                                          size: 16,
-                                        ),
+
+                                      // Right Chevron Icon
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                        size: 22,
                                       ),
                                     ],
                                   ),

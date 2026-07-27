@@ -65,52 +65,55 @@ class BrickStep extends StatelessWidget {
                           );
                           final isAllBricks = brickId == '0';
 
+                          final isLight = theme.isLightMode;
+                          final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
+                          final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
+                          final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
+
                           return Material(
                             color: Colors.transparent,
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.only(bottom: 8),
+                              margin: const EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
-                                color: theme.getListItemColor(),
-                                borderRadius: BorderRadius.circular(12),
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: theme.getBorderColor(),
-                                  width: 1.2,
+                                  color: cardBorder,
+                                  width: 1.0,
                                 ),
                               ),
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 onTap: state.isRefreshingBricks
                                     ? null
                                     : () => state.selectBrick(brick),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   child: Row(
                                     children: [
+                                      // Solid Blue Circle Badge with Icon Inside
                                       Container(
-                                        width: 36,
-                                        height: 36,
+                                        width: 32,
+                                        height: 32,
                                         decoration: BoxDecoration(
-                                          color: isAllBricks
-                                              ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.1 : 0.2)
-                                              : theme.getSurfaceColor(),
-                                          borderRadius: BorderRadius.circular(10),
+                                          color: circleBadgeBg,
+                                          shape: BoxShape.circle,
                                         ),
                                         child: Icon(
                                           isAllBricks
                                               ? Icons.apps_rounded
                                               : Icons.location_city_rounded,
-                                          color: isAllBricks
-                                              ? theme.getAccentBlue()
-                                              : theme.getTextSecondary(),
-                                          size: 20,
+                                          color: Colors.white,
+                                          size: 17,
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 14),
+
+                                      // Middle Title & Customer Count
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               brick['brick_name'] ?? '',
@@ -120,42 +123,24 @@ class BrickStep extends StatelessWidget {
                                                 fontSize: 15,
                                               ),
                                             ),
-                                            const SizedBox(height: 3),
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.people_alt_outlined,
-                                                  size: 14,
-                                                  color: theme.getTextSecondary(),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  '$customerCount ${customerCount == 1 ? 'Customer' : 'Customers'}',
-                                                  style: TextStyle(
-                                                    color: theme.getTextSecondary(),
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '$customerCount ${customerCount == 1 ? 'Customer' : 'Customers'}',
+                                              style: TextStyle(
+                                                color: theme.getTextSecondary(),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: theme.getAccentBlue().withOpacity(
-                                            theme.isLightMode ? 0.08 : 0.2,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.arrow_forward_rounded,
-                                          color: theme.isLightMode
-                                              ? theme.getAccentBlue()
-                                              : const Color(0xFF83ABED),
-                                          size: 16,
-                                        ),
+
+                                      // Right Chevron Icon
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                        size: 22,
                                       ),
                                     ],
                                   ),

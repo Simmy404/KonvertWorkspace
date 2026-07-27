@@ -117,14 +117,18 @@ class PlaceOrderComponents {
     bool enabled = true,
   }) {
     final theme = ThemeManager.instance;
+    final isLight = theme.isLightMode;
+
+    final searchBgColor = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF0E1426);
+    final searchBorderColor = isLight ? const Color(0xFFD4E2FE) : const Color(0xFF252C40);
 
     return Container(
       height: 52,
       decoration: BoxDecoration(
-        color: theme.getSurfaceColor(),
+        color: searchBgColor,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: theme.getBorderColor(),
+          color: searchBorderColor,
           width: 1.2,
         ),
       ),
@@ -133,7 +137,7 @@ class PlaceOrderComponents {
         children: [
           Icon(
             Icons.search_rounded,
-            color: theme.getTextTertiary(),
+            color: theme.getTextSecondary(),
             size: 22,
           ),
           const SizedBox(width: 12),
@@ -144,14 +148,14 @@ class PlaceOrderComponents {
               enabled: enabled,
               style: TextStyle(
                 color: theme.getTextPrimary(),
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                  color: theme.getTextSecondary(),
-                  fontSize: 16,
+                  color: theme.getTextSecondary().withOpacity(0.8),
+                  fontSize: 15,
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,

@@ -105,26 +105,31 @@ class ProductStep extends StatelessWidget {
                         final isOtc = product['product_is_otc'] != null &&
                             product['product_is_otc'].toString().trim().isNotEmpty;
 
+                        final isLight = theme.isLightMode;
+                        final cardBg = isLight ? const Color(0xFFEFF4FD) : const Color(0xFF121624);
+                        final cardBorder = isLight ? const Color(0xFFE2ECFC) : const Color(0xFF1E253A);
+                        final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
+
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
                             color: cartItem != null
-                                ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.05 : 0.1)
-                                : theme.getListItemColor(),
-                            borderRadius: BorderRadius.circular(12),
+                                ? theme.getAccentBlue().withOpacity(isLight ? 0.08 : 0.2)
+                                : cardBg,
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: cartItem != null
-                                  ? theme.getAccentBlue().withOpacity(0.4)
-                                  : theme.getBorderColor(),
-                              width: 1.2,
+                                  ? theme.getAccentBlue()
+                                  : cardBorder,
+                              width: 1.0,
                             ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             child: Row(
                               children: [
-                                // Product Icon
+                                // Solid Blue Circle Badge with Icon Inside
                                 GestureDetector(
                                   onTap: state.isRefreshingProducts
                                       ? null
@@ -135,24 +140,20 @@ class ProductStep extends StatelessWidget {
                                             cartItem,
                                           ),
                                   child: Container(
-                                    width: 36,
-                                    height: 36,
+                                    width: 32,
+                                    height: 32,
                                     decoration: BoxDecoration(
-                                      color: cartItem != null
-                                          ? theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.12 : 0.25)
-                                          : theme.getSurfaceColor(),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: circleBadgeBg,
+                                      shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.medication_outlined,
-                                      color: cartItem != null
-                                          ? theme.getAccentBlue()
-                                          : theme.getTextSecondary(),
-                                      size: 20,
+                                      color: Colors.white,
+                                      size: 17,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 14),
 
                                 // Product Title & Price Details
                                 Expanded(
