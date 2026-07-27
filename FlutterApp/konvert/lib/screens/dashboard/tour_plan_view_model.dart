@@ -97,7 +97,10 @@ class TourPlanViewModel extends ChangeNotifier {
     if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
     
     final currentDay = _currentPlan!.weeks[0].days[dayIndex];
-    DailyTourPlan updatedDay = currentDay.copyWith(type: type);
+    DailyTourPlan updatedDay = currentDay.copyWith(
+      type: type,
+      isConfigured: true,
+    );
 
     // If changing away from field, clear selections
     if (type != DailyTourPlanType.field) {
@@ -122,6 +125,41 @@ class TourPlanViewModel extends ChangeNotifier {
       type: DailyTourPlanType.field,
       brickId: brickId,
       customerIds: customerIds,
+      isConfigured: true,
+    );
+
+    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _safeNotifyListeners();
+    StorageService.instance.saveTourPlan(_currentPlan!);
+  }
+
+  void updateDailyPlan(int dayIndex, DailyTourPlanType type, String? brickId, List<String> customerIds) {
+    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
+
+    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
+    final updatedDay = currentDay.copyWith(
+      type: type,
+      brickId: type == DailyTourPlanType.field ? brickId : null,
+      customerIds: type == DailyTourPlanType.field
+          ? customerIds
+          : (type == DailyTourPlanType.remote ? (customerIds.isNotEmpty ? customerIds : _generatePseudoRandomDoctors()) : []),
+      isConfigured: true,
+    );
+
+    _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
+    _safeNotifyListeners();
+    StorageService.instance.saveTourPlan(_currentPlan!);
+  }
+
+  void clearDayConfig(int dayIndex) {
+    if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return;
+
+    final currentDay = _currentPlan!.weeks[0].days[dayIndex];
+    final updatedDay = currentDay.copyWith(
+      type: DailyTourPlanType.off,
+      brickId: null,
+      customerIds: [],
+      isConfigured: false,
     );
 
     _currentPlan!.weeks[0].days[dayIndex] = updatedDay;
@@ -148,6 +186,7 @@ class TourPlanViewModel extends ChangeNotifier {
   bool isWeek1Complete() {
     if (_currentPlan == null || _currentPlan!.weeks.isEmpty) return false;
     for (var day in _currentPlan!.weeks[0].days) {
+      if (!day.isConfigured) return false;
       if (day.type == DailyTourPlanType.field) {
         if (day.brickId == null || day.customerIds.isEmpty) return false;
       }

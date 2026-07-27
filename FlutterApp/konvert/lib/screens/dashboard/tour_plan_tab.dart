@@ -65,23 +65,72 @@ class TourPlanTab extends StatelessWidget {
               children: [
                 // Top Header Section
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Top Row: Brand Logo & Share Icon
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Tour Plan',
-                            style: TextStyle(
-                              color: theme.isLightMode ? const Color(0xFF0022FF) : Colors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.6,
+                          Image.asset(
+                            theme.getLogoMark(),
+                            height: 28,
+                            errorBuilder: (ctx, err, stack) => Icon(
+                              Icons.auto_awesome,
+                              color: theme.getAccentBlue(),
+                              size: 28,
                             ),
                           ),
-                          // Reset button when previewing generated 4-week plan
+                          IconButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Tour plan export feature coming soon!'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.ios_share_rounded,
+                              color: theme.isLightMode ? Colors.black87 : Colors.white70,
+                              size: 22,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Title & Subtitle Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tour Plan',
+                                style: TextStyle(
+                                  color: theme.isLightMode ? const Color(0xFF0022FF) : Colors.white,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.6,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                showWizard
+                                    ? 'Configure Week 1 tour plan'
+                                    : 'Monthly Schedule & Territory Coverage',
+                                style: TextStyle(
+                                  color: theme.getTextSecondary(),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                           if (plan != null && plan.weeks.length == 4 && plan.status == TourPlanStatus.draft)
                             TextButton.icon(
                               onPressed: () {
@@ -101,17 +150,7 @@ class TourPlanTab extends StatelessWidget {
                             )
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        showWizard
-                            ? 'Configure Week 1 pattern below'
-                            : 'Monthly Schedule & Territory Coverage',
-                        style: TextStyle(
-                          color: theme.getTextSecondary(),
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
 
                       // Metric Summary Cards (Only shown in Monthly Preview)
                       if (!showWizard && plan != null && plan.weeks.length == 4)

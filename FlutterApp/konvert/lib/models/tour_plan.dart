@@ -8,12 +8,14 @@ class DailyTourPlan {
   final DailyTourPlanType type;
   final String? brickId; // Only for field
   final List<String> customerIds; // Only for field (or pseudo-random for remote)
+  final bool isConfigured;
 
   DailyTourPlan({
     required this.date,
     required this.type,
     this.brickId,
     this.customerIds = const [],
+    this.isConfigured = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +24,7 @@ class DailyTourPlan {
       'type': type.name,
       'brickId': brickId,
       'customerIds': customerIds,
+      'isConfigured': isConfigured,
     };
   }
 
@@ -34,6 +37,7 @@ class DailyTourPlan {
       ),
       brickId: map['brickId'],
       customerIds: List<String>.from(map['customerIds'] ?? []),
+      isConfigured: map['isConfigured'] ?? (map['brickId'] != null || map['type'] == 'remote'),
     );
   }
 
@@ -42,12 +46,14 @@ class DailyTourPlan {
     DailyTourPlanType? type,
     String? brickId,
     List<String>? customerIds,
+    bool? isConfigured,
   }) {
     return DailyTourPlan(
       date: date ?? this.date,
       type: type ?? this.type,
       brickId: brickId ?? this.brickId,
       customerIds: customerIds ?? this.customerIds,
+      isConfigured: isConfigured ?? this.isConfigured,
     );
   }
 }

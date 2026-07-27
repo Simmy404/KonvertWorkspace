@@ -11,7 +11,7 @@ class LocationManager extends ChangeNotifier {
 
   Position? _currentPosition;
   Position? get currentPosition => _currentPosition;
-  
+
   bool _isFetching = false;
   bool get isFetching => _isFetching;
 
@@ -26,7 +26,11 @@ class LocationManager extends ChangeNotifier {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ErrorManager.instance.showToastError(
-        ErrorStruct(code: 'LOC-DISABLED', technicalDetails: 'Location services are disabled. Please enable them to use the app.'),
+        ErrorStruct(
+          code: 'LOC-DISABLED',
+          technicalDetails:
+              'Location services are disabled. Please enable them to use the app.',
+        ),
         3,
       );
       return false;
@@ -37,7 +41,10 @@ class LocationManager extends ChangeNotifier {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         ErrorManager.instance.showToastError(
-          ErrorStruct(code: 'LOC-DENIED', technicalDetails: 'Location permissions are denied.'),
+          ErrorStruct(
+            code: 'LOC-DENIED',
+            technicalDetails: 'Location permissions are denied.',
+          ),
           3,
         );
         return false;
@@ -46,7 +53,11 @@ class LocationManager extends ChangeNotifier {
 
     if (permission == LocationPermission.deniedForever) {
       ErrorManager.instance.showToastError(
-        ErrorStruct(code: 'LOC-DENIED-FOREVER', technicalDetails: 'Location permissions are permanently denied, we cannot request permissions.'),
+        ErrorStruct(
+          code: 'LOC-DENIED-FOREVER',
+          technicalDetails:
+              'Location permissions are permanently denied, we cannot request permissions.',
+        ),
         3,
       );
       return false;
@@ -79,13 +90,16 @@ class LocationManager extends ChangeNotifier {
     } catch (e, stack) {
       ErrorManager.instance.logErrorToConsole(
         'LOCATION_MANAGER',
-        ErrorStruct(
-          code: 'LOC-001',
-          technicalDetails: e.toString(),
-        ),
+        ErrorStruct(code: 'LOC-001', technicalDetails: e.toString()),
         stack,
       );
-      ErrorManager.instance.showToastError(ErrorStruct(code: 'LOC-FAIL', technicalDetails: 'Failed to fetch location.'), 3);
+      ErrorManager.instance.showToastError(
+        ErrorStruct(
+          code: 'LOC-FAIL',
+          technicalDetails: 'Failed to fetch location.',
+        ),
+        3,
+      );
     } finally {
       _isFetching = false;
       notifyListeners();
