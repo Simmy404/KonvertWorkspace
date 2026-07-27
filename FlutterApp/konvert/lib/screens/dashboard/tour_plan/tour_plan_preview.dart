@@ -14,7 +14,8 @@ class TourPlanPreview extends StatefulWidget {
 }
 
 class _TourPlanPreviewState extends State<TourPlanPreview> {
-  int _selectedWeekFilter = 0; // 0 = All Weeks, 1 = Week 1, 2 = Week 2, 3 = Week 3, 4 = Week 4
+  int _selectedWeekFilter =
+      0; // 0 = All Weeks, 1 = Week 1, 2 = Week 2, 3 = Week 3, 4 = Week 4
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,9 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
     final theme = ThemeManager.instance;
 
     if (plan == null) {
-      return Center(child: CircularProgressIndicator(color: theme.getAccentBlue()));
+      return Center(
+        child: CircularProgressIndicator(color: theme.getAccentBlue()),
+      );
     }
 
     return Column(
@@ -59,9 +62,17 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             itemCount: _selectedWeekFilter == 0 ? plan.weeks.length : 1,
             itemBuilder: (context, index) {
-              final actualWeekIndex = _selectedWeekFilter == 0 ? index : (_selectedWeekFilter - 1);
+              final actualWeekIndex = _selectedWeekFilter == 0
+                  ? index
+                  : (_selectedWeekFilter - 1);
               final week = plan.weeks[actualWeekIndex];
-              return _buildWeekCard(context, viewModel, week, actualWeekIndex + 1, theme);
+              return _buildWeekCard(
+                context,
+                viewModel,
+                week,
+                actualWeekIndex + 1,
+                theme,
+              );
             },
           ),
         ),
@@ -85,9 +96,7 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? theme.getAccentBlue()
-              : theme.getSurfaceColor(),
+          color: isSelected ? theme.getAccentBlue() : theme.getSurfaceColor(),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? theme.getAccentBlue() : theme.getBorderColor(),
@@ -113,25 +122,35 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
 
     switch (status) {
       case TourPlanStatus.draft:
-        bgColor = const Color(0xFFEAB308).withOpacity(theme.isLightMode ? 0.12 : 0.2);
-        textColor = theme.isLightMode ? const Color(0xFFD97706) : const Color(0xFFFACC15);
+        bgColor = const Color(
+          0xFFEAB308,
+        ).withOpacity(theme.isLightMode ? 0.12 : 0.2);
+        textColor = theme.isLightMode
+            ? const Color(0xFFD97706)
+            : const Color(0xFFFACC15);
         text = 'Draft Plan (Ready for Submission)';
         icon = Icons.edit_note_rounded;
         break;
       case TourPlanStatus.pending:
-        bgColor = theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.12 : 0.2);
+        bgColor = theme.getAccentBlue().withOpacity(
+          theme.isLightMode ? 0.12 : 0.2,
+        );
         textColor = theme.getAccentBlue();
         text = 'Pending Manager Approval';
         icon = Icons.hourglass_top_rounded;
         break;
       case TourPlanStatus.approved:
-        bgColor = const Color(0xFF16A34A).withOpacity(theme.isLightMode ? 0.12 : 0.2);
+        bgColor = const Color(
+          0xFF16A34A,
+        ).withOpacity(theme.isLightMode ? 0.12 : 0.2);
         textColor = const Color(0xFF16A34A);
         text = 'Approved Monthly Plan';
         icon = Icons.verified_rounded;
         break;
       case TourPlanStatus.rejected:
-        bgColor = const Color(0xFFEF4444).withOpacity(theme.isLightMode ? 0.12 : 0.2);
+        bgColor = const Color(
+          0xFFEF4444,
+        ).withOpacity(theme.isLightMode ? 0.12 : 0.2);
         textColor = const Color(0xFFEF4444);
         text = 'Rejected - Revision Required';
         icon = Icons.cancel_rounded;
@@ -227,18 +246,32 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
             padding: const EdgeInsets.only(top: 4.0),
             child: Row(
               children: [
-                Icon(Icons.map_outlined, size: 12, color: theme.getTextSecondary()),
+                Icon(
+                  Icons.map_outlined,
+                  size: 12,
+                  color: theme.getTextSecondary(),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '$fieldDays Field Days',
-                  style: TextStyle(color: theme.getTextSecondary(), fontSize: 11),
+                  style: TextStyle(
+                    color: theme.getTextSecondary(),
+                    fontSize: 11,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Icon(Icons.people_alt_outlined, size: 12, color: theme.getTextSecondary()),
+                Icon(
+                  Icons.people_alt_outlined,
+                  size: 12,
+                  color: theme.getTextSecondary(),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '$totalVisits Doctor Visits',
-                  style: TextStyle(color: theme.getTextSecondary(), fontSize: 11),
+                  style: TextStyle(
+                    color: theme.getTextSecondary(),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -277,13 +310,17 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
       case DailyTourPlanType.remote:
         typeIcon = Icons.laptop_chromebook;
         iconColor = theme.getAccentBlue();
-        iconBg = theme.getAccentBlue().withOpacity(theme.isLightMode ? 0.1 : 0.2);
+        iconBg = theme.getAccentBlue().withOpacity(
+          theme.isLightMode ? 0.1 : 0.2,
+        );
         typeLabel = 'Remote Field Work';
         break;
       case DailyTourPlanType.field:
         typeIcon = Icons.map_rounded;
         iconColor = const Color(0xFF16A34A);
-        iconBg = const Color(0xFF16A34A).withOpacity(theme.isLightMode ? 0.1 : 0.2);
+        iconBg = const Color(
+          0xFF16A34A,
+        ).withOpacity(theme.isLightMode ? 0.1 : 0.2);
         typeLabel = 'Field Work';
         break;
     }
@@ -317,9 +354,7 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: theme.getBorderColor()),
-            ),
+            border: Border(bottom: BorderSide(color: theme.getBorderColor())),
           ),
           child: Row(
             children: [
@@ -359,9 +394,14 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (viewModel.currentPlan?.status == TourPlanStatus.draft) ...[
+                            if (viewModel.currentPlan?.status ==
+                                TourPlanStatus.draft) ...[
                               const SizedBox(width: 4),
-                              Icon(Icons.chevron_right_rounded, size: 16, color: theme.getTextTertiary()),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 16,
+                                color: theme.getTextTertiary(),
+                              ),
                             ],
                           ],
                         ),
@@ -371,11 +411,11 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
                     Text(
                       day.type == DailyTourPlanType.field
                           ? (brickName != null
-                              ? '$brickName • ${day.customerIds.length} Doctors'
-                              : 'Unassigned Area')
+                                ? '$brickName • ${day.customerIds.length} Doctors'
+                                : 'Unassigned Area')
                           : (day.type == DailyTourPlanType.remote
-                              ? '${day.customerIds.length} Remote Doctor Calls'
-                              : 'Rest Day'),
+                                ? '${day.customerIds.length} Remote Doctor Calls'
+                                : 'Rest Day'),
                       style: TextStyle(
                         color: theme.getTextSecondary(),
                         fontSize: 11,
@@ -400,11 +440,7 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.getContainerColor(),
-        border: Border(
-          top: BorderSide(
-            color: theme.getBorderColor(),
-          ),
-        ),
+        border: Border(top: BorderSide(color: theme.getBorderColor())),
       ),
       child: SafeArea(
         top: false,
@@ -424,10 +460,7 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
                 icon: const Icon(Icons.send_rounded, size: 18),
                 label: const Text(
                   'Submit Plan to Manager',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
                   _showSubmitConfirmationDialog(context, viewModel, theme);
@@ -464,13 +497,18 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: theme.getTextSecondary())),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.getTextSecondary()),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.getAccentBlue(),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () {
               viewModel.submitToManager();
@@ -493,9 +531,7 @@ class _TourPlanPreviewState extends State<TourPlanPreview> {
 class BorderDecoration {
   static BoxDecoration bottomBorder(Color color) {
     return BoxDecoration(
-      border: Border(
-        bottom: BorderSide(color: color, width: 0.8),
-      ),
+      border: Border(bottom: BorderSide(color: color, width: 0.8)),
     );
   }
 }

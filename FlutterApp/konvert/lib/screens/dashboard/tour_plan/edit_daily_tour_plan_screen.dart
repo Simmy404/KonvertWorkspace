@@ -115,17 +115,25 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
       _selectedBrickId = uniqueBricks.isNotEmpty ? uniqueBricks.first['brick_id']?.toString() : null;
     }
 
-    // Available doctors based on selected brick or all
+    // Available doctors based on selected brick or all (deduplicated)
     List<Map<String, dynamic>> availableDoctors = [];
     if (_selectedType == DailyTourPlanType.field && _selectedBrickId != null) {
       availableDoctors = viewModel.customersByBrick[_selectedBrickId] ?? [];
     } else if (_selectedType == DailyTourPlanType.remote) {
-      viewModel.customersByBrick.values.forEach((list) {
-        availableDoctors.addAll(list);
-      });
+      // Deduplicate by customer_id to prevent rendering duplicates and reduce list size
+      final Set<String> seenIds = {};
+      for (final list in viewModel.customersByBrick.values) {
+        for (final doc in list) {
+          final id = doc['customer_id']?.toString() ?? '';
+          if (id.isNotEmpty && !seenIds.contains(id)) {
+            seenIds.add(id);
+            availableDoctors.add(doc);
+          }
+        }
+      }
     }
 
-    // Apply search filter
+    // Apply search filter - for Remote mode, only show results when searching (avoids rendering thousands of items)
     if (_searchQuery.trim().isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       availableDoctors = availableDoctors.where((doc) {
@@ -133,6 +141,12 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
         final code = (doc['customer_code'] ?? '').toString().toLowerCase();
         return name.contains(q) || code.contains(q);
       }).toList();
+    } else if (_selectedType == DailyTourPlanType.remote) {
+      // In remote mode with no search query, only show already-selected doctors
+      // to avoid rendering a huge unfiltered list that blocks the main thread
+      availableDoctors = availableDoctors
+          .where((doc) => _selectedCustomerIds.contains(doc['customer_id']?.toString() ?? ''))
+          .toList();
     }
 
     return Scaffold(
@@ -461,13 +475,26 @@ class _EditDailyTourPlanScreenState extends State<EditDailyTourPlanScreen> {
                                   Text(
                                     _selectedType == DailyTourPlanType.field && _selectedBrickId == null
                                         ? 'Please select a territory above'
-                                        : 'No doctors found',
+                                        : _selectedType == DailyTourPlanType.remote && _searchQuery.trim().isEmpty
+                                            ? 'Search above to find & add doctors'
+                                            : 'No doctors found',
                                     style: TextStyle(
                                       color: theme.getTextSecondary(),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
+                                  if (_selectedType == DailyTourPlanType.remote && _searchQuery.trim().isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        'Remote mode: search across all territories',
+                                        style: TextStyle(
+                                          color: theme.getTextTertiary(),
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             )
