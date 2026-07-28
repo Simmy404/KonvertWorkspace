@@ -8,10 +8,8 @@ import 'master_sync_screen.dart';
 import 'bookings_screen.dart';
 
 import 'dashboard/dashboard_view_model.dart';
-import 'dashboard/tour_plan_view_model.dart';
 import 'dashboard/report_view_model.dart';
 import 'dashboard/home_tab.dart';
-import 'dashboard/tour_plan_tab.dart';
 import 'dashboard/report_tab.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -25,7 +23,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late DashboardViewModel _viewModel;
-  late TourPlanViewModel _tourPlanViewModel;
   late ReportViewModel _reportViewModel;
   late PageController _pageController;
 
@@ -33,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _viewModel = DashboardViewModel();
-    _tourPlanViewModel = TourPlanViewModel();
     _reportViewModel = ReportViewModel();
     _pageController = PageController(initialPage: _viewModel.selectedIndex);
     _viewModel.addListener(_onViewModelChanged);
@@ -143,7 +139,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _viewModel),
-        ChangeNotifierProvider.value(value: _tourPlanViewModel),
         ChangeNotifierProvider.value(value: _reportViewModel),
       ],
       child: ListenableBuilder(
@@ -196,7 +191,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onTriggerManualSync: _triggerManualSync,
                                 ),
                                 const BookingsScreen(),
-                                const TourPlanTab(),
                                 const ReportTab(),
                               ],
                             ),
@@ -267,13 +261,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildNavItem(
               viewModel,
               index: 2,
-              selectedIcon: Icons.explore_rounded,
-              unselectedIcon: Icons.explore_outlined,
-              label: 'Tour Plan',
-            ),
-            _buildNavItem(
-              viewModel,
-              index: 3,
               selectedIcon: Icons.analytics_rounded,
               unselectedIcon: Icons.analytics_outlined,
               label: 'Report',

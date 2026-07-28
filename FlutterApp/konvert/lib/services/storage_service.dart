@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
-import '../models/tour_plan.dart';
 import 'dart:convert';
 import 'database_service.dart';
 import '../models/user.dart';
@@ -123,40 +122,6 @@ class StorageService {
       'today_sales': getString(_targetTodayKey) ?? '0',
       'no_of_orders': getString(_targetOrdersKey) ?? '0',
     };
-  }
-
-  // --- TOUR PLAN STORAGE ---
-
-  static const String _tourPlanKey = 'monthly_tour_plan_v1';
-
-  MonthlyTourPlan? getTourPlan() {
-    try {
-      final String? jsonStr = getString(_tourPlanKey);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        return MonthlyTourPlan.fromJson(jsonStr);
-      }
-    } catch (e) {
-      _handleSilentError('STR-TP-1', 'Failed to load tour plan: $e');
-    }
-    return null;
-  }
-
-  Future<bool> saveTourPlan(MonthlyTourPlan plan) async {
-    try {
-      return await setString(_tourPlanKey, plan.toJson());
-    } catch (e) {
-      _handleSilentError('STR-TP-2', 'Failed to save tour plan: $e');
-      return false;
-    }
-  }
-
-  Future<bool> deleteTourPlan() async {
-    try {
-      if (_prefs == null) await init();
-      return await _prefs!.remove(_tourPlanKey);
-    } catch (e) {
-      return false;
-    }
   }
 
   Future<bool> setLastSyncDate(String dateStr) async {

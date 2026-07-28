@@ -1001,11 +1001,6 @@ class HomeTab extends StatelessWidget {
         icon = Icons.cloud_upload_rounded;
         iconColor = const Color(0xFF10B981);
         break;
-      case 'tour_plan_created':
-      case 'tour_plan_edited':
-        icon = Icons.calendar_month_rounded;
-        iconColor = const Color(0xFF8B5CF6);
-        break;
       default:
         icon = Icons.local_activity_rounded;
         iconColor = theme.getAccentBlue();

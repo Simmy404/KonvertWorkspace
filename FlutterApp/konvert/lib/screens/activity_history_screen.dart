@@ -124,7 +124,7 @@ class ActivityHistoryScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    'Actions like placing bookings or configuring tour plans\nwill appear here automatically.',
+                                    'Actions like placing bookings\nwill appear here automatically.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: theme.getTextSecondary(),
@@ -183,11 +183,6 @@ class ActivityHistoryScreen extends StatelessWidget {
       case 'booking_uploaded':
         icon = Icons.cloud_upload_rounded;
         iconColor = const Color(0xFF10B981); // Emerald Green
-        break;
-      case 'tour_plan_created':
-      case 'tour_plan_edited':
-        icon = Icons.calendar_month_rounded;
-        iconColor = const Color(0xFF8B5CF6); // Purple
         break;
       default:
         icon = Icons.local_activity_rounded;

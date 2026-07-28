@@ -6,7 +6,7 @@ import '../../managers/location_manager.dart';
 class DashboardViewModel extends ChangeNotifier {
   bool _isDisposed = false;
   bool needsInitialSync = false;
-  int selectedIndex = 0; // 0 = Home, 1 = Bookings, 2 = Tour Plan, 3 = Report
+  int selectedIndex = 0; // 0 = Home, 1 = Bookings, 2 = Report
 
   int bricksCount = 0;
   int productsCount = 0;

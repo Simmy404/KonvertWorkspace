@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class UserActivity {
   final String id;
-  final String type; // 'booking_created', 'booking_edited', 'booking_deleted', 'tour_plan_created', 'tour_plan_edited'
+  final String type; // 'booking_created', 'booking_edited', 'booking_deleted', 'booking_uploaded'
   final String title;
   final String subtitle;
   final DateTime timestamp;
