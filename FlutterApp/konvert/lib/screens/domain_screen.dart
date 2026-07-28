@@ -19,7 +19,9 @@ class DomainScreen extends StatefulWidget {
 }
 
 class _DomainScreenState extends State<DomainScreen> {
-  final TextEditingController _apiKeyController = TextEditingController(text: '28');
+  final TextEditingController _apiKeyController = TextEditingController(
+    text: '28',
+  );
   final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = false;
@@ -27,16 +29,6 @@ class _DomainScreenState extends State<DomainScreen> {
   String _searchQuery = '';
 
   final List<Company> _companies = const [
-    Company(
-      name: 'Abott Enterprise',
-      url: 'https://www.abott.com',
-      displayUrl: 'abott.com',
-    ),
-    Company(
-      name: 'Bristol Mayer Biotech',
-      url: 'https://www.hassanpharma.com',
-      displayUrl: 'bristol.pk',
-    ),
     Company(
       name: 'Faisal Pharma',
       url: 'https://www.faisalpharma.com',
@@ -54,7 +46,7 @@ class _DomainScreenState extends State<DomainScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCompany = _companies[1]; // Default to Bristol Mayer Biotech
+    _selectedCompany = _companies[1]; // Default to Hassanpharma
 
     _searchController.addListener(() {
       setState(() {

@@ -20,10 +20,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController(
-    text: 'huraira@hassanpharma.com',
+    // text: 'huraira@hassanpharma.com',
+    text: '',
   );
   final TextEditingController _passwordController = TextEditingController(
-    text: 'huraira123',
+    text: '',
+    // text: 'huraira123',
   );
 
   bool _isLoading = false;
@@ -288,10 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 24,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             ),
             child: Text(
               'Change Company',

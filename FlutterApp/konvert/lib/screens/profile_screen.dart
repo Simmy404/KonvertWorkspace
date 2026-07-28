@@ -10,6 +10,7 @@ import '../services/storage_service.dart';
 import '../models/user.dart';
 import '../utils/page_transitions.dart';
 import 'login_screen.dart';
+import '../services/database_service.dart';
 
 class DashedCirclePainter extends CustomPainter {
   final Color color;
@@ -178,6 +179,9 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Future<void> _onLogout(BuildContext context) async {
+    final bookings = await DatabaseService.instance.getAllBookings();
+    final hasBookings = bookings.isNotEmpty;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -194,7 +198,9 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           content: Text(
-            'Are you sure you want to log out of your account?',
+            hasBookings
+                ? 'You have active bookings. Logging out will delete all bookings from the device. Are you sure you want to proceed?'
+                : 'Are you sure you want to log out of your account?',
             style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
           ),
           actions: [
@@ -216,7 +222,7 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Log Out'),
+              child: Text(hasBookings ? 'Delete & Log Out' : 'Log Out'),
             ),
           ],
         );
@@ -224,6 +230,9 @@ class ProfileScreen extends StatelessWidget {
     );
 
     if (confirm == true && context.mounted) {
+      if (hasBookings) {
+        await DatabaseService.instance.deleteAllBookings();
+      }
       await StorageService.instance.logoutUser();
       if (!context.mounted) return;
       Navigator.pushAndRemoveUntil(
