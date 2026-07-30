@@ -1,6 +1,8 @@
 // lib/services/api_service.dart
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:io';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import 'dart:convert';
@@ -13,6 +15,33 @@ import 'database_service.dart';
 class ApiService {
   ApiService._internal();
   static final ApiService instance = ApiService._internal();
+
+  /// Classifies network exceptions into user-friendly error messages (Timeout vs Offline vs Server error)
+  ErrorStruct classifyNetworkError(dynamic e, {String prefix = 'API'}) {
+    if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+      return ErrorStruct(
+        code: '$prefix-TIMEOUT',
+        technicalDetails: 'Request timed out after 30s. Please check your network stability and try again.',
+      );
+    } else if (e is SocketException ||
+        e.toString().contains('SocketException') ||
+        e.toString().contains('Failed host lookup') ||
+        e.toString().contains('No route to host')) {
+      return ErrorStruct(
+        code: '$prefix-OFFLINE',
+        technicalDetails: 'No internet connection available. Please turn on Wi-Fi or Mobile Data.',
+      );
+    } else if (e is http.ClientException) {
+      return ErrorStruct(
+        code: '$prefix-NET-ERR',
+        technicalDetails: 'Network connection error: ${e.message}',
+      );
+    }
+    return ErrorStruct(
+      code: '$prefix-FAIL',
+      technicalDetails: 'Network request failed: $e',
+    );
+  }
 
   /// Authenticates the user against the currently saved domain
   Future<User?> authenticateUser({
@@ -80,13 +109,8 @@ class ApiService {
         return null;
       }
     } catch (e) {
-      ErrorManager.instance.showToastError(
-        ErrorStruct(
-          code: 'API-004',
-          technicalDetails: 'Network request failed: $e',
-        ),
-        4,
-      );
+      final err = classifyNetworkError(e, prefix: 'AUTH');
+      ErrorManager.instance.showToastError(err, 4);
       return null;
     }
   }
@@ -127,13 +151,8 @@ class ApiService {
         return false;
       }
     } catch (e) {
-      ErrorManager.instance.showToastError(
-        ErrorStruct(
-          code: 'API-001',
-          technicalDetails: 'Network request failed: $e',
-        ),
-        4,
-      );
+      final err = classifyNetworkError(e, prefix: 'DOM');
+      ErrorManager.instance.showToastError(err, 4);
       return false;
     }
   }
@@ -175,7 +194,9 @@ class ApiService {
         return null;
       }
     } catch (e) {
-      debugPrint('Sync Exception ($endpoint): $e');
+      final err = classifyNetworkError(e, prefix: 'SYNC');
+      debugPrint('Sync Exception ($endpoint): ${err.technicalDetails}');
+      ErrorManager.instance.showToastError(err, 4);
       return null;
     }
   }
@@ -653,7 +674,9 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      debugPrint('Sync Exception (uploadBookings): $e');
+      final err = classifyNetworkError(e, prefix: 'UPLOAD');
+      debugPrint('Sync Exception (uploadBookings): ${err.technicalDetails}');
+      ErrorManager.instance.showToastError(err, 4);
       return false;
     }
   }
@@ -687,7 +710,9 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      debugPrint('Sync Exception (downloadBookings): $e');
+      final err = classifyNetworkError(e, prefix: 'DOWNLOAD');
+      debugPrint('Sync Exception (downloadBookings): ${err.technicalDetails}');
+      ErrorManager.instance.showToastError(err, 4);
       return null;
     }
   }

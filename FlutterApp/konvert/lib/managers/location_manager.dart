@@ -121,6 +121,9 @@ class LocationManager extends ChangeNotifier {
     return distance <= geofenceRadius;
   }
 
+  Future<bool> openLocationSettings() => Geolocator.openLocationSettings();
+  Future<bool> openAppSettings() => Geolocator.openAppSettings();
+
   Future<void> init() async {
     // Optionally fetch location immediately on startup
   }
@@ -132,13 +135,14 @@ class LocationManager extends ChangeNotifier {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ErrorManager.instance.showToastError(
-        ErrorStruct(
+        const ErrorStruct(
           code: 'LOC-DISABLED',
           technicalDetails:
-              'Location services are disabled. Please enable them to use the app.',
+              'Location services (GPS) are disabled. Opening location settings...',
         ),
-        3,
+        4,
       );
+      await Geolocator.openLocationSettings();
       return false;
     }
 
@@ -147,11 +151,11 @@ class LocationManager extends ChangeNotifier {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         ErrorManager.instance.showToastError(
-          ErrorStruct(
+          const ErrorStruct(
             code: 'LOC-DENIED',
-            technicalDetails: 'Location permissions are denied.',
+            technicalDetails: 'Location permissions are denied. Please allow location access.',
           ),
-          3,
+          4,
         );
         return false;
       }
@@ -159,13 +163,14 @@ class LocationManager extends ChangeNotifier {
 
     if (permission == LocationPermission.deniedForever) {
       ErrorManager.instance.showToastError(
-        ErrorStruct(
+        const ErrorStruct(
           code: 'LOC-DENIED-FOREVER',
           technicalDetails:
-              'Location permissions are permanently denied, we cannot request permissions.',
+              'Location permissions are permanently denied. Opening app settings...',
         ),
-        3,
+        4,
       );
+      await Geolocator.openAppSettings();
       return false;
     }
 
@@ -195,7 +200,35 @@ class LocationManager extends ChangeNotifier {
           : LocationAccuracy.medium;
 
       _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: accuracy,
+        locationSettings: LocationSettings(
+          accuracy: accuracy,
+          timeLimit: const Duration(seconds: 12),
+        ),
+      );
+    } on LocationServiceDisabledException {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'LOC-DISABLED',
+          technicalDetails: 'GPS / Location services are disabled.',
+        ),
+        4,
+      );
+      await Geolocator.openLocationSettings();
+    } on PermissionDeniedException {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'LOC-DENIED',
+          technicalDetails: 'Location permission was denied.',
+        ),
+        4,
+      );
+    } on TimeoutException {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'LOC-TIMEOUT',
+          technicalDetails: 'Location signal request timed out. Please check GPS connection.',
+        ),
+        4,
       );
     } catch (e, stack) {
       ErrorManager.instance.logErrorToConsole(
@@ -206,7 +239,7 @@ class LocationManager extends ChangeNotifier {
       ErrorManager.instance.showToastError(
         ErrorStruct(
           code: 'LOC-FAIL',
-          technicalDetails: 'Failed to fetch location.',
+          technicalDetails: 'Failed to fetch location: $e',
         ),
         3,
       );

@@ -1,5 +1,6 @@
 // lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../managers/theme_manager.dart';
 import '../managers/error_manager.dart';
@@ -59,6 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _onLogin() async {
+    TextInput.finishAutofillContext();
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -187,123 +189,132 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // --- LOGIN UI ---
   Widget _buildLoginStage() {
-    return Column(
-      key: const ValueKey('login_stage'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: Text(
-            'Sign In to\nyour Account',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: ThemeManager.instance.getMatchColor(),
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-              height: 1,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Center(
-          child: Text(
-            'Enter your credentials',
-            style: TextStyle(
-              color: ThemeManager.instance.getGreyTransparent5(),
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Username Field
-        _buildTextField(
-          controller: _usernameController,
-          hintText: 'Enter username',
-          icon: Icons.person_outline,
-          obscureText: false,
-        ),
-        const SizedBox(height: 8),
-
-        // Password Field with Visibility Toggle
-        _buildTextField(
-          controller: _passwordController,
-          hintText: 'Enter password',
-          icon: Icons.lock_outline,
-          obscureText: _obscurePassword,
-          isPassword: true,
-          onToggleVisibility: () {
-            setState(() {
-              _obscurePassword = !_obscurePassword;
-            });
-          },
-        ),
-        const SizedBox(height: 24),
-
-        // Sign In Button
-        SizedBox(
-          width: double.infinity,
-          height: 64,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _onLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ThemeManager.instance.getPrimaryColor(),
-              foregroundColor: ThemeManager.instance.getContrastColor(),
-              disabledBackgroundColor: ThemeManager.instance
-                  .getPrimaryColor()
-                  .withOpacity(0.5),
-              shape: const StadiumBorder(),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: ThemeManager.instance.getContrastColor(),
-                      strokeWidth: 3,
-                    ),
-                  )
-                : const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Change Company Button
-        Center(
-          child: TextButton(
-            onPressed: () async {
-              await StorageService.instance.clearCurrentCompany();
-              if (!mounted) return;
-              Navigator.pushReplacement(
-                context,
-                PageTransitions.fadeSlideUpTransition(const DomainScreen()),
-              );
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            ),
+    return AutofillGroup(
+      child: Column(
+        key: const ValueKey('login_stage'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
             child: Text(
-              'Change Company',
+              'Sign In to\nyour Account',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: ThemeManager.instance.getMatchColor(),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+                height: 1,
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              'Enter your credentials',
+              style: TextStyle(
+                color: ThemeManager.instance.getGreyTransparent5(),
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Username Field
+          _buildTextField(
+            controller: _usernameController,
+            hintText: 'Enter username',
+            icon: Icons.person_outline,
+            obscureText: false,
+            autofillHints: const [AutofillHints.username, AutofillHints.email],
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 8),
+
+          // Password Field with Visibility Toggle
+          _buildTextField(
+            controller: _passwordController,
+            hintText: 'Enter password',
+            icon: Icons.lock_outline,
+            obscureText: _obscurePassword,
+            isPassword: true,
+            autofillHints: const [AutofillHints.password],
+            keyboardType: TextInputType.visiblePassword,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _onLogin(),
+            onToggleVisibility: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Sign In Button
+          SizedBox(
+            width: double.infinity,
+            height: 64,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _onLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ThemeManager.instance.getPrimaryColor(),
+                foregroundColor: ThemeManager.instance.getContrastColor(),
+                disabledBackgroundColor: ThemeManager.instance
+                    .getPrimaryColor()
+                    .withOpacity(0.5),
+                shape: const StadiumBorder(),
+                elevation: 0,
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: ThemeManager.instance.getContrastColor(),
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : const Text(
+                      'Sign In',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Change Company Button
+          Center(
+            child: TextButton(
+              onPressed: () async {
+                await StorageService.instance.clearCurrentCompany();
+                if (!mounted) return;
+                Navigator.pushReplacement(
+                  context,
+                  PageTransitions.fadeSlideUpTransition(const DomainScreen()),
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              ),
+              child: Text(
+                'Change Company',
+                style: TextStyle(
+                  color: ThemeManager.instance.getMatchColor(),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -313,6 +324,10 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
     required bool obscureText,
     bool isPassword = false,
+    Iterable<String>? autofillHints,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
     VoidCallback? onToggleVisibility,
   }) {
     return Container(
@@ -338,6 +353,10 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: controller,
               obscureText: obscureText,
               enabled: !_isLoading,
+              autofillHints: autofillHints,
+              keyboardType: keyboardType,
+              textInputAction: textInputAction,
+              onFieldSubmitted: onSubmitted,
               style: TextStyle(
                 color: ThemeManager.instance.getMatchColor(),
                 fontSize: 16,

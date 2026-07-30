@@ -472,7 +472,20 @@ class ProductStep extends StatelessWidget {
     int currentQty,
     ThemeManager theme,
   ) {
-    final ctrl = TextEditingController(text: currentQty.toString());
+    final ctrl = TextEditingController(text: currentQty.toString())
+      ..selection = TextSelection(baseOffset: 0, extentOffset: currentQty.toString().length);
+
+    void setQtyAndPop(BuildContext ctx) {
+      final newQty = int.tryParse(ctrl.text.trim()) ?? 0;
+      if (newQty > 0) {
+        final existing = state.cart.firstWhere((p) => p.prodID == prodId, orElse: () => throw Exception());
+        state.addToCart(existing.copyWith(qty: newQty));
+      } else if (newQty == 0) {
+        state.removeFromCart(prodId);
+      }
+      Navigator.pop(ctx);
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -487,6 +500,7 @@ class ProductStep extends StatelessWidget {
           autofocus: true,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
+          textInputAction: TextInputAction.done,
           style: TextStyle(
             color: theme.getTextPrimary(),
             fontSize: 28,
@@ -499,7 +513,7 @@ class ProductStep extends StatelessWidget {
               borderSide: BorderSide(color: theme.getAccentBlue(), width: 2),
             ),
           ),
-          onTap: () => ctrl.selection = TextSelection(baseOffset: 0, extentOffset: ctrl.text.length),
+          onSubmitted: (_) => setQtyAndPop(ctx),
         ),
         actions: [
           TextButton(
@@ -512,16 +526,7 @@ class ProductStep extends StatelessWidget {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
-              final newQty = int.tryParse(ctrl.text.trim()) ?? 0;
-              if (newQty > 0) {
-                final existing = state.cart.firstWhere((p) => p.prodID == prodId, orElse: () => throw Exception());
-                state.addToCart(existing.copyWith(qty: newQty));
-              } else if (newQty == 0) {
-                state.removeFromCart(prodId);
-              }
-              Navigator.pop(ctx);
-            },
+            onPressed: () => setQtyAndPop(ctx),
             child: const Text('Set', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -794,171 +799,16 @@ class ProductStep extends StatelessWidget {
     PlaceOrderProduct? existingItem, {
     bool autofocusFirstInput = true,
   }) {
-    int qty = existingItem?.qty ?? 1;
-    double price = existingItem?.price ?? double.tryParse(product['product_tp'].toString()) ?? 0.0;
-    double discount = existingItem?.discount ?? 0.0;
-    double bonus = existingItem?.bonus ?? 0.0;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateModal) {
-            double total = (price * qty) - ((price * qty * discount) / 100) + bonus;
-
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: ThemeManager.instance.getContainerColor(),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            product['product_name'] ?? 'Product Pricing & Details',
-                            style: TextStyle(
-                              color: ThemeManager.instance.getTextPrimary(),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: ThemeManager.instance.getTextSecondary(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    PlaceOrderComponents.buildDialogInput(
-                      'Quantity',
-                      qty.toString(),
-                      (v) {
-                        setStateModal(() {
-                          final parsed = int.tryParse(v);
-                          if (parsed != null && parsed > 0) {
-                            qty = parsed;
-                          }
-                        });
-                      },
-                      autofocus: autofocusFirstInput,
-                    ),
-                    PlaceOrderComponents.buildDialogInput(
-                      'Unit Price (TP)',
-                      price.toString(),
-                      (v) => setStateModal(() => price = double.tryParse(v) ?? 0.0),
-                      autofocus: false,
-                    ),
-                    PlaceOrderComponents.buildDialogInput(
-                      'Discount Percentage (%)',
-                      discount.toString(),
-                      (v) => setStateModal(() => discount = double.tryParse(v) ?? 0.0),
-                    ),
-                    PlaceOrderComponents.buildDialogInput(
-                      'Bonus Amount (Rs)',
-                      bonus.toString(),
-                      (v) => setStateModal(() => bonus = double.tryParse(v) ?? 0.0),
-                    ),
-                    const Divider(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Calculated Subtotal:',
-                          style: TextStyle(
-                            color: ThemeManager.instance.getTextSecondary(),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          'Rs ${total.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: ThemeManager.instance.getTextPrimary(),
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        if (existingItem != null)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                state.removeFromCart(product['product_id'].toString());
-                                Navigator.pop(context);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red,
-                                side: const BorderSide(color: Colors.red),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text('Remove'),
-                            ),
-                          ),
-                        if (existingItem != null) const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (qty > 0) {
-                                final item = PlaceOrderProduct(
-                                  prodID: product['product_id'].toString(),
-                                  name: product['product_name'].toString(),
-                                  qty: qty,
-                                  price: price,
-                                  discount: discount,
-                                  bonus: bonus,
-                                );
-                                state.addToCart(item);
-                              }
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E56E2),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text('Save to Cart', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+        return _ProductPricingDialogContent(
+          state: state,
+          product: product,
+          existingItem: existingItem,
+          autofocusFirstInput: autofocusFirstInput,
         );
       },
     );
@@ -1080,6 +930,262 @@ class ProductStep extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ProductPricingDialogContent extends StatefulWidget {
+  final PlaceOrderState state;
+  final Map<String, dynamic> product;
+  final PlaceOrderProduct? existingItem;
+  final bool autofocusFirstInput;
+
+  const _ProductPricingDialogContent({
+    Key? key,
+    required this.state,
+    required this.product,
+    this.existingItem,
+    this.autofocusFirstInput = true,
+  }) : super(key: key);
+
+  @override
+  State<_ProductPricingDialogContent> createState() => _ProductPricingDialogContentState();
+}
+
+class _ProductPricingDialogContentState extends State<_ProductPricingDialogContent> {
+  late int qty;
+  late double price;
+  late double discount;
+  late double bonus;
+
+  late TextEditingController qtyController;
+  late TextEditingController priceController;
+  late TextEditingController discountController;
+  late TextEditingController bonusController;
+
+  late FocusNode qtyFocus;
+  late FocusNode priceFocus;
+  late FocusNode discountFocus;
+  late FocusNode bonusFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    qty = widget.existingItem?.qty ?? 1;
+    price = widget.existingItem?.price ?? double.tryParse(widget.product['product_tp'].toString()) ?? 0.0;
+    discount = widget.existingItem?.discount ?? 0.0;
+    bonus = widget.existingItem?.bonus ?? 0.0;
+
+    qtyController = TextEditingController(text: qty.toString());
+    priceController = TextEditingController(text: price.toString());
+    discountController = TextEditingController(text: discount.toString());
+    bonusController = TextEditingController(text: bonus.toString());
+
+    // Initially select quantity text if autofocusing
+    if (widget.autofocusFirstInput) {
+      qtyController.selection = TextSelection(baseOffset: 0, extentOffset: qtyController.text.length);
+    }
+
+    qtyFocus = FocusNode();
+    priceFocus = FocusNode();
+    discountFocus = FocusNode();
+    bonusFocus = FocusNode();
+
+    // Select text when a field receives focus so user can quickly type over existing values
+    _addSelectAllOnFocus(qtyFocus, qtyController);
+    _addSelectAllOnFocus(priceFocus, priceController);
+    _addSelectAllOnFocus(discountFocus, discountController);
+    _addSelectAllOnFocus(bonusFocus, bonusController);
+  }
+
+  void _addSelectAllOnFocus(FocusNode node, TextEditingController controller) {
+    node.addListener(() {
+      if (node.hasFocus && controller.text.isNotEmpty) {
+        controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    qtyController.dispose();
+    priceController.dispose();
+    discountController.dispose();
+    bonusController.dispose();
+    qtyFocus.dispose();
+    priceFocus.dispose();
+    discountFocus.dispose();
+    bonusFocus.dispose();
+    super.dispose();
+  }
+
+  void _saveToCart() {
+    if (qty > 0) {
+      final item = PlaceOrderProduct(
+        prodID: widget.product['product_id'].toString(),
+        name: widget.product['product_name'].toString(),
+        qty: qty,
+        price: price,
+        discount: discount,
+        bonus: bonus,
+      );
+      widget.state.addToCart(item);
+    }
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double total = (price * qty) - ((price * qty * discount) / 100) + bonus;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: ThemeManager.instance.getContainerColor(),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.product['product_name'] ?? 'Product Pricing & Details',
+                    style: TextStyle(
+                      color: ThemeManager.instance.getTextPrimary(),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: ThemeManager.instance.getTextSecondary(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            PlaceOrderComponents.buildDialogInput(
+              'Quantity',
+              qtyController,
+              (v) {
+                setState(() {
+                  final parsed = int.tryParse(v);
+                  if (parsed != null && parsed > 0) {
+                    qty = parsed;
+                  }
+                });
+              },
+              autofocus: widget.autofocusFirstInput,
+              focusNode: qtyFocus,
+              nextFocusNode: priceFocus,
+              textInputAction: TextInputAction.next,
+            ),
+            PlaceOrderComponents.buildDialogInput(
+              'Unit Price (TP)',
+              priceController,
+              (v) => setState(() => price = double.tryParse(v) ?? 0.0),
+              autofocus: false,
+              focusNode: priceFocus,
+              nextFocusNode: discountFocus,
+              textInputAction: TextInputAction.next,
+            ),
+            PlaceOrderComponents.buildDialogInput(
+              'Discount Percentage (%)',
+              discountController,
+              (v) => setState(() => discount = double.tryParse(v) ?? 0.0),
+              focusNode: discountFocus,
+              nextFocusNode: bonusFocus,
+              textInputAction: TextInputAction.next,
+            ),
+            PlaceOrderComponents.buildDialogInput(
+              'Bonus Amount (Rs)',
+              bonusController,
+              (v) => setState(() => bonus = double.tryParse(v) ?? 0.0),
+              focusNode: bonusFocus,
+              textInputAction: TextInputAction.done,
+              onSubmitted: _saveToCart,
+            ),
+            const Divider(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Calculated Subtotal:',
+                  style: TextStyle(
+                    color: ThemeManager.instance.getTextSecondary(),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Rs ${total.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: ThemeManager.instance.getTextPrimary(),
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                if (widget.existingItem != null)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        widget.state.removeFromCart(widget.product['product_id'].toString());
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Remove'),
+                    ),
+                  ),
+                if (widget.existingItem != null) const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _saveToCart,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E56E2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Save to Cart', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

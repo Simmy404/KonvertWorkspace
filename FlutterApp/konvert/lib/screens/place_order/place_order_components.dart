@@ -319,18 +319,30 @@ class PlaceOrderComponents {
 
   static Widget buildDialogInput(
     String label,
-    String initialValue,
+    TextEditingController controller,
     Function(String) onChanged, {
     bool autofocus = false,
+    FocusNode? focusNode,
+    FocusNode? nextFocusNode,
+    TextInputAction textInputAction = TextInputAction.next,
+    void Function()? onSubmitted,
   }) {
     final theme = ThemeManager.instance;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: TextField(
+        controller: controller,
+        focusNode: focusNode,
         autofocus: autofocus,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        controller: TextEditingController(text: initialValue)
-          ..selection = TextSelection(baseOffset: 0, extentOffset: initialValue.length),
+        textInputAction: textInputAction,
+        onSubmitted: (val) {
+          if (onSubmitted != null) {
+            onSubmitted();
+          } else if (nextFocusNode != null) {
+            nextFocusNode.requestFocus();
+          }
+        },
         onChanged: onChanged,
         style: TextStyle(
           color: theme.getTextPrimary(),
