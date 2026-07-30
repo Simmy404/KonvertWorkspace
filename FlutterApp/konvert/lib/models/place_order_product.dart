@@ -31,6 +31,24 @@ class PlaceOrderProduct {
     return (total - discountAmount) + bonus;
   }
 
+  PlaceOrderProduct copyWith({
+    String? prodID,
+    String? name,
+    int? qty,
+    double? price,
+    double? bonus,
+    double? discount,
+  }) {
+    return PlaceOrderProduct(
+      prodID: prodID ?? this.prodID,
+      name: name ?? this.name,
+      qty: qty ?? this.qty,
+      price: price ?? this.price,
+      bonus: bonus ?? this.bonus,
+      discount: discount ?? this.discount,
+    );
+  }
+
   @override
   String toString() {
     return 'Product ID: $prodID, Name: $name, Quantity: $qty, Price: $price, Bonus: $bonus, Discount: $discount, Grand Total: ${getGrandTotal()}';

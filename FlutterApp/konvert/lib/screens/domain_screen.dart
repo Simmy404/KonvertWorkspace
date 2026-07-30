@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../managers/theme_manager.dart';
 import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
-import '../models/company.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'login_screen.dart';
@@ -19,46 +18,17 @@ class DomainScreen extends StatefulWidget {
 }
 
 class _DomainScreenState extends State<DomainScreen> {
+  final TextEditingController _domainController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController(
     text: '28',
   );
-  final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isExpanded = false;
-  String _searchQuery = '';
-
-  final List<Company> _companies = const [
-    Company(
-      name: 'Faisal Pharma',
-      url: 'https://www.faisalpharma.com',
-      displayUrl: 'faisalpharma.com',
-    ),
-    Company(
-      name: 'Hassan Pharma',
-      url: 'https://www.hassanpharma.com',
-      displayUrl: 'hassanpharma.com',
-    ),
-  ];
-
-  late Company _selectedCompany;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCompany = _companies[1]; // Default to Hassanpharma
-
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.toLowerCase();
-      });
-    });
-  }
 
   @override
   void dispose() {
+    _domainController.dispose();
     _apiKeyController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -83,12 +53,24 @@ class _DomainScreenState extends State<DomainScreen> {
   }
 
   Future<void> _onConfirm() async {
+    final rawDomain = _domainController.text.trim();
     final apiKey = _apiKeyController.text.trim();
+
+    if (rawDomain.isEmpty) {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'DOM-003',
+          technicalDetails: 'Domain cannot be empty.',
+        ),
+        3,
+      );
+      return;
+    }
 
     if (apiKey.isEmpty) {
       ErrorManager.instance.showToastError(
         const ErrorStruct(
-          code: 'DOM-003',
+          code: 'DOM-005',
           technicalDetails: 'API Key cannot be empty.',
         ),
         3,
@@ -96,19 +78,29 @@ class _DomainScreenState extends State<DomainScreen> {
       return;
     }
 
+    // Normalise: ensure the domain starts with http:// or https://
+    String domain = rawDomain;
+    if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+      domain = 'https://$domain';
+    }
+
     setState(() => _isLoading = true);
 
     final bool isSuccess = await ApiService.instance.authenticateDomain(
-      domain: _selectedCompany.url,
+      domain: domain,
       apiKey: apiKey,
     );
 
     if (!mounted) return;
 
     if (isSuccess) {
+      // Derive a friendly display name from the domain host
+      final uri = Uri.tryParse(domain);
+      final displayName = uri?.host ?? rawDomain;
+
       await StorageService.instance.setCurrentCompany(
-        name: _selectedCompany.name,
-        url: _selectedCompany.url,
+        name: displayName,
+        url: domain,
       );
       await StorageService.instance.setApiKey(apiKey);
 
@@ -133,56 +125,17 @@ class _DomainScreenState extends State<DomainScreen> {
   Widget build(BuildContext context) {
     final bool isLight = ThemeManager.instance.isLightMode;
 
-    // Theme Color Tokens according to mockup:
-    final Color bgColor = isLight
-        ? const Color(0xFFF7F8FC)
-        : const Color(0xFF03071A);
-    final Color outerBoxBg = isLight
-        ? const Color(0xFFF1F0F3)
-        : const Color(0xFF131520);
-    final Color outerBoxBorder = isLight
-        ? const Color(0xFFE3E1E5)
-        : const Color(0xFF242634);
+    // Theme Color Tokens
+    final Color bgColor =
+        isLight ? const Color(0xFFF7F8FC) : const Color(0xFF03071A);
 
-    final Color searchBarBg = isLight ? Colors.white : const Color(0xFF262832);
-    final Color searchBarBorder = isLight
-        ? const Color(0xFFE5E4E8)
-        : const Color(0xFF383A48);
-    final Color searchIconColor = isLight
-        ? const Color(0xFF7A7A80)
-        : const Color(0xFF8E8E93);
-    final Color searchTextColor = isLight
-        ? const Color(0xFF1C1C1E)
-        : Colors.white;
-
-    final Color cardBg = isLight
-        ? const Color(0xFFEEF3FF)
-        : const Color(0xFF222432);
-    final Color selectedCardBorder = const Color(
-      0xFF9E8FFF,
-    ); // Lavender / Indigo purple stroke
-    final Color cardTitleColor = isLight
-        ? const Color(0xFF1C1C1E)
-        : Colors.white;
-    final Color cardUrlColor = isLight
-        ? const Color(0xFF6E6E73)
-        : const Color(0xFF9A9AA4);
-
-    final Color bottomHeaderBg = isLight
-        ? const Color(0xFFEEF3FF)
-        : const Color(0xFF151C30);
-    final Color bottomHeaderBorder = isLight
-        ? const Color(0xFFDCE2FF)
-        : const Color(0xFF263354);
-
-    final Color inputBg = isLight
-        ? const Color(0xFFF1F0F3)
-        : const Color(0xFF131520);
-    final Color inputBorder = isLight
-        ? const Color(0xFFE3E1E5)
-        : const Color(0xFF242634);
+    final Color inputBg =
+        isLight ? const Color(0xFFF1F0F3) : const Color(0xFF131520);
+    final Color inputBorder =
+        isLight ? const Color(0xFFE3E1E5) : const Color(0xFF242634);
     final Color inputIconColor = const Color(0xFF8E8E93);
     final Color inputHintColor = const Color(0xFF8E8E93);
+    final Color searchTextColor = isLight ? const Color(0xFF1C1C1E) : Colors.white;
 
     final Color buttonBg = isLight ? const Color(0xFF0038FF) : Colors.white;
     final Color buttonTextColor = isLight ? Colors.white : Colors.black;
@@ -235,38 +188,84 @@ class _DomainScreenState extends State<DomainScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // Main Domain Selection Container
+                    // Hero image + title (flexible, fills available space)
                     Expanded(
-                      child: _isExpanded
-                          ? _buildExpandedSelector(
-                              outerBoxBg: outerBoxBg,
-                              outerBoxBorder: outerBoxBorder,
-                              searchBarBg: searchBarBg,
-                              searchBarBorder: searchBarBorder,
-                              searchIconColor: searchIconColor,
-                              searchTextColor: searchTextColor,
-                              cardBg: cardBg,
-                              selectedCardBorder: selectedCardBorder,
-                              cardTitleColor: cardTitleColor,
-                              cardUrlColor: cardUrlColor,
-                              bottomHeaderBg: bottomHeaderBg,
-                              bottomHeaderBorder: bottomHeaderBorder,
-                            )
-                          : _buildCollapsedView(
-                              bottomHeaderBg: bottomHeaderBg,
-                              bottomHeaderBorder: bottomHeaderBorder,
-                              cardTitleColor: cardTitleColor,
-                              cardUrlColor: cardUrlColor,
-                              inputIconColor: inputIconColor,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 24.0),
+                              child: Center(
+                                child: Image.asset(
+                                  ThemeManager.instance.getDomainMain(),
+                                  fit: BoxFit.contain,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Icon(
+                                    Icons.language,
+                                    color: isLight
+                                        ? Colors.blue.shade300
+                                        : Colors.white54,
+                                    size: 100,
+                                  ),
+                                ),
+                              ),
                             ),
+                          ),
+                          Center(
+                            child: Text(
+                              'Connect Domain',
+                              style: TextStyle(
+                                color: isLight ? Colors.black : Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Center(
+                            child: Text(
+                              'Enter your server domain and API key',
+                              style: TextStyle(
+                                color: isLight
+                                    ? const Color(0xFF6E6E73)
+                                    : const Color(0xFF9A9AA4),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
                     ),
 
-                    const SizedBox(height: 16),
+                    // Domain Text Input
+                    _buildInputField(
+                      controller: _domainController,
+                      icon: Icons.language,
+                      hint: 'e.g. yourdomain.com',
+                      label: 'Server Domain',
+                      inputBg: inputBg,
+                      inputBorder: inputBorder,
+                      inputIconColor: inputIconColor,
+                      inputHintColor: inputHintColor,
+                      textColor: searchTextColor,
+                      keyboardType: TextInputType.url,
+                    ),
+
+                    const SizedBox(height: 12),
 
                     // API Key Field
-                    _buildApiKeyField(
+                    _buildInputField(
+                      controller: _apiKeyController,
+                      icon: Icons.lock_outline,
+                      hint: 'Enter API Key',
+                      label: 'API Key',
+                      obscureText: true,
                       inputBg: inputBg,
                       inputBorder: inputBorder,
                       inputIconColor: inputIconColor,
@@ -343,283 +342,18 @@ class _DomainScreenState extends State<DomainScreen> {
     );
   }
 
-  // --- SUB-WIDGET: Collapsed View ---
-  Widget _buildCollapsedView({
-    required Color bottomHeaderBg,
-    required Color bottomHeaderBorder,
-    required Color cardTitleColor,
-    required Color cardUrlColor,
-    required Color inputIconColor,
-  }) {
-    final bool isLight = ThemeManager.instance.isLightMode;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24.0),
-            child: Center(
-              child: Image.asset(
-                ThemeManager.instance.getDomainMain(),
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.language,
-                  color: isLight ? Colors.blue.shade300 : Colors.white54,
-                  size: 100,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Center(
-          child: Text(
-            'Connect Domain',
-            style: TextStyle(
-              color: isLight ? Colors.black : Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Center(
-          child: Text(
-            'Select your company and enter key',
-            style: TextStyle(
-              color: isLight
-                  ? const Color(0xFF6E6E73)
-                  : const Color(0xFF9A9AA4),
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
-        _buildCompanySelectorHeader(
-          isExpanded: false,
-          bgColor: bottomHeaderBg,
-          borderColor: bottomHeaderBorder,
-          titleColor: cardTitleColor,
-          urlColor: cardUrlColor,
-          iconColor: inputIconColor,
-        ),
-      ],
-    );
-  }
-
-  // --- SUB-WIDGET: Fully Expanded Selector Panel ---
-  Widget _buildExpandedSelector({
-    required Color outerBoxBg,
-    required Color outerBoxBorder,
-    required Color searchBarBg,
-    required Color searchBarBorder,
-    required Color searchIconColor,
-    required Color searchTextColor,
-    required Color cardBg,
-    required Color selectedCardBorder,
-    required Color cardTitleColor,
-    required Color cardUrlColor,
-    required Color bottomHeaderBg,
-    required Color bottomHeaderBorder,
-  }) {
-    final filteredCompanies = _companies.where((c) {
-      if (_searchQuery.isEmpty) return true;
-      return c.name.toLowerCase().contains(_searchQuery) ||
-          c.url.toLowerCase().contains(_searchQuery) ||
-          c.displayUrl.toLowerCase().contains(_searchQuery);
-    }).toList();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: outerBoxBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: outerBoxBorder, width: 1),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          // 1. Search Bar
-          Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: searchBarBg,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: searchBarBorder, width: 1),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: searchIconColor, size: 22),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    style: TextStyle(
-                      color: searchTextColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Search company',
-                      hintStyle: TextStyle(
-                        color: searchIconColor,
-                        fontSize: 16,
-                      ),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // 2. Company List Items
-          Expanded(
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              itemCount: filteredCompanies.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final company = filteredCompanies[index];
-                final isSelected = company.name == _selectedCompany.name;
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCompany = company;
-                      _isExpanded = false;
-                      _searchController.clear();
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: isSelected
-                          ? Border.all(color: selectedCardBorder, width: 1.5)
-                          : Border.all(color: Colors.transparent, width: 1.5),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          company.name,
-                          style: TextStyle(
-                            color: cardTitleColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          company.displayUrl,
-                          style: TextStyle(
-                            color: cardUrlColor,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // 3. Bottom Selected Selector Trigger Header
-          _buildCompanySelectorHeader(
-            isExpanded: true,
-            bgColor: bottomHeaderBg,
-            borderColor: bottomHeaderBorder,
-            titleColor: cardTitleColor,
-            urlColor: cardUrlColor,
-            iconColor: searchIconColor,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- SUB-WIDGET: Domain Selector Header Bar ---
-  Widget _buildCompanySelectorHeader({
-    required bool isExpanded,
-    required Color bgColor,
-    required Color borderColor,
-    required Color titleColor,
-    required Color urlColor,
-    required Color iconColor,
-  }) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _isExpanded = !_isExpanded;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.language, color: iconColor, size: 26),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _selectedCompany.name,
-                    style: TextStyle(
-                      color: titleColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _selectedCompany.displayUrl,
-                    style: TextStyle(color: urlColor, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: iconColor,
-              size: 26,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- SUB-WIDGET: API Key Field ---
-  Widget _buildApiKeyField({
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String hint,
+    required String label,
     required Color inputBg,
     required Color inputBorder,
     required Color inputIconColor,
     required Color inputHintColor,
     required Color textColor,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return Container(
       height: 60,
@@ -631,13 +365,14 @@ class _DomainScreenState extends State<DomainScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_outline, color: inputIconColor, size: 24),
+          Icon(icon, color: inputIconColor, size: 24),
           const SizedBox(width: 14),
           Expanded(
             child: TextFormField(
-              controller: _apiKeyController,
-              obscureText: true,
+              controller: controller,
+              obscureText: obscureText,
               enabled: !_isLoading,
+              keyboardType: keyboardType,
               style: TextStyle(
                 color: textColor,
                 fontSize: 16,
@@ -645,7 +380,7 @@ class _DomainScreenState extends State<DomainScreen> {
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Enter API Key',
+                hintText: hint,
                 hintStyle: TextStyle(color: inputHintColor, fontSize: 16),
                 contentPadding: const EdgeInsets.symmetric(vertical: 18),
                 isDense: true,

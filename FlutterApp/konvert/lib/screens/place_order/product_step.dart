@@ -111,7 +111,7 @@ class ProductStep extends StatelessWidget {
                         final circleBadgeBg = isLight ? const Color(0xFF3B82F6) : const Color(0xFF0055FF);
 
                         return AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
+                          duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
                             color: cartItem != null
@@ -125,23 +125,25 @@ class ProductStep extends StatelessWidget {
                               width: 1.0,
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            child: Row(
-                              children: [
-                                // Solid Blue Circle Badge with Icon Inside
-                                GestureDetector(
-                                  onTap: state.isRefreshingProducts
-                                      ? null
-                                      : () => _showProductPricingBottomSheet(
-                                            context,
-                                            state,
-                                            product,
-                                            cartItem,
-                                          ),
-                                  child: Container(
-                                    width: 32,
-                                    height: 32,
+                          child: InkWell(
+                            onTap: state.isRefreshingProducts
+                                ? null
+                                : () => _showProductPricingBottomSheet(
+                                      context,
+                                      state,
+                                      product,
+                                      cartItem,
+                                      autofocusFirstInput: cartItem == null,
+                                    ),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              child: Row(
+                                children: [
+                                  // Solid Blue Circle Badge with Icon Inside
+                                  Container(
+                                    width: 34,
+                                    height: 34,
                                     decoration: BoxDecoration(
                                       color: circleBadgeBg,
                                       shape: BoxShape.circle,
@@ -152,21 +154,10 @@ class ProductStep extends StatelessWidget {
                                       size: 17,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
+                                  const SizedBox(width: 14),
 
-                                // Product Title & Price Details
-                                Expanded(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: state.isRefreshingProducts
-                                        ? null
-                                        : () => _showProductPricingBottomSheet(
-                                              context,
-                                              state,
-                                              product,
-                                              cartItem,
-                                            ),
+                                  // Product Title & Price Details
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -234,117 +225,15 @@ class ProductStep extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                ),
 
-                                // Inline Quantity Stepper / Add Button
-                                cartItem != null
-                                    ? Container(
-                                        decoration: BoxDecoration(
-                                          color: theme.getSurfaceColor(),
-                                          borderRadius: BorderRadius.circular(20),
-                                          boxShadow: [
-                                          ],
-                                          border: Border.all(
-                                            color: theme.getBorderColor(),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              constraints: const BoxConstraints(
-                                                minWidth: 28,
-                                                minHeight: 28,
-                                              ),
-                                              padding: EdgeInsets.zero,
-                                              onPressed: state.isRefreshingProducts
-                                                  ? null
-                                                  : () => state.decrementProductQty(prodId),
-                                              icon: Icon(
-                                                cartItem.qty == 1
-                                                    ? Icons.delete_outline_rounded
-                                                    : Icons.remove_rounded,
-                                                size: 16,
-                                                color: cartItem.qty == 1
-                                                    ? const Color(0xFFEF4444)
-                                                    : theme.getTextPrimary(),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                                              child: Text(
-                                                '${cartItem.qty}',
-                                                style: TextStyle(
-                                                  color: theme.getTextPrimary(),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            ),
-                                            IconButton(
-                                              constraints: const BoxConstraints(
-                                                minWidth: 28,
-                                                minHeight: 28,
-                                              ),
-                                              padding: EdgeInsets.zero,
-                                              onPressed: state.isRefreshingProducts
-                                                  ? null
-                                                  : () => state.incrementProductQty(product),
-                                              icon: Icon(
-                                                Icons.add_rounded,
-                                                size: 16,
-                                                color: theme.getAccentBlue(),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    : ElevatedButton(
-                                        onPressed: state.isRefreshingProducts
-                                            ? null
-                                            : () {
-                                                state.incrementProductQty(product);
-                                                final cartItem = state.cart.firstWhere((p) => p.prodID == prodId);
-                                                _showProductPricingBottomSheet(
-                                                  context,
-                                                  state,
-                                                  product,
-                                                  cartItem,
-                                                  autofocusFirstInput: true,
-                                                );
-                                              },
-                                        style: ElevatedButton.styleFrom(
-                                           backgroundColor: theme.getSurfaceColor(),
-                                           foregroundColor: theme.getAccentBlue(),
-                                           padding: const EdgeInsets.symmetric(
-                                             horizontal: 16,
-                                             vertical: 0,
-                                           ),
-                                           minimumSize: const Size(0, 34),
-                                           shape: RoundedRectangleBorder(
-                                             borderRadius: BorderRadius.circular(20),
-                                             side: BorderSide(
-                                               color: theme.getBorderColor(),
-                                             )
-                                           ),
-                                           elevation: 0,
-                                         ),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.add_rounded, size: 16),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              'Add',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                              ],
+                                  const SizedBox(width: 8),
+
+                                  // Inline Quantity Stepper / Add Button
+                                  cartItem != null
+                                      ? _buildQtyStepper(context, state, prodId, cartItem, theme)
+                                      : _buildAddButton(theme),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -458,6 +347,184 @@ class ProductStep extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // ==========================================
+  // QTY STEPPER HELPERS
+  // ==========================================
+
+  /// Inline −/qty/+ stepper. Long-press on the qty number to type directly.
+  Widget _buildQtyStepper(
+    BuildContext context,
+    PlaceOrderState state,
+    String prodId,
+    dynamic cartItem,
+    ThemeManager theme,
+  ) {
+    return GestureDetector(
+      // Long-press on the whole stepper → quick-type qty dialog
+      onLongPress: state.isRefreshingProducts
+          ? null
+          : () => _showQuickQtyDialog(context, state, prodId, cartItem.qty, theme),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.getSurfaceColor(),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: theme.getBorderColor()),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: state.isRefreshingProducts
+                  ? null
+                  : () => state.decrementProductQty(prodId),
+              child: Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                child: Icon(
+                  cartItem.qty == 1
+                      ? Icons.delete_outline_rounded
+                      : Icons.remove_rounded,
+                  size: 17,
+                  color: cartItem.qty == 1
+                      ? const Color(0xFFEF4444)
+                      : theme.getTextPrimary(),
+                ),
+              ),
+            ),
+            // Qty number — long-press to type
+            GestureDetector(
+              onLongPress: state.isRefreshingProducts
+                  ? null
+                  : () => _showQuickQtyDialog(context, state, prodId, cartItem.qty, theme),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '${cartItem.qty}',
+                  style: TextStyle(
+                    color: theme.getTextPrimary(),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: state.isRefreshingProducts
+                  ? null
+                  : () => state.incrementProductQty(
+                        {'product_id': prodId, 'product_name': cartItem.name, 'product_tp': cartItem.price.toString()},
+                      ),
+              child: Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.add_rounded,
+                  size: 17,
+                  color: theme.getAccentBlue(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Large solid-blue pill "Add" button for products not yet in cart.
+  Widget _buildAddButton(ThemeManager theme) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.getAccentBlue(),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add_rounded, size: 16, color: Colors.white),
+          SizedBox(width: 4),
+          Text(
+            'Add',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Quick-type dialog: lets the salesman type a qty directly without tapping + many times.
+  void _showQuickQtyDialog(
+    BuildContext context,
+    PlaceOrderState state,
+    String prodId,
+    int currentQty,
+    ThemeManager theme,
+  ) {
+    final ctrl = TextEditingController(text: currentQty.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.getContainerColor(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Set Quantity',
+          style: TextStyle(color: theme.getTextPrimary(), fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: theme.getTextPrimary(),
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: theme.getAccentBlue(), width: 2),
+            ),
+          ),
+          onTap: () => ctrl.selection = TextSelection(baseOffset: 0, extentOffset: ctrl.text.length),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: TextStyle(color: theme.getTextSecondary())),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.getAccentBlue(),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              final newQty = int.tryParse(ctrl.text.trim()) ?? 0;
+              if (newQty > 0) {
+                final existing = state.cart.firstWhere((p) => p.prodID == prodId, orElse: () => throw Exception());
+                state.addToCart(existing.copyWith(qty: newQty));
+              } else if (newQty == 0) {
+                state.removeFromCart(prodId);
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Set', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

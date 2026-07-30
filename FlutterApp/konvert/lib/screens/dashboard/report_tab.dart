@@ -73,17 +73,7 @@ class ReportTab extends StatelessWidget {
                               ),
                             )
                           else if (viewModel.reportData == null)
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.5,
-                              child: Center(
-                                child: Text(
-                                  'Failed to load report data',
-                                  style: TextStyle(
-                                    color: theme.getTextSecondary(),
-                                  ),
-                                ),
-                              ),
-                            )
+                            _buildReportsUnavailableFallback(context, theme, isDark, viewModel)
                           else
                             _buildSegmentContent(
                               context,
@@ -974,6 +964,92 @@ class ReportTab extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportsUnavailableFallback(
+    BuildContext context,
+    ThemeManager theme,
+    bool isDark,
+    ReportViewModel viewModel,
+  ) {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.55,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon badge
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: (isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFF1F5F9))
+                      .withOpacity(isDark ? 1.0 : 0.9),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.bar_chart_outlined,
+                  size: 40,
+                  color: theme.getTextTertiary(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Reports not available',
+                style: TextStyle(
+                  color: theme.getTextPrimary(),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.3,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'We couldn\'t reach the reports server.\nThis may be a network issue or the server is temporarily unavailable.',
+                style: TextStyle(
+                  color: theme.getTextSecondary(),
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () => viewModel.refresh(),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text(
+                  'Try Again',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E56E2),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

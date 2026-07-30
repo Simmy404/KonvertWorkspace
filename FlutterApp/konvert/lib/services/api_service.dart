@@ -49,7 +49,7 @@ class ApiService {
               "apiKey": apiKey,
             },
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         try {
@@ -109,7 +109,7 @@ class ApiService {
       // Standard form-urlencoded POST request matching your Java map structure
       final response = await http
           .post(url, body: {"domain": domain, "apiKey": apiKey})
-          .timeout(const Duration(seconds: 15)); // Prevent infinite hanging
+          .timeout(const Duration(seconds: 30)); // Prevent infinite hanging
 
       if (response.statusCode == 200) {
         final bodyStr = response.body.trim().toLowerCase();
@@ -160,7 +160,7 @@ class ApiService {
             url,
             body: {"userid": user.id.toString(), "bid": user.bid.toString()},
           )
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -249,7 +249,7 @@ class ApiService {
                 'date_filter': dateFilter,
               },
             )
-            .timeout(const Duration(seconds: 5));
+            .timeout(const Duration(seconds: 30));
 
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);

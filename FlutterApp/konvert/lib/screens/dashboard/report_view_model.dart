@@ -4,6 +4,7 @@ import '../../models/report_data.dart';
 
 class ReportViewModel extends ChangeNotifier {
   bool isLoading = true;
+  bool hasError = false;
   String selectedFilter = 'month'; // 'today', 'week', 'month', 'year', 'all'
   int selectedSegment = 0; // 0: Overview, 1: Sales, 2: Financials
   ReportData? reportData;
@@ -26,9 +27,16 @@ class ReportViewModel extends ChangeNotifier {
 
   Future<void> _fetchData() async {
     isLoading = true;
+    hasError = false;
     notifyListeners();
 
-    reportData = await ApiService.instance.fetchReportingData(selectedFilter);
+    try {
+      reportData = await ApiService.instance.fetchReportingData(selectedFilter);
+      hasError = reportData == null;
+    } catch (_) {
+      reportData = null;
+      hasError = true;
+    }
 
     isLoading = false;
     notifyListeners();
