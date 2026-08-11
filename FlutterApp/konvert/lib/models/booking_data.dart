@@ -17,7 +17,6 @@ class BookingData {
   double bookingGrandTotal;
   int bookingProdCount;
   String bookingRemarks;
-  List<String> evidenceImages;
 
   BookingData({
     required this.bookingInvoice,
@@ -34,7 +33,6 @@ class BookingData {
     required this.bookingTime,
     required this.bookingProdCount,
     this.bookingRemarks = "",
-    this.evidenceImages = const [],
   }) : bookingGrandTotal =
            (bookingPrice * bookingQty) - bookingDiscount + bookingBonus;
 
@@ -53,8 +51,7 @@ class BookingData {
       bookingTime = other.bookingTime,
       bookingProdCount = other.bookingProdCount,
       bookingGrandTotal = other.bookingGrandTotal,
-      bookingRemarks = other.bookingRemarks,
-      evidenceImages = List.from(other.evidenceImages);
+      bookingRemarks = other.bookingRemarks;
 
   double calculateGrandTotal() {
     return (bookingPrice * bookingQty) - bookingDiscount + bookingBonus;
@@ -78,24 +75,11 @@ class BookingData {
       'booking_grand_total': bookingGrandTotal,
       'booking_prod_count': bookingProdCount,
       'booking_remarks': bookingRemarks,
-      'booking_images': jsonEncode(evidenceImages),
     };
   }
 
   // Create from Map (SQLite or API response)
   factory BookingData.fromJson(Map<String, dynamic> json) {
-    List<String> images = [];
-    if (json['booking_images'] != null && json['booking_images'].toString().isNotEmpty) {
-      try {
-        final decoded = jsonDecode(json['booking_images'].toString());
-        if (decoded is List) {
-          images = List<String>.from(decoded);
-        }
-      } catch (e) {
-        images = [];
-      }
-    }
-
     return BookingData(
         bookingInvoice:
             int.tryParse(json['booking_invoice']?.toString() ?? '0') ?? 0,
@@ -122,7 +106,6 @@ class BookingData {
         bookingProdCount:
             int.tryParse(json['booking_prod_count']?.toString() ?? '1') ?? 1,
         bookingRemarks: json['booking_remarks']?.toString() ?? "",
-        evidenceImages: images,
       )
       ..bookingGrandTotal =
           double.tryParse(json['booking_grand_total']?.toString() ?? '0.0') ??

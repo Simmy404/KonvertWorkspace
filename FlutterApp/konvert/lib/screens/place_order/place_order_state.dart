@@ -38,7 +38,6 @@ class PlaceOrderState extends ChangeNotifier {
 
   List<PlaceOrderProduct> cart = [];
   String remarks = "";
-  List<String> evidenceImages = [];
 
   bool isLoading = false;
 
@@ -147,10 +146,7 @@ class PlaceOrderState extends ChangeNotifier {
         );
       }
 
-      // Populate evidence images
-      if (existingInvoiceItems!.isNotEmpty) {
-        evidenceImages = List.from(existingInvoiceItems!.first.evidenceImages);
-      }
+
 
       // Jump directly to Step 2 (Product Step) for editing
       currentStep = 2;
@@ -430,7 +426,6 @@ class PlaceOrderState extends ChangeNotifier {
     allCustomers = [];
     filteredCustomers = [];
     remarks = '';
-    evidenceImages.clear();
     editingInvoiceNumber = null;
     currentStep = 0;
     _safeNotifyListeners();
@@ -478,7 +473,6 @@ class PlaceOrderState extends ChangeNotifier {
           bookingTime: timeStr,
           bookingProdCount: cart.length,
           bookingRemarks: remarks,
-          evidenceImages: evidenceImages,
         );
         await DatabaseService.instance.insertBooking(b);
       }
@@ -500,7 +494,6 @@ class PlaceOrderState extends ChangeNotifier {
         bookingTime: timeStr,
         bookingProdCount: 0,
         bookingRemarks: remarks.isEmpty ? 'No order placed (Visit confirmation)' : remarks,
-        evidenceImages: evidenceImages,
       );
       await DatabaseService.instance.insertBooking(b);
     }
@@ -536,27 +529,4 @@ class PlaceOrderState extends ChangeNotifier {
     return true;
   }
 
-  Future<void> addEvidenceImage(String tempPath) async {
-    if (evidenceImages.length >= 3) return;
-    try {
-      final docDir = await getApplicationDocumentsDirectory();
-      final fileName = 'evidence_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final newFile = await File(tempPath).copy('${docDir.path}/$fileName');
-      evidenceImages.add(newFile.path);
-      _safeNotifyListeners();
-    } catch (e) {
-      debugPrint('Error saving evidence image: $e');
-    }
-  }
-
-  void removeEvidenceImage(int index) {
-    if (index >= 0 && index < evidenceImages.length) {
-      final path = evidenceImages[index];
-      try {
-        File(path).deleteSync();
-      } catch (_) {}
-      evidenceImages.removeAt(index);
-      _safeNotifyListeners();
-    }
-  }
 }

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/booking_data.dart';
 import '../models/error_struct.dart';
 import '../managers/error_manager.dart';
@@ -124,6 +126,152 @@ class _BookingsScreenState extends State<BookingsScreen> {
     }
   }
 
+  void _downloadBookings(BuildContext context) {
+    Navigator.pop(context); // Close the bottom sheet
+
+    if (_viewModel.groupedBookings.isEmpty) {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'NO_BOOKINGS',
+          technicalDetails: 'No local bookings available to download',
+        ),
+        2,
+      );
+      return;
+    }
+
+    // Generate CSV contents
+    // customer id, product id, quantity, discount, product price, bonus
+    List<Map<String, String>> csvList = [];
+
+    _viewModel.groupedBookings.forEach((invoice, items) {
+      StringBuffer csvContent = StringBuffer();
+      for (var item in items) {
+        csvContent.writeln('${item.bookingCustId},${item.bookingProdId},${item.bookingQty},${item.bookingDiscount},${item.bookingPrice},${item.bookingBonus}');
+      }
+      csvList.add({
+        'invoice': invoice.toString(),
+        'content': csvContent.toString(),
+      });
+    });
+
+    // Show dialog with CSV contents
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: ThemeManager.instance.getSurfaceColor(),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            'Generated CSVs',
+            style: TextStyle(
+              color: ThemeManager.instance.getMatchColor(),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: csvList.length,
+              itemBuilder: (context, index) {
+                final csvData = csvList[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Invoice #${csvData['invoice']}',
+                        style: TextStyle(
+                          color: ThemeManager.instance.getMatchColor(),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: ThemeManager.instance.getContainerColor(),
+                          border: Border.all(color: ThemeManager.instance.getBorderColor()),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          csvData['content']!,
+                          style: TextStyle(
+                            color: ThemeManager.instance.getTextSecondary(),
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: ThemeManager.instance.getTextSecondary()),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  Directory? directory;
+                  if (Platform.isAndroid) {
+                    directory = Directory('/storage/emulated/0/Download');
+                    if (!await directory.exists()) {
+                      directory = await getExternalStorageDirectory();
+                    }
+                  } else {
+                    directory = await getApplicationDocumentsDirectory();
+                  }
+
+                  if (directory != null) {
+                    for (var csvData in csvList) {
+                      final file = File('${directory.path}/invoice_${csvData['invoice']}.csv');
+                      await file.writeAsString(csvData['content']!);
+                    }
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Saved to ${directory.path}'),
+                          backgroundColor: const Color(0xFF16A34A),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ErrorManager.instance.showToastError(
+                      ErrorStruct(
+                        code: 'SAVE_FAILED',
+                        technicalDetails: 'Failed to save CSVs: $e',
+                      ),
+                      3,
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ThemeManager.instance.getPrimaryColor(),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save Local'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showExportOptions(BuildContext context) {
     final isDark = !ThemeManager.instance.isLightMode;
     showModalBottomSheet(
@@ -241,16 +389,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 'Download Bookings',
                 style: TextStyle(color: ThemeManager.instance.getMatchColor()),
               ),
-              onTap: () {
-                Navigator.pop(context);
-                ErrorManager.instance.showToastError(
-                  const ErrorStruct(
-                    code: 'COMING_SOON',
-                    technicalDetails: 'Download feature coming soon',
-                  ),
-                  2,
-                );
-              },
+              onTap: () => _downloadBookings(context),
             ),
           ],
         ),
