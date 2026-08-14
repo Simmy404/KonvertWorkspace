@@ -29,7 +29,7 @@ class _CustomerStepState extends State<CustomerStep> {
       children: [
         // Search & Category Filter Chips
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

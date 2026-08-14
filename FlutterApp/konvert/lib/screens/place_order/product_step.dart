@@ -20,7 +20,7 @@ class ProductStep extends StatelessWidget {
       children: [
         // Header, Search Box & Category Filters
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

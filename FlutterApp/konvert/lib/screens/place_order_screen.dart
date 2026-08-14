@@ -153,7 +153,7 @@ class _PlaceOrderView extends StatelessWidget {
     final titleColor = theme.isLightMode ? const Color(0xFF0022FF) : Colors.white;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       color: Colors.transparent,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -202,31 +202,37 @@ class _PlaceOrderView extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
-          // 3-Step Circle Node Bar with Dots & Icons inside Circles
+          // 3-Step Simple Icon Bar with Dots
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildStepCircleNode(
+                _buildStepIconNode(
                   icon: Icons.location_city_rounded,
                   stepIndex: 0,
                   currentStep: state.currentStep,
                   onTap: () => state.jumpToStep(0),
                   theme: theme,
                 ),
-                _buildStepDotsDivider(isCompleted: state.currentStep > 0, theme: theme),
-                _buildStepCircleNode(
+                _buildStepDotsDivider(
+                  isCompleted: state.currentStep > 0,
+                  theme: theme,
+                ),
+                _buildStepIconNode(
                   icon: Icons.person_rounded,
                   stepIndex: 1,
                   currentStep: state.currentStep,
                   onTap: () => state.jumpToStep(1),
                   theme: theme,
                 ),
-                _buildStepDotsDivider(isCompleted: state.currentStep > 1, theme: theme),
-                _buildStepCircleNode(
+                _buildStepDotsDivider(
+                  isCompleted: state.currentStep > 1,
+                  theme: theme,
+                ),
+                _buildStepIconNode(
                   icon: Icons.shopping_bag_rounded,
                   stepIndex: 2,
                   currentStep: state.currentStep,
@@ -241,7 +247,10 @@ class _PlaceOrderView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepDotsDivider({required bool isCompleted, required ThemeManager theme}) {
+  Widget _buildStepDotsDivider({
+    required bool isCompleted,
+    required ThemeManager theme,
+  }) {
     final activeDotColor = const Color(0xFFFF9D54);
     final inactiveDotColor = theme.isLightMode
         ? const Color(0xFFCBD5E1)
@@ -253,8 +262,8 @@ class _PlaceOrderView extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(4, (i) {
           return Container(
-            width: 5,
-            height: 5,
+            width: 3.5,
+            height: 3.5,
             decoration: BoxDecoration(
               color: dotColor,
               shape: BoxShape.circle,
@@ -265,7 +274,7 @@ class _PlaceOrderView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepCircleNode({
+  Widget _buildStepIconNode({
     required IconData icon,
     required int stepIndex,
     required int currentStep,
@@ -276,38 +285,22 @@ class _PlaceOrderView extends StatelessWidget {
     final isCompleted = currentStep > stepIndex;
     final canTap = isActive || isCompleted;
 
-    // Node Colors matching mockup images
-    final activeBgColor = const Color(0xFFFF9D54); // Vibrant orange/amber
-    final inactiveBgColor = theme.isLightMode
-        ? const Color(0xFFCBD5E1)
-        : const Color(0xFF3B4254);
+    final activeColor = const Color(0xFFFF9D54);
+    final inactiveColor = theme.isLightMode
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF475569);
 
-    final bgColor = (isActive || isCompleted) ? activeBgColor : inactiveBgColor;
-    final iconColor = (isActive || isCompleted) ? Colors.white : Colors.white70;
+    final color = (isActive || isCompleted) ? activeColor : inactiveColor;
 
     return GestureDetector(
       onTap: canTap ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: bgColor,
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: activeBgColor.withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Icon(
           icon,
-          size: 20,
-          color: iconColor,
+          size: isActive ? 20 : 17,
+          color: color,
         ),
       ),
     );

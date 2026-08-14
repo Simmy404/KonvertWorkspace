@@ -17,7 +17,7 @@ class BrickStep extends StatelessWidget {
       children: [
         // Search Input Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: PlaceOrderComponents.buildSearchBar(
             controller: state.brickSearchController,
             onChanged: state.filterBricks,
