@@ -181,6 +181,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Expanded(
                             child: PageView(
                               controller: _pageController,
+                              physics: const PageScrollPhysics(
+                                parent: ClampingScrollPhysics(),
+                              ),
                               onPageChanged: (index) {
                                 if (_viewModel.selectedIndex != index) {
                                   _viewModel.setSelectedIndex(index);

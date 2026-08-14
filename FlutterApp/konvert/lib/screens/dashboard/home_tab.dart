@@ -275,7 +275,7 @@ class HomeTab extends StatelessWidget {
           backgroundColor: ThemeManager.instance.getContainerColor(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
+              parent: ClampingScrollPhysics(),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

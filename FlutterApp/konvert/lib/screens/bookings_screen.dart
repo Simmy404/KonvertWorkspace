@@ -598,7 +598,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                 : ListView.builder(
                                     physics:
                                         const AlwaysScrollableScrollPhysics(
-                                          parent: BouncingScrollPhysics(),
+                                          parent: ClampingScrollPhysics(),
                                         ),
                                     itemCount: filteredGrouped.length + 1,
                                     itemBuilder: (context, index) {

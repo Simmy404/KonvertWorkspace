@@ -25,7 +25,9 @@ class ReportTab extends StatelessWidget {
               onRefresh: () => viewModel.refresh(),
               color: const Color(0xFF1E56E2),
               child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
                 slivers: [
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(
