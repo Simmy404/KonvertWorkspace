@@ -42,13 +42,16 @@ class ReportTab extends StatelessWidget {
                               Text(
                                 'Report',
                                 style: TextStyle(
-                                  color: theme.isLightMode ? const Color(0xFF0022FF) : Colors.white,
+                                  color: theme.isLightMode
+                                      ? const Color(0xFF0022FF)
+                                      : Colors.white,
                                   fontSize: 34,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: -0.6,
                                 ),
                               ),
-                              _buildFilterDropdown(viewModel, theme, isDark),
+                              if (viewModel.reportData != null)
+                                _buildFilterDropdown(viewModel, theme, isDark),
                             ],
                           ),
                           const SizedBox(height: 6),
@@ -60,10 +63,6 @@ class ReportTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          
-                          // Segmented Control
-                          _buildSegmentedControl(viewModel, theme, isDark),
-                          const SizedBox(height: 24),
 
                           if (viewModel.isLoading)
                             SizedBox(
@@ -73,8 +72,16 @@ class ReportTab extends StatelessWidget {
                               ),
                             )
                           else if (viewModel.reportData == null)
-                            _buildReportsUnavailableFallback(context, theme, isDark, viewModel)
-                          else
+                            _buildReportsUnavailableFallback(
+                              context,
+                              theme,
+                              isDark,
+                              viewModel,
+                            )
+                          else ...[
+                            // Segmented Control
+                            _buildSegmentedControl(viewModel, theme, isDark),
+                            const SizedBox(height: 24),
                             _buildSegmentContent(
                               context,
                               viewModel.reportData!,
@@ -82,6 +89,7 @@ class ReportTab extends StatelessWidget {
                               theme,
                               isDark,
                             ),
+                          ],
                         ],
                       ),
                     ),
@@ -95,7 +103,11 @@ class ReportTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSegmentedControl(ReportViewModel viewModel, ThemeManager theme, bool isDark) {
+  Widget _buildSegmentedControl(
+    ReportViewModel viewModel,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -113,7 +125,13 @@ class ReportTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSegmentButton(String title, int index, ReportViewModel viewModel, ThemeManager theme, bool isDark) {
+  Widget _buildSegmentButton(
+    String title,
+    int index,
+    ReportViewModel viewModel,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     final isSelected = viewModel.selectedSegment == index;
     return Expanded(
       child: GestureDetector(
@@ -122,23 +140,27 @@ class ReportTab extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected 
-              ? (isDark ? theme.getListItemColor() : Colors.white)
-              : Colors.transparent,
+            color: isSelected
+                ? (isDark ? theme.getListItemColor() : Colors.white)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected && !isDark ? [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              )
-            ] : null,
+            boxShadow: isSelected && !isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
           child: Center(
             child: Text(
               title,
               style: TextStyle(
-                color: isSelected ? theme.getTextPrimary() : theme.getTextSecondary(),
+                color: isSelected
+                    ? theme.getTextPrimary()
+                    : theme.getTextSecondary(),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 14,
               ),
@@ -159,9 +181,7 @@ class ReportTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.getListItemColor(),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: theme.getBorderColor(),
-        ),
+        border: Border.all(color: theme.getBorderColor()),
       ),
       child: DropdownButton<String>(
         value: viewModel.selectedFilter,
@@ -188,7 +208,13 @@ class ReportTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSegmentContent(BuildContext context, ReportData data, int segment, ThemeManager theme, bool isDark) {
+  Widget _buildSegmentContent(
+    BuildContext context,
+    ReportData data,
+    int segment,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     switch (segment) {
       case 0:
         return _buildOverviewSegment(data, theme, isDark);
@@ -203,7 +229,11 @@ class ReportTab extends StatelessWidget {
     }
   }
 
-  Widget _buildOverviewSegment(ReportData data, ThemeManager theme, bool isDark) {
+  Widget _buildOverviewSegment(
+    ReportData data,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +256,9 @@ class ReportTab extends StatelessWidget {
                 'Fulfillment Rate',
                 '${data.metrics.fulfillmentRate.toStringAsFixed(1)}%',
                 Icons.check_circle_outline,
-                data.metrics.fulfillmentRate >= 90 ? Colors.green : Colors.orange,
+                data.metrics.fulfillmentRate >= 90
+                    ? Colors.green
+                    : Colors.orange,
                 theme,
                 isDark,
               ),
@@ -280,10 +312,7 @@ class ReportTab extends StatelessWidget {
       return const SizedBox();
     }
 
-    final maxSales = weekly.days.fold<double>(
-      0,
-      (m, e) => max(m, e.sales),
-    );
+    final maxSales = weekly.days.fold<double>(0, (m, e) => max(m, e.sales));
     final maxY = max(maxSales, threshold * 1.3);
 
     return Column(
@@ -303,23 +332,23 @@ class ReportTab extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               'Daily performance benchmarked against company average',
-              style: TextStyle(
-                color: theme.getTextSecondary(),
-                fontSize: 12,
-              ),
+              style: TextStyle(color: theme.getTextSecondary(), fontSize: 12),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Container(
           height: 260,
-          padding: const EdgeInsets.only(right: 20, top: 24, bottom: 12, left: 12),
+          padding: const EdgeInsets.only(
+            right: 20,
+            top: 24,
+            bottom: 12,
+            left: 12,
+          ),
           decoration: BoxDecoration(
             color: theme.getListItemColor(),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.getBorderColor(),
-            ),
+            border: Border.all(color: theme.getBorderColor()),
           ),
           child: BarChart(
             BarChartData(
@@ -430,8 +459,9 @@ class ReportTab extends StatelessWidget {
                       toY: day.sales,
                       color: barColor,
                       width: 18,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(6)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(6),
+                      ),
                     ),
                   ],
                 );
@@ -453,8 +483,16 @@ class ReportTab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildLegendPill('Poor (< Avg)', const Color(0xFFFCA5A5), theme),
-              _buildLegendPill('Good (Near Avg)', const Color(0xFFCBD5E1), theme),
-              _buildLegendPill('Excellent (> Avg)', const Color(0xFF86EFAC), theme),
+              _buildLegendPill(
+                'Good (Near Avg)',
+                const Color(0xFFCBD5E1),
+                theme,
+              ),
+              _buildLegendPill(
+                'Excellent (> Avg)',
+                const Color(0xFF86EFAC),
+                theme,
+              ),
             ],
           ),
         ),
@@ -528,12 +566,16 @@ class ReportTab extends StatelessWidget {
           const SizedBox(height: 16),
           _buildTopList(data.areaPerformance, theme, isDark, isProduct: false),
           const SizedBox(height: 32),
-        ]
+        ],
       ],
     );
   }
 
-  Widget _buildFinancialsSegment(ReportData data, ThemeManager theme, bool isDark) {
+  Widget _buildFinancialsSegment(
+    ReportData data,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,10 +630,7 @@ class ReportTab extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           'No near-expiry stock alerts! 🎉',
-          style: TextStyle(
-            color: theme.getTextSecondary(),
-            fontSize: 16,
-          ),
+          style: TextStyle(color: theme.getTextSecondary(), fontSize: 16),
         ),
       );
     }
@@ -619,18 +658,14 @@ class ReportTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.getListItemColor(),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.getBorderColor(),
-            ),
+            border: Border.all(color: theme.getBorderColor()),
           ),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: data.expiryAlerts.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              color: theme.getBorderColor(),
-            ),
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, color: theme.getBorderColor()),
             itemBuilder: (context, index) {
               final alert = data.expiryAlerts[index];
               return ListTile(
@@ -695,12 +730,20 @@ class ReportTab extends StatelessWidget {
               );
             },
           ),
-        )
+        ),
       ],
     );
   }
 
-  Widget _buildFinancialCard(String title, String value, String description, IconData icon, Color iconColor, ThemeManager theme, bool isDark) {
+  Widget _buildFinancialCard(
+    String title,
+    String value,
+    String description,
+    IconData icon,
+    Color iconColor,
+    ThemeManager theme,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -709,7 +752,6 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -760,7 +802,7 @@ class ReportTab extends StatelessWidget {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -783,7 +825,6 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,9 +873,7 @@ class ReportTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.getListItemColor(),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.getBorderColor(),
-          ),
+          border: Border.all(color: theme.getBorderColor()),
         ),
         child: Center(
           child: Text(
@@ -845,8 +884,12 @@ class ReportTab extends StatelessWidget {
       );
     }
 
-    final maxGross = trend.map((e) => e.grossSales).fold<double>(0, (m, e) => max(m, e));
-    final maxNet = trend.map((e) => e.netSales).fold<double>(0, (m, e) => max(m, e));
+    final maxGross = trend
+        .map((e) => e.grossSales)
+        .fold<double>(0, (m, e) => max(m, e));
+    final maxNet = trend
+        .map((e) => e.netSales)
+        .fold<double>(0, (m, e) => max(m, e));
     final maxY = max(maxGross, maxNet);
 
     return Container(
@@ -858,7 +901,6 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-
       ),
       child: LineChart(
         LineChartData(
@@ -988,10 +1030,11 @@ class ReportTab extends StatelessWidget {
                 width: 88,
                 height: 88,
                 decoration: BoxDecoration(
-                  color: (isDark
-                          ? const Color(0xFF1E293B)
-                          : const Color(0xFFF1F5F9))
-                      .withOpacity(isDark ? 1.0 : 0.9),
+                  color:
+                      (isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFF1F5F9))
+                          .withOpacity(isDark ? 1.0 : 0.9),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isDark
@@ -1008,7 +1051,7 @@ class ReportTab extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Reports not available',
+                'Reports currently unavailable',
                 style: TextStyle(
                   color: theme.getTextPrimary(),
                   fontSize: 20,
@@ -1069,16 +1112,13 @@ class ReportTab extends StatelessWidget {
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
-
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (context, index) => Divider(
-          height: 1,
-          color: theme.getBorderColor(),
-        ),
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: theme.getBorderColor()),
         itemBuilder: (context, index) {
           final item = items[index];
           final hasReturns = item.returnedTotal > 0;
@@ -1121,7 +1161,11 @@ class ReportTab extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.warning_amber_rounded, size: 12, color: Colors.orange),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 12,
+                        color: Colors.orange,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Returns: ${currencyFormat.format(item.returnedTotal)}',
@@ -1131,7 +1175,7 @@ class ReportTab extends StatelessWidget {
                         ),
                       ),
                     ],
-                  )
+                  ),
               ],
             ),
             trailing: Column(

@@ -10,7 +10,6 @@ import '../models/user.dart';
 import '../models/report_data.dart';
 import '../models/booking_data.dart';
 import '../services/storage_service.dart';
-import 'database_service.dart';
 
 class ApiService {
   ApiService._internal();
@@ -242,7 +241,6 @@ class ApiService {
   }
 
   Future<ReportData?> fetchReportingData(String dateFilter) async {
-    // 1. Try fetching from remote API
     try {
       final company = StorageService.instance.getCurrentCompany();
       final user = StorageService.instance.getCurrentUser(
@@ -257,364 +255,42 @@ class ApiService {
         final cleanDomain = domain.endsWith('/')
             ? domain.substring(0, domain.length - 1)
             : domain;
-        final Uri url = Uri.parse(
-          '$cleanDomain/esalesmanAPI/getReportingData.php',
-        );
 
-        final response = await http
-            .post(
-              url,
-              body: {
-                'userid': user.id.toString(),
-                'bid': user.bid.toString(),
-                'date_filter': dateFilter,
-              },
-            )
-            .timeout(const Duration(seconds: 30));
+        final endpoints = ['getreports.php', 'getReportingData.php'];
+        for (final endpoint in endpoints) {
+          try {
+            final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/$endpoint');
+            final response = await http
+                .post(
+                  url,
+                  body: {
+                    'userid': user.id.toString(),
+                    'bid': user.bid.toString(),
+                    'date_filter': dateFilter,
+                  },
+                )
+                .timeout(const Duration(seconds: 15));
 
-        if (response.statusCode == 200) {
-          final jsonResponse = jsonDecode(response.body);
-          if (jsonResponse is Map<String, dynamic> &&
-              !jsonResponse.containsKey('error')) {
-            return ReportData.fromJson(jsonResponse);
+            if (response.statusCode == 200) {
+              final jsonResponse = jsonDecode(response.body);
+              if (jsonResponse is Map<String, dynamic> &&
+                  !jsonResponse.containsKey('error')) {
+                return ReportData.fromJson(jsonResponse);
+              }
+            } else if (response.statusCode == 404) {
+              // Endpoint not found on server, try fallback endpoint
+              continue;
+            }
+          } catch (e) {
+            debugPrint('Reporting API ($endpoint) request error: $e');
           }
         }
       }
     } catch (e) {
-      debugPrint(
-        'Remote Reporting API unavailable, computing local report fallback: $e',
-      );
+      debugPrint('Reporting API unavailable: $e');
     }
 
-    // 2. Local SQLite computation fallback
-    try {
-      final localBookings = await DatabaseService.instance.getAllBookings();
-      if (localBookings.isNotEmpty) {
-        double totalSales = 0;
-        final Set<int> uniqueCust = {};
-        final Set<int> uniqueOrders = {};
-        final Map<String, double> salesByDate = {};
-        final Map<int, double> salesByProduct = {};
-        final Map<int, double> salesByCustomer = {};
-
-        for (var b in localBookings) {
-          final total = b.bookingGrandTotal > 0
-              ? b.bookingGrandTotal
-              : (b.bookingQty * b.bookingPrice);
-          totalSales += total;
-          if (b.bookingCustId > 0) uniqueCust.add(b.bookingCustId);
-          if (b.bookingInvoice > 0) uniqueOrders.add(b.bookingInvoice);
-
-          final dateStr = b.bookingDate;
-          salesByDate[dateStr] = (salesByDate[dateStr] ?? 0) + total;
-
-          salesByProduct[b.bookingProdId] =
-              (salesByProduct[b.bookingProdId] ?? 0) + total;
-          salesByCustomer[b.bookingCustId] =
-              (salesByCustomer[b.bookingCustId] ?? 0) + total;
-        }
-
-        // Top products lookup
-        final products = await DatabaseService.instance.getAllProducts();
-        final prodNameMap = {
-          for (var p in products) p['product_id']: p['product_name'],
-        };
-        final topProducts =
-            salesByProduct.entries
-                .map(
-                  (e) => TopEntity(
-                    id: e.key.toString(),
-                    name: prodNameMap[e.key] ?? 'Product #${e.key}',
-                    grossTotal: e.value,
-                    netTotal: e.value,
-                    returnedTotal: 0.0,
-                  ),
-                )
-                .toList()
-              ..sort((a, b) => b.netTotal.compareTo(a.netTotal));
-
-        // Top customers lookup
-        final customers = await DatabaseService.instance.getAllCustomers();
-        final custNameMap = {
-          for (var c in customers) c['customer_id']: c['customer_name'],
-        };
-        final topCustomers =
-            salesByCustomer.entries
-                .map(
-                  (e) => TopEntity(
-                    id: e.key.toString(),
-                    name: custNameMap[e.key] ?? 'Customer #${e.key}',
-                    grossTotal: e.value,
-                    netTotal: e.value,
-                    returnedTotal: 0.0,
-                  ),
-                )
-                .toList()
-              ..sort((a, b) => b.netTotal.compareTo(a.netTotal));
-
-        final trend = salesByDate.entries
-            .map(
-              (e) => ChartDataPoint(
-                label: e.key,
-                grossSales: e.value,
-                netSales: e.value,
-                orders: 1,
-              ),
-            )
-            .toList();
-
-        const localThreshold = 2000.0;
-        final localWeeklyDays =
-            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) {
-              final s = totalSales > 0 ? (totalSales / 7) : 1500.0;
-              String st = 'good';
-              if (s > 1.15 * localThreshold) {
-                st = 'excellent';
-              } else if (s < 0.85 * localThreshold) {
-                st = 'poor';
-              }
-              return WeeklyPerformanceDay(
-                day: day,
-                date: day,
-                sales: s,
-                status: st,
-              );
-            }).toList();
-
-        return ReportData(
-          metrics: ReportMetrics(
-            grossSales: totalSales,
-            netSales: totalSales,
-            returnedSales: 0.0,
-            totalOrders: uniqueOrders.length,
-            activeCustomers: uniqueCust.length,
-            fulfillmentRate: 100.0,
-            profitMargin: 20.0,
-            target: 50,
-          ),
-          financials: Financials(
-            totalOutstanding: 0.0,
-            totalDiscounts: 0.0,
-            totalCollections: totalSales * 0.8,
-          ),
-          trend: trend,
-          topProducts: topProducts.take(5).toList(),
-          topCustomers: topCustomers.take(5).toList(),
-          areaPerformance: [],
-          expiryAlerts: [],
-          weeklyPerformance: WeeklyPerformanceData(
-            threshold: localThreshold,
-            days: localWeeklyDays,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Local SQLite calculation error: $e');
-    }
-
-    // 3. Realistic Demo Data Fallback (for pristine test environments)
-    final now = DateTime.now();
-    final List<ChartDataPoint> demoTrend = List.generate(7, (i) {
-      final date = now.subtract(Duration(days: 6 - i));
-      final dateStr = "${date.month}/${date.day}";
-      final vals = [1250.0, 1800.0, 1420.0, 2100.0, 1950.0, 2800.0, 3100.0];
-      return ChartDataPoint(
-        label: dateStr,
-        grossSales: vals[i % vals.length] * 1.1,
-        netSales: vals[i % vals.length],
-        orders: (vals[i % vals.length] / 100).round(),
-      );
-    });
-
-    const demoThreshold = 2000.0;
-    final demoWeeklyDays = [
-      WeeklyPerformanceDay(
-        day: 'Mon',
-        date: 'Mon',
-        sales: 1250.0,
-        status: 'poor',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Tue',
-        date: 'Tue',
-        sales: 1950.0,
-        status: 'good',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Wed',
-        date: 'Wed',
-        sales: 2800.0,
-        status: 'excellent',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Thu',
-        date: 'Thu',
-        sales: 1420.0,
-        status: 'poor',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Fri',
-        date: 'Fri',
-        sales: 2100.0,
-        status: 'good',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Sat',
-        date: 'Sat',
-        sales: 3100.0,
-        status: 'excellent',
-      ),
-      WeeklyPerformanceDay(
-        day: 'Sun',
-        date: 'Sun',
-        sales: 800.0,
-        status: 'poor',
-      ),
-    ];
-
-    return ReportData(
-      metrics: ReportMetrics(
-        grossSales: 15862.0,
-        netSales: 14420.0,
-        returnedSales: 1442.0,
-        totalOrders: 42,
-        activeCustomers: 18,
-        fulfillmentRate: 90.9,
-        profitMargin: 24.5,
-        target: 50,
-      ),
-      financials: Financials(
-        totalOutstanding: 45000.0,
-        totalDiscounts: 850.0,
-        totalCollections: 12500.0,
-      ),
-      trend: demoTrend,
-      topProducts: [
-        TopEntity(
-          id: '1',
-          name: 'Augmentin 625mg',
-          grossTotal: 4620.0,
-          netTotal: 4200.0,
-          returnedTotal: 420.0,
-          qty: 140,
-        ),
-        TopEntity(
-          id: '2',
-          name: 'Panadol Extra 500mg',
-          grossTotal: 3410.0,
-          netTotal: 3100.0,
-          returnedTotal: 310.0,
-          qty: 310,
-        ),
-        TopEntity(
-          id: '3',
-          name: 'Cefspan 400mg',
-          grossTotal: 3135.0,
-          netTotal: 2850.0,
-          returnedTotal: 285.0,
-          qty: 95,
-        ),
-        TopEntity(
-          id: '4',
-          name: 'Flagyl 400mg',
-          grossTotal: 2640.0,
-          netTotal: 2400.0,
-          returnedTotal: 240.0,
-          qty: 200,
-        ),
-        TopEntity(
-          id: '5',
-          name: 'Disprin 300mg',
-          grossTotal: 2057.0,
-          netTotal: 1870.0,
-          returnedTotal: 187.0,
-          qty: 187,
-        ),
-      ],
-      topCustomers: [
-        TopEntity(
-          id: '101',
-          name: 'City Hospital Pharmacy',
-          grossTotal: 4950.0,
-          netTotal: 4500.0,
-          returnedTotal: 450.0,
-        ),
-        TopEntity(
-          id: '102',
-          name: 'Green Medicos',
-          grossTotal: 4180.0,
-          netTotal: 3800.0,
-          returnedTotal: 380.0,
-        ),
-        TopEntity(
-          id: '103',
-          name: 'Shaheen Chemist',
-          grossTotal: 3190.0,
-          netTotal: 2900.0,
-          returnedTotal: 290.0,
-        ),
-        TopEntity(
-          id: '104',
-          name: 'Care Pharmacy',
-          grossTotal: 2145.0,
-          netTotal: 1950.0,
-          returnedTotal: 195.0,
-        ),
-        TopEntity(
-          id: '105',
-          name: 'Al-Razi Hospital',
-          grossTotal: 1397.0,
-          netTotal: 1270.0,
-          returnedTotal: 127.0,
-        ),
-      ],
-      areaPerformance: [
-        TopEntity(
-          id: '1',
-          name: 'Central Commercial Area',
-          grossTotal: 8580.0,
-          netTotal: 7800.0,
-          returnedTotal: 780.0,
-        ),
-        TopEntity(
-          id: '2',
-          name: 'North District',
-          grossTotal: 4620.0,
-          netTotal: 4200.0,
-          returnedTotal: 420.0,
-        ),
-
-        TopEntity(
-          id: '3',
-          name: 'South Avenue',
-          grossTotal: 2662.0,
-          netTotal: 2420.0,
-          returnedTotal: 242.0,
-        ),
-      ],
-      expiryAlerts: [
-        ExpiryAlert(
-          productName: 'Augmentin 625mg',
-          batchNo: 'B2931',
-          expiryDate: '2026-08-15',
-          qty: 50,
-          value: 1250.0,
-          customerName: 'City Hospital Pharmacy',
-        ),
-        ExpiryAlert(
-          productName: 'Panadol Extra',
-          batchNo: 'PE492',
-          expiryDate: '2026-09-02',
-          qty: 120,
-          value: 480.0,
-          customerName: 'Green Medicos',
-        ),
-      ],
-      weeklyPerformance: WeeklyPerformanceData(
-        threshold: demoThreshold,
-        days: demoWeeklyDays,
-      ),
-    );
+    return null;
   }
 
   // Target Logic
