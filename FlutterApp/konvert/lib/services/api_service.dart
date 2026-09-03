@@ -9,7 +9,9 @@ import 'dart:convert';
 import '../models/user.dart';
 import '../models/report_data.dart';
 import '../models/booking_data.dart';
+import '../models/customer_last_booking.dart';
 import '../services/storage_service.dart';
+import 'database_service.dart';
 
 class ApiService {
   ApiService._internal();
@@ -389,6 +391,60 @@ class ApiService {
       final err = classifyNetworkError(e, prefix: 'DOWNLOAD');
       debugPrint('Sync Exception (downloadBookings): ${err.technicalDetails}');
       ErrorManager.instance.showToastError(err, 4);
+      return null;
+    }
+  }
+
+  /// Fetches the last booking for a customer from remote server (getLastBooking.php),
+  /// with local SQLite fallback for offline usage.
+  Future<CustomerLastBooking?> fetchCustomerLastBooking(String customerId) async {
+    final company = StorageService.instance.getCurrentCompany();
+    final user = StorageService.instance.getCurrentUser(includeSuspended: true);
+
+    if (company != null && user != null) {
+      String domain = company['url']!;
+      if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+        domain = 'https://$domain';
+      }
+      final cleanDomain = domain.endsWith('/')
+          ? domain.substring(0, domain.length - 1)
+          : domain;
+
+      try {
+        final Uri url = Uri.parse('$cleanDomain/esalesmanAPI/getLastBooking.php');
+        final response = await http
+            .post(
+              url,
+              body: {
+                'bid': user.bid.toString(),
+                'userid': user.id.toString(),
+                'custid': customerId,
+              },
+            )
+            .timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) {
+            if (decoded['status'] == 'success' && decoded['booking'] != null) {
+              return CustomerLastBooking.fromJson(
+                Map<String, dynamic>.from(decoded['booking']),
+              );
+            } else if (decoded['status'] == 'empty') {
+              return null;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Remote fetchCustomerLastBooking error: $e');
+      }
+    }
+
+    // Local SQLite fallback
+    try {
+      return await DatabaseService.instance.getLastBookingForCustomer(customerId);
+    } catch (e) {
+      debugPrint('Local getLastBookingForCustomer fallback error: $e');
       return null;
     }
   }

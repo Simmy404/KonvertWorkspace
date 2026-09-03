@@ -2,6 +2,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/booking_data.dart';
+import '../models/customer_last_booking.dart';
 
 class DatabaseService {
   DatabaseService._internal();
@@ -356,4 +357,73 @@ class DatabaseService {
     await db.delete('bookings');
   }
 
+  Future<CustomerLastBooking?> getLastBookingForCustomer(String customerId) async {
+    final db = await instance.database;
+    final int? custId = int.tryParse(customerId);
+    if (custId == null) return null;
+
+    final lastInvoiceRes = await db.rawQuery(
+      'SELECT booking_invoice, booking_date, booking_time FROM bookings WHERE booking_custid = ? ORDER BY booking_date DESC, booking_invoice DESC LIMIT 1',
+      [custId],
+    );
+
+    if (lastInvoiceRes.isEmpty) return null;
+
+    final invoice = lastInvoiceRes.first['booking_invoice'];
+    final date = lastInvoiceRes.first['booking_date']?.toString() ?? '';
+    final time = lastInvoiceRes.first['booking_time']?.toString() ?? '';
+
+    // Fetch customer name
+    final custRes = await db.query('customers', where: 'customer_id = ?', whereArgs: [custId], limit: 1);
+    final customerName = custRes.isNotEmpty ? custRes.first['customer_name']?.toString() ?? '' : 'Customer #$customerId';
+
+    // Fetch products
+    final itemsRes = await db.query('bookings', where: 'booking_invoice = ?', whereArgs: [invoice]);
+    final allProducts = await getAllProducts();
+    final prodMap = {for (var p in allProducts) p['product_id'].toString(): p};
+
+    List<CustomerLastBookingItem> items = [];
+    double grandTotal = 0.0;
+    int totalQty = 0;
+
+    for (var b in itemsRes) {
+      final prodId = b['booking_prodid'].toString();
+      final pInfo = prodMap[prodId];
+      final pName = pInfo != null ? pInfo['product_name']?.toString() ?? 'Product #$prodId' : 'Product #$prodId';
+      final pack = pInfo != null ? pInfo['product_packsize']?.toString() ?? '' : '';
+      final qty = int.tryParse(b['booking_qty']?.toString() ?? '0') ?? 0;
+      final price = double.tryParse(b['booking_price']?.toString() ?? '0.0') ?? 0.0;
+      final bonus = double.tryParse(b['booking_bonus']?.toString() ?? '0.0') ?? 0.0;
+      final discount = double.tryParse(b['booking_discount']?.toString() ?? '0.0') ?? 0.0;
+      
+      final discAmt = (price * qty * discount) / 100.0;
+      final lineTot = (price * qty) - discAmt + bonus;
+
+      grandTotal += lineTot;
+      totalQty += qty;
+
+      items.add(CustomerLastBookingItem(
+        prodId: prodId,
+        prodName: pName,
+        packSize: pack,
+        qty: qty,
+        bonus: bonus,
+        price: price,
+        discount: discount,
+        lineTotal: lineTot,
+      ));
+    }
+
+    return CustomerLastBooking(
+      invoiceNo: int.tryParse(invoice?.toString() ?? '0') ?? 0,
+      customerId: custId,
+      customerName: customerName,
+      bookingDate: date,
+      bookingTime: time,
+      totalItems: items.length,
+      totalQty: totalQty,
+      grandTotal: grandTotal,
+      items: items,
+    );
+  }
 }
