@@ -60,7 +60,7 @@ class CustomerLastBookingItem {
   final String prodName;
   final String packSize;
   final int qty;
-  final double bonus;
+  final String bonus;
   final double price;
   final double discount;
   final double lineTotal;
@@ -82,7 +82,7 @@ class CustomerLastBookingItem {
       prodName: json['prod_name']?.toString() ?? '',
       packSize: json['pack_size']?.toString() ?? '',
       qty: int.tryParse(json['qty']?.toString() ?? '0') ?? 0,
-      bonus: double.tryParse(json['bonus']?.toString() ?? '0.0') ?? 0.0,
+      bonus: json['bonus']?.toString() ?? '',
       price: double.tryParse(json['price']?.toString() ?? '0.0') ?? 0.0,
       discount: double.tryParse(json['discount']?.toString() ?? '0.0') ?? 0.0,
       lineTotal: double.tryParse(json['line_total']?.toString() ?? '0.0') ?? 0.0,

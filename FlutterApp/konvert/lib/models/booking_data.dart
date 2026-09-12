@@ -7,7 +7,7 @@ class BookingData {
   int bookingCustId;
   int bookingProdId;
   int bookingQty;
-  double bookingBonus;
+  String bookingBonus;
   double bookingDiscount;
   double bookingPrice;
   double bookingLong;
@@ -24,7 +24,7 @@ class BookingData {
     required this.bookingCustId,
     required this.bookingProdId,
     required this.bookingQty,
-    this.bookingBonus = 0.0,
+    this.bookingBonus = '',
     this.bookingDiscount = 0.0,
     required this.bookingPrice,
     required this.bookingLong,
@@ -34,7 +34,7 @@ class BookingData {
     required this.bookingProdCount,
     this.bookingRemarks = "",
   }) : bookingGrandTotal =
-           (bookingPrice * bookingQty) - bookingDiscount + bookingBonus;
+           (bookingPrice * bookingQty) - ((bookingPrice * bookingQty * bookingDiscount) / 100);
 
   BookingData.copy(BookingData other)
     : bookingInvoice = other.bookingInvoice,
@@ -54,7 +54,7 @@ class BookingData {
       bookingRemarks = other.bookingRemarks;
 
   double calculateGrandTotal() {
-    return (bookingPrice * bookingQty) - bookingDiscount + bookingBonus;
+    return (bookingPrice * bookingQty) - ((bookingPrice * bookingQty * bookingDiscount) / 100);
   }
 
   // Convert to Map for SQLite or API
@@ -90,8 +90,7 @@ class BookingData {
         bookingProdId:
             int.tryParse(json['booking_prodid']?.toString() ?? '0') ?? 0,
         bookingQty: int.tryParse(json['booking_qty']?.toString() ?? '0') ?? 0,
-        bookingBonus:
-            double.tryParse(json['booking_bonus']?.toString() ?? '0.0') ?? 0.0,
+        bookingBonus: json['booking_bonus']?.toString() ?? '',
         bookingDiscount:
             double.tryParse(json['booking_discount']?.toString() ?? '0.0') ??
             0.0,

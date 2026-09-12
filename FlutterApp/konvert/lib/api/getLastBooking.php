@@ -93,14 +93,14 @@ if ($itemsQuery) {
     while ($item = mysqli_fetch_assoc($itemsQuery)) {
         $qty = (int)$item['qty'];
         $price = (float)$item['price'];
-        $bonus = (float)$item['bonus'];
+        $bonus = (string)$item['bonus'];
         $discount = (float)$item['discount'];
         $lineTotal = (float)$item['line_total'];
 
         // Fallback line total calculation if missing
         if ($lineTotal <= 0 && $price > 0 && $qty > 0) {
             $discountAmount = ($price * $qty * $discount) / 100.0;
-            $lineTotal = ($price * $qty) - $discountAmount + $bonus;
+            $lineTotal = ($price * $qty) - $discountAmount;
         }
 
         $grandTotal += $lineTotal;

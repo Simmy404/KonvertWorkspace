@@ -81,7 +81,7 @@ class DatabaseService {
         booking_custid INTEGER,
         booking_prodid INTEGER,
         booking_qty INTEGER,
-        booking_bonus DECIMAL(10,2),
+        booking_bonus TEXT,
         booking_discount DECIMAL(10,2),
         booking_price DECIMAL(10,2),
         booking_long DECIMAL(10,6),
@@ -393,11 +393,11 @@ class DatabaseService {
       final pack = pInfo != null ? pInfo['product_packsize']?.toString() ?? '' : '';
       final qty = int.tryParse(b['booking_qty']?.toString() ?? '0') ?? 0;
       final price = double.tryParse(b['booking_price']?.toString() ?? '0.0') ?? 0.0;
-      final bonus = double.tryParse(b['booking_bonus']?.toString() ?? '0.0') ?? 0.0;
+      final bonus = b['booking_bonus']?.toString() ?? '';
       final discount = double.tryParse(b['booking_discount']?.toString() ?? '0.0') ?? 0.0;
       
       final discAmt = (price * qty * discount) / 100.0;
-      final lineTot = (price * qty) - discAmt + bonus;
+      final lineTot = (price * qty) - discAmt;
 
       grandTotal += lineTot;
       totalQty += qty;

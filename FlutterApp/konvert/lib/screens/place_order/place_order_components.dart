@@ -324,6 +324,7 @@ class PlaceOrderComponents {
     bool autofocus = false,
     FocusNode? focusNode,
     FocusNode? nextFocusNode,
+    TextInputType keyboardType = const TextInputType.numberWithOptions(decimal: true),
     TextInputAction textInputAction = TextInputAction.next,
     void Function()? onSubmitted,
   }) {
@@ -334,7 +335,7 @@ class PlaceOrderComponents {
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        keyboardType: keyboardType,
         textInputAction: textInputAction,
         onSubmitted: (val) {
           if (onSubmitted != null) {

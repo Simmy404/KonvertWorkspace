@@ -5,7 +5,7 @@ class PlaceOrderProduct {
   String name;
   int qty;
   double price;
-  double bonus;
+  String bonus;
   double discount;
 
   PlaceOrderProduct({
@@ -13,7 +13,7 @@ class PlaceOrderProduct {
     required this.name,
     this.qty = 0,
     required this.price,
-    this.bonus = 0.0,
+    this.bonus = '',
     this.discount = 0.0,
   });
 
@@ -28,7 +28,7 @@ class PlaceOrderProduct {
   double getGrandTotal() {
     double total = price * qty;
     double discountAmount = (total * discount) / 100; // Discount is percentage
-    return (total - discountAmount) + bonus;
+    return (total - discountAmount);
   }
 
   PlaceOrderProduct copyWith({
@@ -36,7 +36,7 @@ class PlaceOrderProduct {
     String? name,
     int? qty,
     double? price,
-    double? bonus,
+    String? bonus,
     double? discount,
   }) {
     return PlaceOrderProduct(

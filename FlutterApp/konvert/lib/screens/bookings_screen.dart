@@ -1082,7 +1082,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                                                 ),
                                                               ),
                                                               Text(
-                                                                'Qty: ${b.bookingQty}  •  ${_formatCurrency(b.bookingGrandTotal)}',
+                                                                'Qty: ${b.bookingQty}${b.bookingBonus.trim().isNotEmpty ? '  •  Bonus: ${b.bookingBonus.trim()}' : ''}  •  ${_formatCurrency(b.bookingGrandTotal)}',
                                                                 style: TextStyle(
                                                                   color:
                                                                       !ThemeManager

@@ -485,7 +485,7 @@ class PlaceOrderState extends ChangeNotifier {
             int.tryParse(selectedCustomer!['customer_id'].toString()) ?? 0,
         bookingProdId: 0,
         bookingQty: 0,
-        bookingBonus: 0.0,
+        bookingBonus: '',
         bookingDiscount: 0.0,
         bookingPrice: 0.0,
         bookingLong: LocationManager.instance.currentPosition?.longitude ?? 0.0,

@@ -246,10 +246,10 @@ class ProductStep extends StatelessWidget {
                                               ),
                                               if (cartItem != null &&
                                                   (cartItem.discount > 0 ||
-                                                      cartItem.bonus > 0)) ...[
+                                                      cartItem.bonus.trim().isNotEmpty)) ...[
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  '(${cartItem.discount > 0 ? '${cartItem.discount}% Off' : ''}${cartItem.discount > 0 && cartItem.bonus > 0 ? ' + ' : ''}${cartItem.bonus > 0 ? '+Rs ${cartItem.bonus}' : ''})',
+                                                  '(${cartItem.discount > 0 ? '${cartItem.discount}% Off' : ''}${cartItem.discount > 0 && cartItem.bonus.trim().isNotEmpty ? ' + ' : ''}${cartItem.bonus.trim().isNotEmpty ? 'Bonus: ${cartItem.bonus.trim()}' : ''})',
                                                   style: const TextStyle(
                                                     color: Color(0xFF16A34A),
                                                     fontSize: 10,
@@ -741,7 +741,7 @@ class ProductStep extends StatelessWidget {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            'TP: Rs ${item.price} | Qty: ${item.qty}${item.discount > 0 ? ' | Disc: ${item.discount}%' : ''}${item.bonus > 0 ? ' | Bonus: Rs ${item.bonus}' : ''}',
+                                            'TP: Rs ${item.price} | Qty: ${item.qty}${item.discount > 0 ? ' | Disc: ${item.discount}%' : ''}${item.bonus.trim().isNotEmpty ? ' | Bonus: ${item.bonus.trim()}' : ''}',
                                             style: TextStyle(
                                               color: ThemeManager.instance
                                                   .getTextSecondary(),
@@ -987,7 +987,7 @@ class _ProductPricingDialogContentState
   late int qty;
   late double price;
   late double discount;
-  late double bonus;
+  late String bonus;
 
   late TextEditingController qtyController;
   late TextEditingController priceController;
@@ -1008,12 +1008,12 @@ class _ProductPricingDialogContentState
         double.tryParse(widget.product['product_tp'].toString()) ??
         0.0;
     discount = widget.existingItem?.discount ?? 0.0;
-    bonus = widget.existingItem?.bonus ?? 0.0;
+    bonus = widget.existingItem?.bonus ?? '';
 
     qtyController = TextEditingController(text: qty.toString());
     priceController = TextEditingController(text: price.toString());
     discountController = TextEditingController(text: discount.toString());
-    bonusController = TextEditingController(text: bonus.toString());
+    bonusController = TextEditingController(text: bonus);
 
     // Initially select quantity text if autofocusing
     if (widget.autofocusFirstInput) {
@@ -1076,7 +1076,7 @@ class _ProductPricingDialogContentState
 
   @override
   Widget build(BuildContext context) {
-    double total = (price * qty) - ((price * qty * discount) / 100) + bonus;
+    double total = (price * qty) - ((price * qty * discount) / 100);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1155,10 +1155,11 @@ class _ProductPricingDialogContentState
               textInputAction: TextInputAction.next,
             ),
             PlaceOrderComponents.buildDialogInput(
-              'Bonus Amount (Rs)',
+              'Bonus (Optional)',
               bonusController,
-              (v) => setState(() => bonus = double.tryParse(v) ?? 0.0),
+              (v) => setState(() => bonus = v),
               focusNode: bonusFocus,
+              keyboardType: TextInputType.text,
               textInputAction: TextInputAction.done,
               onSubmitted: _saveToCart,
             ),
@@ -1748,7 +1749,7 @@ class _PreviousBookingDialogState extends State<_PreviousBookingDialog> {
                                 fontSize: 12,
                               ),
                             ),
-                            if (item.bonus > 0) ...[
+                            if (item.bonus.trim().isNotEmpty) ...[
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -1760,7 +1761,7 @@ class _PreviousBookingDialogState extends State<_PreviousBookingDialog> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  '+${item.bonus.toStringAsFixed(0)} Bns',
+                                  '${item.bonus.trim()} Bns',
                                   style: const TextStyle(
                                     color: Colors.green,
                                     fontSize: 10,
