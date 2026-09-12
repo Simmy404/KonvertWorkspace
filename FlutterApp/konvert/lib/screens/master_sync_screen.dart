@@ -5,6 +5,7 @@ import '../managers/error_manager.dart';
 import '../models/error_struct.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/network_service.dart';
 import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
 import 'login_screen.dart';
@@ -35,6 +36,26 @@ class _MasterSyncScreenState extends State<MasterSyncScreen> {
   }
 
   Future<void> _startMasterSync() async {
+    // Check for internet connection before starting
+    final hasNet = await NetworkService.instance.checkConnection();
+    if (!hasNet) {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'SYNC-OFFLINE',
+          technicalDetails:
+              'No internet connection. Connect to internet to Master Sync.',
+        ),
+        4,
+      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageTransitions.fadeTransition(const DashboardScreen(fromLogin: false)),
+        );
+      }
+      return;
+    }
+
     // Temporarily suspend user session until Master Sync is 100% complete
     await StorageService.instance.suspendUserSession();
 

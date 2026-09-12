@@ -8,10 +8,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../managers/theme_manager.dart';
 import '../../services/storage_service.dart';
+import '../../services/network_service.dart';
+import '../../managers/error_manager.dart';
+import '../../models/error_struct.dart';
 import 'dashboard_view_model.dart';
 import '../../managers/location_manager.dart';
 import '../place_order_screen.dart';
-import '../login_screen.dart';
 import '../profile_screen.dart';
 import '../../utils/page_transitions.dart';
 import '../notifications/notifications_screen.dart';
@@ -260,11 +262,18 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeManager.instance,
+      listenable: Listenable.merge([ThemeManager.instance, NetworkService.instance]),
       builder: (context, child) {
         final currentUser = StorageService.instance.getCurrentUser();
         final targets = StorageService.instance.getTargets();
         final dashboardVM = context.watch<DashboardViewModel>();
+        final isConnected = NetworkService.instance.isConnected;
+
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+        final lastSyncDate = StorageService.instance.getLastSyncDate();
+        final bool isOutdated = (lastSyncDate != todayStr);
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -283,7 +292,14 @@ class HomeTab extends StatelessWidget {
                 // ==========================================
                 // TOP SECTION: BACKGROUND IMAGE AREA
                 // ==========================================
-                _buildTopSection(context, currentUser, targets, dashboardVM),
+                _buildTopSection(
+                  context,
+                  currentUser,
+                  targets,
+                  dashboardVM,
+                  isOutdated,
+                  isConnected,
+                ),
 
                 // ==========================================
                 // BOTTOM SECTION: MY ACTIVITY & LOGOUT
@@ -392,6 +408,8 @@ class HomeTab extends StatelessWidget {
     dynamic currentUser,
     Map<String, dynamic> targets,
     DashboardViewModel dashboardVM,
+    bool isOutdated,
+    bool isConnected,
   ) {
     return Stack(
       children: [
@@ -462,8 +480,14 @@ class HomeTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Top Action Bar: Logo + Icons
-                          _buildTopActionBar(context),
-                          const SizedBox(height: 24),
+                          _buildTopActionBar(context, isOutdated, isConnected),
+                          if (isOutdated) ...[
+                            const SizedBox(height: 14),
+                            _buildMasterSyncStatusBanner(context, isConnected),
+                            const SizedBox(height: 14),
+                          ] else ...[
+                            const SizedBox(height: 24),
+                          ],
 
                           // User Greeting with Avatar
                           _buildUserGreeting(context, currentUser),
@@ -553,7 +577,7 @@ class HomeTab extends StatelessWidget {
   // ==========================================
   // TOP ACTION BAR: LOGO + SYNC + NOTIFICATION
   // ==========================================
-  Widget _buildTopActionBar(BuildContext context) {
+  Widget _buildTopActionBar(BuildContext context, bool isOutdated, bool isConnected) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -573,10 +597,25 @@ class HomeTab extends StatelessWidget {
         Row(
           children: [
             IconButton(
-              onPressed: onTriggerManualSync,
-              icon: const Icon(
+              onPressed: () {
+                if (!isConnected) {
+                  ErrorManager.instance.showToastError(
+                    const ErrorStruct(
+                      code: 'SYNC-OFFLINE',
+                      technicalDetails:
+                          'No internet connection. Connect to internet to Master Sync.',
+                    ),
+                    4,
+                  );
+                  return;
+                }
+                onTriggerManualSync();
+              },
+              icon: Icon(
                 Icons.wb_sunny_outlined,
-                color: Colors.white,
+                color: (isOutdated && isConnected)
+                    ? const Color(0xFF22C55E)
+                    : Colors.white,
                 size: 22,
               ),
               tooltip: 'Master Sync',
@@ -627,6 +666,107 @@ class HomeTab extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // ==========================================
+  // MASTER SYNC STATUS BANNER (OUTDATED DATA / AVAILABLE)
+  // ==========================================
+  Widget _buildMasterSyncStatusBanner(BuildContext context, bool isConnected) {
+    if (!isConnected) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEF4444).withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.45),
+            width: 1.2,
+          ),
+        ),
+        child: const Row(
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              color: Color(0xFFFCA5A5),
+              size: 18,
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Outdated data, Connect to internet to Master Sync',
+                style: TextStyle(
+                  color: Color(0xFFFEE2E2),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTriggerManualSync,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16A34A).withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF22C55E),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.sync_rounded,
+                    color: Color(0xFF22C55E),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Internet available, Master Sync now',
+                    style: TextStyle(
+                      color: Color(0xFF22C55E),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Color(0xFF22C55E),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   // ==========================================

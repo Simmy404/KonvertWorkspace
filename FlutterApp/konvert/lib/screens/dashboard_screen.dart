@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../managers/theme_manager.dart';
+import '../managers/error_manager.dart';
+import '../models/error_struct.dart';
 import '../services/storage_service.dart';
+import '../services/network_service.dart';
 import '../utils/page_transitions.dart';
 import 'master_sync_screen.dart';
 import 'bookings_screen.dart';
@@ -58,7 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  void _checkInitialSync() {
+  Future<void> _checkInitialSync() async {
     final now = DateTime.now();
     final todayStr =
         "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
@@ -67,18 +70,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bool isFirstOpenToday = (lastSyncDate != todayStr);
 
     if (widget.fromLogin || isFirstOpenToday) {
-      _viewModel.setNeedsInitialSync(true);
+      final hasNet = await NetworkService.instance.checkConnection();
+      if (!hasNet) {
+        // Do not allow starting of master sync if user is not connected to internet.
+        _viewModel.setNeedsInitialSync(false);
+        return;
+      }
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageTransitions.instantTransition(const MasterSyncScreen()),
-        );
+      if (widget.fromLogin) {
+        _viewModel.setNeedsInitialSync(true);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            PageTransitions.instantTransition(const MasterSyncScreen()),
+          );
+        }
+      } else {
+        // First open today with internet: Stay on dashboard and display "Internet available, Master Sync now"
+        _viewModel.setNeedsInitialSync(false);
       }
     }
   }
 
-  void _triggerManualSync() {
+  Future<void> _triggerManualSync() async {
+    final hasNet = await NetworkService.instance.checkConnection();
+    if (!hasNet) {
+      ErrorManager.instance.showToastError(
+        const ErrorStruct(
+          code: 'SYNC-OFFLINE',
+          technicalDetails:
+              'Cannot start Master Sync without an internet connection. Please connect to the internet first.',
+        ),
+        4,
+      );
+      return;
+    }
+
+    if (!mounted) return;
     Navigator.push(
       context,
       PageTransitions.fadeTransition(const MasterSyncScreen()),
