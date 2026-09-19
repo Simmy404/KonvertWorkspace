@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/place_order_product.dart';
 import '../../models/customer_last_booking.dart';
@@ -30,6 +31,7 @@ class ProductStep extends StatelessWidget {
                   Expanded(
                     child: PlaceOrderComponents.buildSearchBar(
                       controller: state.productSearchController,
+                      focusNode: state.productSearchFocusNode,
                       onChanged: state.filterProducts,
                       hint: 'Search ${state.allProducts.length} Products',
                       onClear: () => state.filterProducts(''),
@@ -901,8 +903,8 @@ class ProductStep extends StatelessWidget {
     Map<String, dynamic> product,
     PlaceOrderProduct? existingItem, {
     bool autofocusFirstInput = true,
-  }) {
-    showModalBottomSheet(
+  }) async {
+    final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -915,6 +917,18 @@ class ProductStep extends StatelessWidget {
         );
       },
     );
+
+    if (result == true) {
+      state.clearProductSearch();
+      // Wait for bottom sheet close animation to finish so focus request isn't lost
+      await Future.delayed(const Duration(milliseconds: 250));
+      if (context.mounted) {
+        state.productSearchController.selection =
+            const TextSelection.collapsed(offset: 0);
+        FocusScope.of(context).requestFocus(state.productSearchFocusNode);
+        SystemChannels.textInput.invokeMethod('TextInput.show');
+      }
+    }
   }
 
   Widget _buildLastBookingButton(
@@ -1070,8 +1084,10 @@ class _ProductPricingDialogContentState
         bonus: bonus,
       );
       widget.state.addToCart(item);
+      Navigator.pop(context, true);
+    } else {
+      Navigator.pop(context, false);
     }
-    Navigator.pop(context);
   }
 
   @override
@@ -1159,7 +1175,7 @@ class _ProductPricingDialogContentState
               bonusController,
               (v) => setState(() => bonus = v),
               focusNode: bonusFocus,
-              keyboardType: TextInputType.text,
+              keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
               onSubmitted: _saveToCart,
             ),
@@ -1197,7 +1213,7 @@ class _ProductPricingDialogContentState
                         widget.state.removeFromCart(
                           widget.product['product_id'].toString(),
                         );
-                        Navigator.pop(context);
+                        Navigator.pop(context, false);
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,

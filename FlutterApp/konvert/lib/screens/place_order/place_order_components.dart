@@ -115,6 +115,7 @@ class PlaceOrderComponents {
     required String hint,
     required VoidCallback onClear,
     bool enabled = true,
+    FocusNode? focusNode,
   }) {
     final theme = ThemeManager.instance;
     final isLight = theme.isLightMode;
@@ -144,6 +145,7 @@ class PlaceOrderComponents {
           Expanded(
             child: TextField(
               controller: controller,
+              focusNode: focusNode,
               onChanged: onChanged,
               enabled: enabled,
               style: TextStyle(
@@ -169,6 +171,7 @@ class PlaceOrderComponents {
               onTap: () {
                 controller.clear();
                 onClear();
+                focusNode?.requestFocus();
               },
               child: Icon(
                 Icons.close_rounded,

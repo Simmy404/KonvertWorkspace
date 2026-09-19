@@ -1,7 +1,5 @@
 import 'dart:math';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
@@ -44,6 +42,7 @@ class PlaceOrderState extends ChangeNotifier {
   TextEditingController brickSearchController = TextEditingController();
   TextEditingController customerSearchController = TextEditingController();
   TextEditingController productSearchController = TextEditingController();
+  FocusNode productSearchFocusNode = FocusNode();
 
   PlaceOrderState({this.existingInvoiceItems}) {
     _init();
@@ -55,6 +54,7 @@ class PlaceOrderState extends ChangeNotifier {
     brickSearchController.dispose();
     customerSearchController.dispose();
     productSearchController.dispose();
+    productSearchFocusNode.dispose();
     super.dispose();
   }
 
@@ -311,6 +311,11 @@ class PlaceOrderState extends ChangeNotifier {
     productSearchController.clear();
     selectedProductCategoryFilter = 'all';
     _safeNotifyListeners();
+  }
+
+  void clearProductSearch() {
+    productSearchController.clear();
+    _applyProductFilters();
   }
 
   void filterProducts(String query) {
